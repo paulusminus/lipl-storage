@@ -23,6 +23,13 @@ struct LyricSummary {
     title: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct Lyric {
+    id: i32,
+    title: String,
+    parts: Vec<Vec<String>>
+}
+
 
 #[derive(Clone)]
 struct Store {
@@ -70,6 +77,22 @@ async fn get_lyric_list(store: Store) -> Result<impl Reply, Rejection> {
     ))
 }
 
+async fn get_lyric(path: String, store: Store) -> Result<impl Reply, Rejection> {
+    let lyric_id = path.parse::<i32>().unwrap_or_default();
+    
+    match store.lyric_list.read().get(&lyric_id) {
+        Some(item) => Ok(
+            warp::reply::json(
+                &Lyric { 
+                    title: item.title.to_string_lossy().to_string(), 
+                    parts: item.parts.clone(), 
+                    id: lyric_id 
+                }
+            )
+        ),
+        None => Err(warp::reject::not_found()),
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,6 +115,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and(warp::path::end())
         .and(store_filter.clone())
         .and_then(get_lyric_list);
+
+    let get_item = warp::get()
+        .and(warp::path("v1"))
+        .and(warp::path("lyric"))
+        .and(warp::path::param())
+        .and(store_filter.clone())
+        .and_then(get_lyric);
 
     /*
     let delete_item = warp::delete()
@@ -118,7 +148,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .or(update_item);
     */
 
-    warp::serve(get_items)
+    let routes = get_items
+    .or(get_item);
+
+    warp::serve(routes)
         .run(([127, 0, 0, 1], 3030))
         .await;
 
