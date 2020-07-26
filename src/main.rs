@@ -5,6 +5,7 @@ use warp::{http, Filter, Reply, Rejection};
 use serde::{Serialize, Deserialize};
 
 type Items = HashMap<String, i32>;
+type Lyrics = HashMap<u32, lipl::Lyric>;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 struct Id {
@@ -17,17 +18,45 @@ struct Item {
     quantity: i32,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+struct LyricSummary {
+    id: u32,
+    title: String,
+}
+
+
 #[derive(Clone)]
 struct Store {
-    grocery_list: Arc<RwLock<Items>>
+    grocery_list: Arc<RwLock<Items>>,
+    lyric_list: Arc<RwLock<Lyrics>>,
 }
 
 impl Store {
     fn new() -> Self {
         Store {
-            grocery_list: Arc::new(RwLock::new(HashMap::new()))
+            grocery_list: Arc::new(RwLock::new(HashMap::new())),
+            lyric_list:  Arc::new(RwLock::new(get_lyrics_store()))
         }
     }
+}
+
+fn get_lyrics_store() -> Lyrics {
+    let mut result: HashMap<u32, lipl::Lyric> = HashMap::new();
+    let mut count = 0;
+
+    let entries = lipl::get_songs("/home/paul/Documenten/lipl.data/Geheugenkoor", "txt").unwrap();
+
+    for entry in entries {
+        match entry {
+            Ok(e) => { 
+                count += 1;
+                result.insert(count, e);
+            },
+            Err(_) => {},
+        }
+    }
+
+    result
 }
 
 async fn update_grocery_list(
@@ -54,6 +83,20 @@ async fn delete_grocery_list_item(
     ))
 }
 
+async fn get_lyric_list(store: Store) -> Result<impl Reply, Rejection> {
+    let mut result: Vec<LyricSummary> = vec!();
+    let r = store.lyric_list.read();
+
+    for (id, lyric) in r.iter() {
+        result.push(LyricSummary { id: id.clone(), title: format!("{}", lyric.title.to_string_lossy()) });
+    }
+
+    Ok(warp::reply::json(
+        &result,
+    ))
+}
+
+
 async fn get_grocery_list(
     store: Store,
 ) -> Result<impl Reply, Rejection> {
@@ -77,23 +120,28 @@ fn post_json() -> impl Filter<Extract = (Item,), Error = Rejection> + Clone {
     warp::body::content_length_limit(1024 * 16).and(warp::body::json())
 }
 
+/*
 fn print_item<T>(item: T)
 where T: std::fmt::Display {
     println!("{}", item); 
 }
+*/
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let store = Store::new();
     let store_filter = warp::any().map(move || store.clone());
 
-    lipl::get_songs("/home/paul/Documenten/lipl.data/Geheugenkoor", "txt")
-    .unwrap()
+    /*
+    let songs = lipl::get_songs("/home/paul/Documenten/lipl.data/Geheugenkoor", "txt")?;
+    songs
     .iter()
     .filter(|r| r.is_ok())
     .map(|r| r.as_ref().unwrap())
     .for_each(print_item);
+    */
 
+    /*
     let add_items = warp::post()
         .and(warp::path("v1"))
         .and(warp::path("groceries"))
@@ -101,14 +149,16 @@ async fn main() {
         .and(post_json())
         .and(store_filter.clone())
         .and_then(update_grocery_list);
+    */
 
     let get_items = warp::get()
         .and(warp::path("v1"))
-        .and(warp::path("groceries"))
+        .and(warp::path("lyric"))
         .and(warp::path::end())
         .and(store_filter.clone())
-        .and_then(get_grocery_list);
+        .and_then(get_lyric_list);
 
+    /*
     let delete_item = warp::delete()
         .and(warp::path("v1"))
         .and(warp::path("groceries"))
@@ -124,13 +174,18 @@ async fn main() {
         .and(post_json())
         .and(store_filter.clone())
         .and_then(update_grocery_list);
+    */
 
+    /*
     let routes = add_items
         .or(get_items)
         .or(delete_item)
         .or(update_item);
+    */
 
-    warp::serve(routes)
+    warp::serve(get_items)
         .run(([127, 0, 0, 1], 3030))
         .await;
+
+    Ok(())
 }
