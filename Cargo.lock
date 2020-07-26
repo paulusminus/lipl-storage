@@ -439,6 +439,17 @@ name = "lipl"
 version = "0.1.1"
 
 [[package]]
+name = "lipl-repo"
+version = "0.1.1"
+dependencies = [
+ "lipl",
+ "parking_lot",
+ "serde",
+ "tokio",
+ "warp",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -561,17 +572,6 @@ dependencies = [
  "safemem",
  "tempfile",
  "twoway",
-]
-
-[[package]]
-name = "neat-api"
-version = "0.1.0"
-dependencies = [
- "lipl",
- "parking_lot",
- "serde",
- "tokio",
- "warp",
 ]
 
 [[package]]
