@@ -7,17 +7,6 @@ use serde::{Serialize, Deserialize};
 type Lyrics = BTreeMap<i32, lipl::Lyric>;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-struct Id {
-    name: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-struct Item {
-    name: String,
-    quantity: i32,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
 struct LyricSummary {
     id: i32,
     title: String,
