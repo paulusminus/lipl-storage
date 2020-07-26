@@ -57,3 +57,32 @@ where T: std::fmt::Display {
     println!("{}", item); 
 }
 */
+
+    /*
+    let delete_item = warp::delete()
+        .and(warp::path("v1"))
+        .and(warp::path("groceries"))
+        .and(warp::path::end())
+        .and(delete_json())
+        .and(store_filter.clone())
+        .and_then(delete_grocery_list_item);
+
+    let update_item = warp::put()
+        .and(warp::path("v1"))
+        .and(warp::path("groceries"))
+        .and(warp::path::end())
+        .and(post_json())
+        .and(store_filter.clone())
+        .and_then(update_grocery_list);
+    */
+
+    /*
+    let add_items = warp::post()
+        .and(warp::path("v1"))
+        .and(warp::path("groceries"))
+        .and(warp::path::end())
+        .and(post_json())
+        .and(store_filter.clone())
+        .and_then(update_grocery_list);
+    */
+
