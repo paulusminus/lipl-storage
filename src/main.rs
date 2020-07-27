@@ -19,27 +19,39 @@ struct Lyric {
     parts: Vec<Vec<String>>
 }
 
-
 #[derive(Clone)]
 struct Store {
     lyric_list: Arc<RwLock<Lyrics>>,
 }
 
 impl Store {
-    fn new() -> Self {
+    fn from(list: impl std::iter::Iterator<Item = lipl::Lyric>) -> Self {
         Store {
-            lyric_list:  Arc::new(RwLock::new(get_lyrics_store())),
+            lyric_list: Arc::new(
+                RwLock::new(
+                    (1..)
+                    .zip(list)
+                    .collect()
+                )
+            ),
         }
     }
+
     fn get_summaries(&self) -> Vec<LyricSummary> {
-        let mut result: Vec<LyricSummary> = vec!();
-        for (id, lyric) in self.lyric_list.read().iter() {
-            result.push(LyricSummary { id: id.clone(), title: format!("{}", lyric.title.to_string_lossy()) });
-        }
-        result
+        self
+        .lyric_list
+        .read()
+        .iter()
+        .map(|(id, lyric)| LyricSummary { id: id.clone(), title: format!("{}", lyric.title.to_string_lossy()) })
+        .collect()
     }
+
     fn get_lyric(&self, id: i32) -> Option<Lyric> {
-        self.lyric_list.read().get(&id).map(|l| Lyric {
+        self
+        .lyric_list
+        .read()
+        .get(&id)
+        .map(|l| Lyric {
             title: l.title.to_string_lossy().to_string(), 
             parts: l.parts.clone(), 
             id: id,
@@ -47,32 +59,17 @@ impl Store {
     }
 }
 
-fn get_lyrics_store() -> Lyrics {
-    let mut result: BTreeMap<i32, lipl::Lyric> = BTreeMap::new();
-    let mut count = 0;
-
-    let entries = lipl::get_songs("/home/paul/Documenten/lipl.data/Geheugenkoor", "txt").unwrap();
-    for entry in entries {
-        match entry {
-            Ok(e) => { 
-                count += 1;
-                result.insert(count, e);
-            },
-            Err(_) => {},
-        }
-    }
-
-    result
-}
-
 fn lyric_id_from_path(path: String) -> i32 {
-    path.parse::<i32>().unwrap_or_default()
+    path.parse::<i32>()
+    .unwrap_or_default()
 }
 
 async fn get_lyric_list(store: Store) -> Result<impl Reply, Rejection> {
-    Ok(warp::reply::json(
-        &store.get_summaries()
-    ))
+    Ok(
+        warp::reply::json(
+            &store.get_summaries()
+        )
+    )
 }
 
 async fn get_lyric(path: String, store: Store) -> Result<impl Reply, Rejection> {
@@ -81,14 +78,22 @@ async fn get_lyric(path: String, store: Store) -> Result<impl Reply, Rejection> 
         lyric_id_from_path(path)
     )
     .map_or_else(
-        || Err(warp::reject::not_found()),
+        |     | Err(warp::reject::not_found()),
         |lyric| Ok(warp::reply::json(&lyric)),
     )
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let store = Store::new();
+    let args: Vec<String> = std::env::args().collect();
+    let path = &args[1];
+
+    let store = Store::from(
+        lipl::get_songs(path, "txt")
+        .unwrap()
+        .into_iter()
+        .filter_map(|e| e.ok())   
+    );
     let store_filter = warp::any().map(move || store.clone());
 
     let get_items = 
@@ -107,14 +112,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and(store_filter.clone())
         .and_then(get_lyric);
 
-
     let routes = 
         get_items
         .or(get_item);
 
     warp::serve(routes)
-        .run(([127, 0, 0, 1], 3030))
+        .run(([0, 0, 0, 0], 3030))
         .await;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
 }
