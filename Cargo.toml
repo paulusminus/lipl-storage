@@ -1,0 +1,14 @@
+[package]
+name = "lipl-io"
+version = "0.1.0"
+authors = ["Paul Min <info@paulmin.nl>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = "0.3"
+tokio = { version = "0.3", features = ["fs", "stream", "io-util"] }
+
+[dev-dependencies]
+tokio = { version = "0.3", features = ["macros", "rt-multi-thread"] }
