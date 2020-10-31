@@ -11,6 +11,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     while let Some(lyric) = result.next().await {
         println!("{}", lyric.id);
+        println!("Number of parts: {}", lyric.parts.len());
         
         if lyric.yaml.is_some() {
             println!("{}", lyric.yaml.unwrap());
