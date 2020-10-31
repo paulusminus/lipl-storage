@@ -4,7 +4,7 @@ use tokio::io::BufReader;
 use tokio::fs::File;
 use lipl_io::to_parts_async;
 
-const FILE_NAME: &str = "./tests/fs/test.txt";
+const FILE_NAME: &str = "./tests/fs/jp9GLx3mjW9c2gtGGi6J6w5oS4RUD8fUAMhgquhtknoGggptg";
 
 async fn get_data() -> BufReader<File> {
     let file = File::open(FILE_NAME).await.unwrap();
@@ -31,7 +31,7 @@ async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         result.0,
-        Some("title: Whatever  \nmembers: [Kerst, Kinderliedjes]\n".to_owned()),
+        Some("title: Whatever  \nmember_of:\n  - Kerst\n  - Kinderliedjes\n".to_owned()),
     );
 
     Ok(())

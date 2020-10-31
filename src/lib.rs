@@ -5,20 +5,31 @@ use tokio::io::BufReader;
 use std::path::PathBuf;
 use std::io::Error;
 use bs58::decode;
+use serde::{Deserialize, Serialize};
 
 mod parts;
 pub use parts::to_parts_async;
 
 pub struct Lyric {
     pub id: String,
-    pub yaml: Option<String>,
+    pub title: Option<String>,
+    pub member_of: Option<Vec<String>>,
     pub parts: Vec<Vec<String>>,
+}
+
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
+struct Frontmatter {
+    title: Option<String>,
+    member_of: Option<Vec<String>>
 }
 
 pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb).await?;
     let reader = BufReader::new(file);
     let (yaml, parts) = to_parts_async(reader).await?;
+
+    let parsed = yaml.and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok());
+    let frontmatter = parsed.unwrap_or_else(|| Frontmatter { title: None, member_of: None });
 
     let mut decoded = [0xFF; 36];
     decode(pb.file_stem().unwrap().to_string_lossy().to_string().as_str()).into(&mut decoded).unwrap();
@@ -27,7 +38,8 @@ pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
     Ok(
         Lyric {
             id,
-            yaml,
+            title: frontmatter.title,
+            member_of: frontmatter.member_of,
             parts,
         }
     )

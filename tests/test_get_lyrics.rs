@@ -1,12 +1,14 @@
 use tokio::stream::StreamExt;
-use lipl_io::{get_lyrics, Lyric};
+use lipl_io::{get_lyrics};
 
 const DIR_NAME: &str = "./tests/fs/";
 
 #[tokio::test]
 async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
     let stream = get_lyrics(DIR_NAME).await?;
-    let songs: Vec<Lyric> = stream.collect().await;
+
+    tokio::pin!(stream);
+    let song1 = stream.next().await.unwrap();
 
     assert_eq!(
         vec![
@@ -19,26 +21,33 @@ async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
                 "een tweede couplet".to_owned()
             ]
         ],
-        songs[0].parts,
+        song1.parts,
     );
 
     assert_eq!(
-        Some("title: Whatever  \nmembers: [Kerst, Kinderliedjes]\n".to_owned()),
-        songs[0].yaml,
+        Some("Whatever".to_owned()),
+        song1.title,
     );
 
     assert_eq!(
-        songs[0].id,
-        "test",
+        Some(vec!["Kerst".to_owned(), "Kinderliedjes".to_owned()]),
+        song1.member_of,
     );
 
     assert_eq!(
-        songs[1].id,
-        "test2",
+        song1.id,
+        "a6223cbc-95f2-46ce-b444-08ea59ee3fd9".to_owned(),
+    );
+
+    let song2 = stream.next().await.unwrap();
+
+    assert_eq!(
+        song2.id,
+        "b65e14d1-fb98-4df8-bfd3-48143371cb17".to_owned(),
     );
 
     assert_eq!(
-        songs[1].yaml,
+        song2.title,
         None,
     );
 

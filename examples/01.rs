@@ -2,13 +2,6 @@ use std::io::{ErrorKind};
 use lipl_io::{get_lyrics};
 use tokio::stream::StreamExt;
 use std::time::{Instant};
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Frontmatter {
-    title: Option<String>,
-    member_of: Option<Vec<String>>
-}
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -31,14 +24,11 @@ async fn main() -> Result<(), std::io::Error> {
         println!("id: {}", lyric.id);
         println!("Number of parts: {}", lyric.parts.len());
      
-        if let Some(yaml) = lyric.yaml {
-            let frontmatter: Frontmatter = serde_yaml::from_str(&yaml).unwrap();
-            if let Some(title) = frontmatter.title {
-                println!("Title: {}", title);
-            }
-            if let Some(member_of) = frontmatter.member_of {
-                println!("Member of: {}", member_of.join(", "));
-            }
+        if let Some(title) = lyric.title {
+            println!("Title: {}", title);
+        }
+        if let Some(member_of) = lyric.member_of {
+            println!("Member of: {}", member_of.join(", "));
         }
         println!();
     }
