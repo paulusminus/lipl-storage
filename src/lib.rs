@@ -4,6 +4,7 @@ use futures::future::ready;
 use tokio::io::BufReader;
 use std::path::PathBuf;
 use std::io::Error;
+use bs58::decode;
 
 mod parts;
 pub use parts::to_parts_async;
@@ -18,9 +19,14 @@ pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb).await?;
     let reader = BufReader::new(file);
     let (yaml, parts) = to_parts_async(reader).await?;
+
+    let mut decoded = [0xFF; 36];
+    decode(pb.file_stem().unwrap().to_string_lossy().to_string().as_str()).into(&mut decoded).unwrap();
+    let id = std::str::from_utf8(&decoded).unwrap().to_owned();
+
     Ok(
         Lyric {
-            id: pb.file_stem().unwrap().to_string_lossy().to_string(),
+            id,
             yaml,
             parts,
         }
