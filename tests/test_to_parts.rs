@@ -16,7 +16,7 @@ async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
     let result = to_parts_async(get_data().await).await?;
 
     assert_eq!(
-        result.parts,
+        result.1,
         vec![
             vec![
                 "Hallo allemaal".to_owned(),
@@ -30,7 +30,7 @@ async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     assert_eq!(
-        result.yaml,
+        result.0,
         Some("title: Whatever  \nmembers: [Kerst, Kinderliedjes]\n".to_owned()),
     );
 

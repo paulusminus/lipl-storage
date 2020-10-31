@@ -1,9 +1,8 @@
 use std::io::Error;
 use tokio::io::{BufReader, AsyncBufReadExt, AsyncRead};
 use tokio::stream::StreamExt;
-use crate::Lyric;
 
-pub async fn to_parts_async<T>(reader: BufReader<T>) -> Result<Lyric, Error>
+pub async fn to_parts_async<T>(reader: BufReader<T>) -> Result<(Option<String>, Vec<Vec<String>>), Error>
 where T: AsyncRead + Unpin
 {
     let mut lines = reader.lines();
@@ -50,10 +49,9 @@ where T: AsyncRead + Unpin
     }
 
     Ok(
-        Lyric {
+        (
             yaml,
-            parts: result,
-        }
+            result,
+        )
     )
 }
-

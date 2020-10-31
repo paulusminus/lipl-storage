@@ -9,6 +9,7 @@ mod parts;
 pub use parts::to_parts_async;
 
 pub struct Lyric {
+    pub id: String,
     pub yaml: Option<String>,
     pub parts: Vec<Vec<String>>,
 }
@@ -16,10 +17,17 @@ pub struct Lyric {
 pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb).await?;
     let reader = BufReader::new(file);
-    to_parts_async(reader).await
+    let (yaml, parts) = to_parts_async(reader).await?;
+    Ok(
+        Lyric {
+            id: pb.file_stem().unwrap().to_string_lossy().to_string(),
+            yaml,
+            parts,
+        }
+    )
 }
 
-pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=(PathBuf, Lyric)>, Error> {
+pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
     read_dir(path)
     .await
     .map(|rd|
@@ -27,18 +35,9 @@ pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=(PathBuf, Lyric)>
         .filter(|entry| ready(entry.is_ok()))
         .map(|entry| entry.unwrap().path())
         .then(|path_buffer| async move {
-            (path_buffer.to_path_buf(), get_file(&path_buffer).await)
+            get_file(&path_buffer).await
         })
-        .filter(|(_, lyric_file)| ready(lyric_file.is_ok()))
-        .map(|(path_buffer, lyric_file)| (path_buffer, lyric_file.unwrap()))
+        .filter(|lyric_file| ready(lyric_file.is_ok()))
+        .map(|lyric_file| lyric_file.unwrap())
     )
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[tokio::test]
-    async fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }

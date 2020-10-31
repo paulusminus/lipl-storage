@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use tokio::stream::StreamExt;
 use lipl_io::{get_lyrics, Lyric};
 
@@ -7,7 +6,7 @@ const DIR_NAME: &str = "./tests/fs/";
 #[tokio::test]
 async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
     let stream = get_lyrics(DIR_NAME).await?;
-    let songs: Vec<(PathBuf, Lyric)> = stream.collect().await;
+    let songs: Vec<Lyric> = stream.collect().await;
 
     assert_eq!(
         vec![
@@ -20,26 +19,26 @@ async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
                 "een tweede couplet".to_owned()
             ]
         ],
-        songs[0].1.parts,
+        songs[0].parts,
     );
 
     assert_eq!(
         Some("title: Whatever  \nmembers: [Kerst, Kinderliedjes]\n".to_owned()),
-        songs[0].1.yaml,
+        songs[0].yaml,
     );
 
     assert_eq!(
-        songs[0].0.to_string_lossy().to_string(),
-        "./tests/fs/test.txt",
+        songs[0].id,
+        "test",
     );
 
     assert_eq!(
-        songs[1].0.to_string_lossy().to_string(),
-        "./tests/fs/test2.txt",
+        songs[1].id,
+        "test2",
     );
 
     assert_eq!(
-        songs[1].1.yaml,
+        songs[1].yaml,
         None,
     );
 
