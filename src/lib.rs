@@ -8,24 +8,29 @@ use std::io::Error;
 mod parts;
 pub use parts::to_parts_async;
 
-pub async fn get_file(pb: &PathBuf) -> Result<(Option<String>, Vec<Vec<String>>), Error> {
+pub struct Lyric {
+    pub yaml: Option<String>,
+    pub parts: Vec<Vec<String>>,
+}
+
+pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb).await?;
     let reader = BufReader::new(file);
     to_parts_async(reader).await
 }
 
-pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=(PathBuf, (Option<String>, Vec<Vec<String>>))>, Error> {
+pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=(PathBuf, Lyric)>, Error> {
     read_dir(path)
     .await
     .map(|rd|
         rd
-        .filter(|e| ready(e.is_ok()))
-        .map(|e| e.unwrap().path())
-        .then(|p| async move {
-            (p.to_path_buf(), get_file(&p).await)
+        .filter(|entry| ready(entry.is_ok()))
+        .map(|entry| entry.unwrap().path())
+        .then(|path_buffer| async move {
+            (path_buffer.to_path_buf(), get_file(&path_buffer).await)
         })
-        .filter(|(_, s)| ready(s.is_ok()))
-        .map(|(p, s)| (p, s.unwrap()))
+        .filter(|(_, lyric_file)| ready(lyric_file.is_ok()))
+        .map(|(path_buffer, lyric_file)| (path_buffer, lyric_file.unwrap()))
     )
 }
 

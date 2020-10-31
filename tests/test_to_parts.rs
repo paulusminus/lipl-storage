@@ -4,28 +4,34 @@ use tokio::io::BufReader;
 use tokio::fs::File;
 use lipl_io::to_parts_async;
 
-async fn get_data(filename: &str) -> BufReader<File> {
-    let file = File::open(filename).await.unwrap();
+const FILE_NAME: &str = "./tests/fs/test.txt";
+
+async fn get_data() -> BufReader<File> {
+    let file = File::open(FILE_NAME).await.unwrap();
     BufReader::new(file)
 }
 
 #[tokio::test]
 async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
+    let result = to_parts_async(get_data().await).await?;
+
     assert_eq!(
-        to_parts_async(get_data("./tests/fs/test.txt").await).await?,
-        (
-            Some("title: Whatever  \nmembers: [Kerst, Kinderliedjes]\n".to_owned()),
+        result.parts,
+        vec![
             vec![
-                vec![
-                    "Hallo allemaal".to_owned(),
-                    "Wat fijn dat u er bent".to_owned(),
-                ],
-                vec![
-                    "En dan ook nog".to_owned(),
-                    "een tweede couplet".to_owned()
-                ]
+                "Hallo allemaal".to_owned(),
+                "Wat fijn dat u er bent".to_owned(),
             ],
-        )
+            vec![
+                "En dan ook nog".to_owned(),
+                "een tweede couplet".to_owned()
+            ]
+        ],
+    );
+
+    assert_eq!(
+        result.yaml,
+        Some("title: Whatever  \nmembers: [Kerst, Kinderliedjes]\n".to_owned()),
     );
 
     Ok(())
