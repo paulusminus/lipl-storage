@@ -12,6 +12,7 @@ tokio = { version = "0.3", features = ["fs", "stream", "io-util"] }
 bs58 = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
+uuid = "0.8"
 
 [dev-dependencies]
 tokio = { version = "0.3", features = ["macros", "rt"] }

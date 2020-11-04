@@ -31,9 +31,10 @@ pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
     let parsed = yaml.and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok());
     let frontmatter = parsed.unwrap_or_else(|| Frontmatter { title: None, member_of: None });
 
-    let mut decoded = [0xFF; 36];
+    let mut decoded = [0xFF; 16];
     decode(pb.file_stem().unwrap().to_string_lossy().to_string().as_str()).into(&mut decoded).unwrap();
-    let id = std::str::from_utf8(&decoded).unwrap().to_owned();
+    let id = uuid::Uuid::from_slice(&decoded).unwrap().to_hyphenated().to_string();
+    // let id = std::str::from_utf8(&decoded).unwrap().to_owned();
 
     Ok(
         Lyric {

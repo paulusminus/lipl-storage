@@ -36,14 +36,14 @@ async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         song1.id,
-        "a6223cbc-95f2-46ce-b444-08ea59ee3fd9".to_owned(),
+        "0ba4ef4d-0ce3-41d0-ac81-605ad1ae9358".to_owned(),
     );
 
     let song2 = stream.next().await.unwrap();
 
     assert_eq!(
         song2.id,
-        "b65e14d1-fb98-4df8-bfd3-48143371cb17".to_owned(),
+        "388b39a0-9acc-4cf0-98cb-a3d2035ecc3a".to_owned(),
     );
 
     assert_eq!(

@@ -1,4 +1,5 @@
 use std::io::{ErrorKind};
+use std::collections::HashMap;
 use lipl_io::{get_lyrics};
 use tokio::runtime::{Builder};
 use tokio::stream::StreamExt;
@@ -21,10 +22,17 @@ fn main() -> Result<(), std::io::Error> {
             return Err(std::io::Error::new(ErrorKind::Other, "Directory not found"));
         }
     
+        let mut hm: HashMap<String, Vec<String>> = HashMap::new();
         let result = get_lyrics(&path).await.expect(&format!("No results for {}", path));
         tokio::pin!(result);
     
         while let Some(lyric) = result.next().await {
+            if let Some(playlists) = &lyric.member_of {
+                playlists.iter().for_each(|pl| {
+                    hm.entry(pl.clone()).or_insert(Vec::new()).push(lyric.id.clone());
+                });
+            }
+
             println!(
                 "Title: {}, {} parts, id = {}, member of: {}",
                 lyric.title.unwrap_or("<< onbekend >>".to_owned()),
@@ -35,6 +43,14 @@ fn main() -> Result<(), std::io::Error> {
             );
             println!();
         }
+
+        hm.keys().for_each(|key| {
+            println!("{}:", key);
+            hm[key].iter().for_each(|value| {
+                println!("  - {}", value);
+            });
+            println!();
+        });
     
         println!("Elapsed: {} ms", start.elapsed().as_millis());
         Ok(())

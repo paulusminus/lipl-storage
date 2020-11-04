@@ -4,7 +4,7 @@ use tokio::io::BufReader;
 use tokio::fs::File;
 use lipl_io::to_parts_async;
 
-const FILE_NAME: &str = "./tests/fs/jp9GLx3mjW9c2gtGGi6J6w5oS4RUD8fUAMhgquhtknoGggptg";
+const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5";
 
 async fn get_data() -> BufReader<File> {
     let file = File::open(FILE_NAME).await.unwrap();
