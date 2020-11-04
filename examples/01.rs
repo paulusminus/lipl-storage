@@ -25,15 +25,14 @@ fn main() -> Result<(), std::io::Error> {
         tokio::pin!(result);
     
         while let Some(lyric) = result.next().await {
-            println!("id: {}", lyric.id);
-            println!("Number of parts: {}", lyric.parts.len());
-         
-            if let Some(title) = lyric.title {
-                println!("Title: {}", title);
-            }
-            if let Some(member_of) = lyric.member_of {
-                println!("Member of: {}", member_of.join(", "));
-            }
+            println!(
+                "Title: {}, {} parts, id = {}, member of: {}",
+                lyric.title.unwrap_or("<< onbekend >>".to_owned()),
+                lyric.parts.len(),
+                lyric.id,
+                lyric.member_of.unwrap_or_default().join(", ")
+
+            );
             println!();
         }
     
