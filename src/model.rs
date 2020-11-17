@@ -41,7 +41,7 @@ impl Store {
         .lyric_list
         .read()
         .iter()
-        .map(|(id, lyric)| LyricSummary { id: id.clone(), title: format!("{}", lyric.title.to_string_lossy()) })
+        .map(|(id, lyric)| LyricSummary { id: *id, title: format!("{}", lyric.title.to_string_lossy()) })
         .collect()
     }
 
@@ -60,7 +60,7 @@ impl Store {
     pub fn add_lyric(&self, parts: Vec<Vec<String>>, title: String) -> Option<Lyric> {
         let mut lock = self.lyric_list.write();
         let key = lock.keys().cloned().last().unwrap_or_default() + 1;
-        lock.insert(key, lipl_data_disk::Lyric { parts: parts, title: std::ffi::OsString::from(title)})
+        lock.insert(key, lipl_data_disk::Lyric { parts, title: std::ffi::OsString::from(title)})
         .map_or_else(
             |     | None,
             |lyric| Some(Lyric { id: key, parts: lyric.parts, title: lyric.title.to_string_lossy().to_string() })
