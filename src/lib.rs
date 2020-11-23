@@ -48,8 +48,9 @@ pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
 }
 
 pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
-    Ok(
-        iter(read_dir(path)?)
+    read_dir(path)
+    .map(|list|
+        iter(list)
         .filter(|entry| ready(entry.is_ok()))
         .map(|entry| entry.unwrap().path())
         .then(|path_buffer| async move {
