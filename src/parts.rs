@@ -1,6 +1,6 @@
 use std::io::Error;
-use tokio::io::{BufReader, AsyncBufReadExt, AsyncRead};
-use tokio::stream::StreamExt;
+use futures::io::{BufReader, AsyncRead, AsyncBufReadExt};
+use futures::StreamExt;
 
 pub async fn to_parts_async<T>(reader: BufReader<T>) -> Result<(Option<String>, Vec<Vec<String>>), Error>
 where T: AsyncRead + Unpin
@@ -11,7 +11,7 @@ where T: AsyncRead + Unpin
     let mut yaml: Option<String> = None;
     let mut yaml_start: bool = false;
 
-    let mut line_no = 0;
+    let mut line_no: u32 = 0;
     while let Some(line) = lines.next().await {
         line_no += 1;
         let line_result: String = line?;

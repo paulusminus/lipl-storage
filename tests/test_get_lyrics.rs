@@ -1,4 +1,4 @@
-use tokio::stream::StreamExt;
+use futures::StreamExt;
 use lipl_io::{get_lyrics};
 
 const DIR_NAME: &str = "./tests/fs/";

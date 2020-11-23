@@ -8,7 +8,6 @@ edition = "2018"
 
 [dependencies]
 futures = "0.3"
-tokio = { version = "0.3", features = ["fs", "stream", "io-util"] }
 bs58 = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"

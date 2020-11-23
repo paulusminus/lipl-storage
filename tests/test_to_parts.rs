@@ -1,19 +1,17 @@
 extern crate lipl_io;
 
-use tokio::io::BufReader;
-use tokio::fs::File;
+use futures::io::{AllowStdIo, BufReader};
+use std::fs::File;
 use lipl_io::to_parts_async;
 
 const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5";
 
-async fn get_data() -> BufReader<File> {
-    let file = File::open(FILE_NAME).await.unwrap();
-    BufReader::new(file)
-}
-
 #[tokio::test]
 async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
-    let result = to_parts_async(get_data().await).await?;
+    let file = File::open(FILE_NAME).unwrap();
+    let test = AllowStdIo::new(file);
+    let reader = BufReader::new(test);
+    let result = to_parts_async(reader).await?;
 
     assert_eq!(
         result.1,

@@ -1,7 +1,7 @@
-use tokio::fs::{read_dir, File};
-use futures::stream::{Stream, StreamExt};
+use std::fs::{read_dir, File};
+use futures::stream::{Stream, StreamExt, iter};
 use futures::future::ready;
-use tokio::io::BufReader;
+use futures::io::{AllowStdIo, BufReader};
 use std::path::PathBuf;
 use std::io::Error;
 use bs58::decode;
@@ -24,8 +24,9 @@ struct Frontmatter {
 }
 
 pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
-    let file = File::open(pb).await?;
-    let reader = BufReader::new(file);
+    let file = File::open(pb)?;
+    let test = AllowStdIo::new(file);
+    let reader = BufReader::new(test);
     let (yaml, parts) = to_parts_async(reader).await?;
 
     let parsed = yaml.and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok());
@@ -47,10 +48,8 @@ pub async fn get_file(pb: &PathBuf) -> Result<Lyric, Error> {
 }
 
 pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
-    read_dir(path)
-    .await
-    .map(|rd|
-        rd
+    Ok(
+        iter(read_dir(path)?)
         .filter(|entry| ready(entry.is_ok()))
         .map(|entry| entry.unwrap().path())
         .then(|path_buffer| async move {

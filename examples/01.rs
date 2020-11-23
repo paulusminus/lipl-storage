@@ -2,9 +2,8 @@ use std::collections::HashMap;
 use std::io::{Error as IOError, ErrorKind};
 use std::path::Path;
 use std::time::{Instant};
-
+use futures::StreamExt;
 use tokio::runtime::{Builder};
-use tokio::stream::StreamExt;
 
 use lipl_io::{get_lyrics};
 
@@ -50,7 +49,7 @@ fn main() -> Result<(), std::io::Error> {
                 lyric.id,
                 lyric.member_of.unwrap_or_default().join(", "),
             );
-            println!();
+            // println!();
         }
 
         hm.keys().for_each(|key| {
