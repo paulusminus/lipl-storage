@@ -1,11 +1,10 @@
-use std::collections::HashMap;
 use std::io::{Error as IOError, ErrorKind};
 use std::path::Path;
 use std::time::{Instant};
 use futures::StreamExt;
 use tokio::runtime::{Builder};
 
-use lipl_io::{get_lyrics};
+use lipl_io::{get_lyrics, get_playlists, Lyric, Playlist};
 
 fn get_path() -> Result<String, IOError> {
     let mut args = std::env::args();
@@ -30,28 +29,30 @@ fn main() -> Result<(), std::io::Error> {
         let start = Instant::now();
 
         let path = get_path()?;
-        let mut hm: HashMap<String, Vec<String>> = HashMap::new();
 
-        let lyrics = get_lyrics(&path).await.expect(&format!("No results for {}", &path));
-        tokio::pin!(lyrics);
-    
-        while let Some(lyric) = lyrics.next().await {
-            if let Some(playlists) = &lyric.member_of {
-                playlists.iter().for_each(|pl| {
-                    hm.entry(pl.clone()).or_insert(Vec::new()).push(lyric.id.clone());
-                });
-            };
+        let lyrics: Vec<Lyric> = get_lyrics(&path).await?.collect().await;
 
+        for lyric in lyrics {
             println!(
-                "Title: {}, {} parts, id = {}, member of: {}",
+                "Lyric: {}, {} parts, id = {}, member of: {}",
                 lyric.title.unwrap_or("<< onbekend >>".to_owned()),
                 lyric.parts.len(),
                 lyric.id,
                 lyric.member_of.unwrap_or_default().join(", "),
             );
-            // println!();
+        };
+
+        let playlists: Vec<Playlist> = get_playlists(&path).await?.collect().await;
+
+        for playlist in playlists {
+            println!();
+            println!("Playlist: {}", playlist.title);
+            for member in playlist.members {
+                println!("  - {}", member);
+            }
         }
 
+        /*
         hm.keys().for_each(|key| {
             println!("title: {}", key);
             println!("members:");
@@ -60,6 +61,7 @@ fn main() -> Result<(), std::io::Error> {
             });
             println!();
         });
+        */
     
         println!("Elapsed: {:?} ms", start.elapsed());
         Ok(())
