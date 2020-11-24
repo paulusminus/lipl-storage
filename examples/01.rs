@@ -1,10 +1,13 @@
+use std::collections::HashMap;
 use std::io::{Error as IOError, ErrorKind};
 use std::path::Path;
 use std::time::{Instant};
-use futures::StreamExt;
+use futures::{Stream, StreamExt};
+use uuid::Uuid;
 use tokio::runtime::{Builder};
 
-use lipl_io::{get_lyrics, get_playlists, Lyric, Playlist, UuidExt};
+use lipl_io::{get_lyrics, get_playlists, UuidExt};
+use lipl_io::HasId;
 
 fn get_path() -> Result<String, IOError> {
     let mut args = std::env::args();
@@ -21,6 +24,15 @@ fn get_path() -> Result<String, IOError> {
     Ok(path)
 }
 
+async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T> {
+    s
+    .collect::<Vec<T>>()
+    .await
+    .into_iter()
+    .map(|e| (e.id(), e))
+    .collect()
+}
+
 fn main() -> Result<(), std::io::Error> {
 
     let rt = Builder::new_current_thread().enable_all().build().unwrap();
@@ -30,24 +42,24 @@ fn main() -> Result<(), std::io::Error> {
 
         let path = get_path()?;
 
-        let lyrics: Vec<Lyric> = get_lyrics(&path).await?.collect().await;
+        let lyrics = create_hashmap(get_lyrics(&path).await?).await;
 
-        for lyric in lyrics.iter() {
+        for (uuid, lyric) in lyrics.iter() {
             println!(
                 "Lyric: {}, {} parts, id = {}",
                 lyric.title.as_ref().unwrap_or(&"<< onbekend >>".to_owned()),
                 lyric.parts.len(),
-                lyric.id.to_base58(),
+                uuid.to_base58(),
             );
         };
 
-        let playlists: Vec<Playlist> = get_playlists(&path).await?.collect().await;
+        let playlists = create_hashmap(get_playlists(&path).await?).await;
 
-        for playlist in playlists {
+        for (_uuid, playlist) in playlists {
             println!();
             println!("Playlist: {}", playlist.title);
             for member in playlist.members {
-                println!("  - {}, {:?}", member.to_base58(), lyrics.iter().filter(|l| l.id == member).collect::<Vec<&Lyric>>()[0].title);
+                println!("  - {}, {:?}", member.to_base58(), lyrics[&member].title);
             }
         }
     

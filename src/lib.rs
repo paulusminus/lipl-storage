@@ -34,6 +34,22 @@ pub struct Playlist {
     pub members: Vec<Uuid>
 }
 
+pub trait HasId {
+    fn id(&self) -> Uuid;
+}
+
+impl HasId for Lyric {
+    fn id(&self) -> Uuid {
+        self.id
+    }
+}
+
+impl HasId for Playlist {
+    fn id(&self) -> Uuid {
+        self.id
+    }
+}
+
 impl From<(Uuid, DiskPlaylist)> for Playlist {
     fn from(data: (Uuid, DiskPlaylist)) -> Playlist {
         Playlist {
