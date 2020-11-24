@@ -7,65 +7,16 @@ use std::path::{PathBuf};
 use futures::future::ready;
 use futures::io::{AllowStdIo, BufReader};
 use futures::stream::{Stream, StreamExt, iter};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+mod model;
 mod parts;
 mod pathbuf_ext;
 mod uuid_ext;
 pub use parts::to_parts_async;
-use pathbuf_ext::PathBufExt;
-pub use uuid_ext::UuidExt;
-
-pub struct Lyric {
-    pub id: Uuid,
-    pub title: Option<String>,
-    pub parts: Vec<Vec<String>>,
-}
-
-#[derive(Debug, PartialEq, Deserialize, Serialize)]
-pub struct DiskPlaylist {
-    pub title: String,
-    pub members: Vec<String>
-}
-
-pub struct Playlist {
-    pub id: Uuid,
-    pub title: String,
-    pub members: Vec<Uuid>
-}
-
-pub trait HasId {
-    fn id(&self) -> Uuid;
-}
-
-impl HasId for Lyric {
-    fn id(&self) -> Uuid {
-        self.id
-    }
-}
-
-impl HasId for Playlist {
-    fn id(&self) -> Uuid {
-        self.id
-    }
-}
-
-impl From<(Uuid, DiskPlaylist)> for Playlist {
-    fn from(data: (Uuid, DiskPlaylist)) -> Playlist {
-        Playlist {
-            id: data.0,
-            title: data.1.title,
-            members: data.1.members.iter().map(|m| PathBuf::from(m).to_uuid())
-            .collect()
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Deserialize, Serialize)]
-struct Frontmatter {
-    title: Option<String>,
-}
+use crate::pathbuf_ext::PathBufExt;
+pub use crate::uuid_ext::UuidExt;
+pub use crate::model::{DiskPlaylist, Frontmatter, HasId, Lyric, Playlist};
 
 pub async fn get_lyric(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb)?;
