@@ -1,13 +1,9 @@
-use std::collections::HashMap;
 use std::io::{Error as IOError, ErrorKind};
 use std::path::Path;
 use std::time::{Instant};
-use futures::{Stream, StreamExt};
-use uuid::Uuid;
 use tokio::runtime::{Builder};
 
-use lipl_io::{get_lyrics, get_playlists, UuidExt};
-use lipl_io::HasId;
+use lipl_io::{create_hashmap, get_lyrics, get_playlists, UuidExt};
 
 fn get_path() -> Result<String, IOError> {
     let mut args = std::env::args();
@@ -24,14 +20,6 @@ fn get_path() -> Result<String, IOError> {
     Ok(path)
 }
 
-async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T> {
-    s
-    .collect::<Vec<T>>()
-    .await
-    .into_iter()
-    .map(|e| (e.id(), e))
-    .collect()
-}
 
 fn main() -> Result<(), std::io::Error> {
 
@@ -55,11 +43,11 @@ fn main() -> Result<(), std::io::Error> {
 
         let playlists = create_hashmap(get_playlists(&path).await?).await;
 
-        for (_uuid, playlist) in playlists {
+        for (uuid, playlist) in playlists {
             println!();
-            println!("Playlist: {}", playlist.title);
+            println!("Playlist: {}, id = {}", playlist.title, uuid.to_base58());
             for member in playlist.members {
-                println!("  - {}, {:?}", member.to_base58(), lyrics[&member].title);
+                println!("  - {}", member.to_base58());
             }
         }
     

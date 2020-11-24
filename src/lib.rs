@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::{OsStr};
 use std::fs::{read_dir, read_to_string, File};
 use std::io::{Error};
@@ -116,4 +117,13 @@ pub async fn get_playlists(path: &str) -> Result<impl Stream<Item=Playlist>, Err
         .filter_map(|path_buffer| ready(get_playlist(&path_buffer)))
         .map(Playlist::from)
     )
+}
+
+pub async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T> {
+    s
+    .collect::<Vec<T>>()
+    .await
+    .into_iter()
+    .map(|e| (e.id(), e))
+    .collect()
 }
