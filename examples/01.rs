@@ -51,17 +51,6 @@ fn main() -> Result<(), std::io::Error> {
                 println!("  - {}", member);
             }
         }
-
-        /*
-        hm.keys().for_each(|key| {
-            println!("title: {}", key);
-            println!("members:");
-            hm[key].iter().for_each(|value| {
-                println!("  - {}", value);
-            });
-            println!();
-        });
-        */
     
         println!("Elapsed: {:?} ms", start.elapsed());
         Ok(())
