@@ -61,7 +61,7 @@ fn main() -> Result<(), std::io::Error> {
             println!();
         });
     
-        println!("Elapsed: {} ms", start.elapsed().as_millis());
+        println!("Elapsed: {:?} ms", start.elapsed());
         Ok(())
     })
 }

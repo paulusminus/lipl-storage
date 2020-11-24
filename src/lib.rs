@@ -1,9 +1,11 @@
+use std::ffi::{OsStr};
 use std::fs::{read_dir, File};
-use futures::stream::{Stream, StreamExt, iter};
+use std::io::{Error};
+use std::path::{PathBuf};
+
 use futures::future::ready;
 use futures::io::{AllowStdIo, BufReader};
-use std::path::PathBuf;
-use std::io::Error;
+use futures::stream::{Stream, StreamExt, iter};
 use bs58::decode;
 use serde::{Deserialize, Serialize};
 
@@ -53,6 +55,7 @@ pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
         iter(list)
         .filter(|entry| ready(entry.is_ok()))
         .map(|entry| entry.unwrap().path())
+        .filter(|path_buffer| ready(path_buffer.extension() == Some(OsStr::new("txt"))))
         .then(|path_buffer| async move {
             get_file(&path_buffer).await
         })
