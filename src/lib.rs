@@ -74,12 +74,16 @@ pub fn get_playlist(pb: &PathBuf) -> Option<(Uuid, DiskPlaylist)> {
     .map(|d| (pb.to_uuid(), d))
 }
 
+fn get_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Stream<Item=PathBuf> {
+    iter(rd)
+    .filter_map(|entry| ready(entry.map(|e| e.path()).ok()))
+    .filter(move |path_buffer| ready(path_buffer.extension() == Some(OsStr::new(filter))))    
+}
+
 pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
     read_dir(path)
     .map(|list|
-        iter(list)
-        .filter_map(|entry| ready(entry.map(|e| e.path()).ok()))
-        .filter(|path_buffer| ready(path_buffer.extension() == Some(OsStr::new("txt"))))
+        get_files(list, "txt")
         .then(|path_buffer| async move {
             get_lyric(&path_buffer).await
         })
@@ -90,9 +94,7 @@ pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
 pub async fn get_playlists(path: &str) -> Result<impl Stream<Item=Playlist>, Error> {
     read_dir(path)
     .map(|list|
-        iter(list)
-        .filter_map(|entry| ready(entry.map(|e| e.path()).ok()))
-        .filter(|path_buffer| ready(path_buffer.extension() == Some(OsStr::new("yaml"))))
+        get_files(list, "yaml")
         .filter_map(|path_buffer| ready(get_playlist(&path_buffer)))
         .map(Playlist::from)
     )
