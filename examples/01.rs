@@ -32,13 +32,12 @@ fn main() -> Result<(), std::io::Error> {
 
         let lyrics: Vec<Lyric> = get_lyrics(&path).await?.collect().await;
 
-        for lyric in lyrics {
+        for lyric in lyrics.iter() {
             println!(
-                "Lyric: {}, {} parts, id = {}, member of: {}",
-                lyric.title.unwrap_or("<< onbekend >>".to_owned()),
+                "Lyric: {}, {} parts, id = {}",
+                lyric.title.as_ref().unwrap_or(&"<< onbekend >>".to_owned()),
                 lyric.parts.len(),
                 lyric.id,
-                lyric.member_of.unwrap_or_default().join(", "),
             );
         };
 
@@ -48,7 +47,7 @@ fn main() -> Result<(), std::io::Error> {
             println!();
             println!("Playlist: {}", playlist.title);
             for member in playlist.members {
-                println!("  - {}", member);
+                println!("  - {}, {:?}", member, lyrics.iter().filter(|l| l.id == member).collect::<Vec<&Lyric>>()[0].title);
             }
         }
     
