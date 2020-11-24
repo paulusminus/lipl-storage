@@ -4,7 +4,7 @@ use std::time::{Instant};
 use futures::StreamExt;
 use tokio::runtime::{Builder};
 
-use lipl_io::{get_lyrics, get_playlists, Lyric, Playlist};
+use lipl_io::{get_lyrics, get_playlists, Lyric, Playlist, UuidExt};
 
 fn get_path() -> Result<String, IOError> {
     let mut args = std::env::args();
@@ -37,7 +37,7 @@ fn main() -> Result<(), std::io::Error> {
                 "Lyric: {}, {} parts, id = {}",
                 lyric.title.as_ref().unwrap_or(&"<< onbekend >>".to_owned()),
                 lyric.parts.len(),
-                lyric.id,
+                lyric.id.to_base58(),
             );
         };
 
@@ -47,7 +47,7 @@ fn main() -> Result<(), std::io::Error> {
             println!();
             println!("Playlist: {}", playlist.title);
             for member in playlist.members {
-                println!("  - {}, {:?}", member, lyrics.iter().filter(|l| l.id == member).collect::<Vec<&Lyric>>()[0].title);
+                println!("  - {}, {:?}", member.to_base58(), lyrics.iter().filter(|l| l.id == member).collect::<Vec<&Lyric>>()[0].title);
             }
         }
     

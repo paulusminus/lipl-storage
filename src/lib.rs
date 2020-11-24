@@ -11,8 +11,10 @@ use uuid::Uuid;
 
 mod parts;
 mod pathbuf_ext;
+mod uuid_ext;
 pub use parts::to_parts_async;
 use pathbuf_ext::PathBufExt;
+pub use uuid_ext::UuidExt;
 
 pub struct Lyric {
     pub id: Uuid,
