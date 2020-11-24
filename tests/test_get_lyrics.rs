@@ -8,6 +8,7 @@ async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
     let stream = get_lyrics(DIR_NAME).await?;
 
     tokio::pin!(stream);
+    let song2 = stream.next().await.unwrap();
     let song1 = stream.next().await.unwrap();
 
     assert_eq!(
@@ -30,19 +31,13 @@ async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     assert_eq!(
-        Some(vec!["Kerst".to_owned(), "Kinderliedjes".to_owned()]),
-        song1.member_of,
-    );
-
-    assert_eq!(
-        song1.id,
+        song1.id.to_string(),
         "0ba4ef4d-0ce3-41d0-ac81-605ad1ae9358".to_owned(),
     );
 
-    let song2 = stream.next().await.unwrap();
-
+    
     assert_eq!(
-        song2.id,
+        song2.id.to_string(),
         "388b39a0-9acc-4cf0-98cb-a3d2035ecc3a".to_owned(),
     );
 

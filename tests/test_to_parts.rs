@@ -4,7 +4,7 @@ use futures::io::{AllowStdIo, BufReader};
 use std::fs::File;
 use lipl_io::to_parts_async;
 
-const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5";
+const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5.txt";
 
 #[tokio::test]
 async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,7 +29,7 @@ async fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         result.0,
-        Some("title: Whatever  \nmember_of:\n  - Kerst\n  - Kinderliedjes\n".to_owned()),
+        Some("title: Whatever\n".to_owned()),
     );
 
     Ok(())

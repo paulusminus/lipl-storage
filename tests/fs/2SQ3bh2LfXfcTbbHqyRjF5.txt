@@ -1,8 +1,5 @@
 ---
-title: Whatever  
-member_of:
-  - Kerst
-  - Kinderliedjes
+title: Whatever
 ---
 
 Hallo allemaal
