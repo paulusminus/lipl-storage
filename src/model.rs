@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::fmt;
 use std::path::{PathBuf};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -12,8 +11,8 @@ pub struct Lyric {
     pub parts: Vec<Vec<String>>,
 }
 
-impl Display for Lyric {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+impl fmt::Display for Lyric {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "Lyric: {}, {} parts, id = {}",
@@ -36,8 +35,8 @@ pub struct Playlist {
     pub members: Vec<Uuid>
 }
 
-impl Display for Playlist {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+impl fmt::Display for Playlist {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "Playlist: {}, id = {}\n{}",
@@ -73,11 +72,6 @@ impl From<(Uuid, DiskPlaylist)> for Playlist {
             .collect()
         }
     }
-}
-
-pub struct Db {
-    pub lyrics: HashMap<Uuid, Lyric>,
-    pub playlists: HashMap<Uuid, Playlist>,
 }
 
 #[derive(Debug, Default, PartialEq, Deserialize, Serialize)]

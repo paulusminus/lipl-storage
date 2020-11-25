@@ -16,10 +16,12 @@ mod pathbuf_ext;
 mod uuid_ext;
 use pathbuf_ext::PathBufExt;
 use uuid_ext::UuidExt;
-use model::{Db, DiskPlaylist, Frontmatter, HasId, Playlist};
+use model::{DiskPlaylist, Frontmatter, HasId, Playlist};
 pub use crate::args::{get_path};
 pub use crate::model::Lyric;
 pub use crate::parts::to_parts_async;
+
+pub type Db<T> = HashMap<Uuid, T>;
 
 pub async fn get_lyric(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb)?;
@@ -50,6 +52,7 @@ pub fn get_playlist(pb: &PathBuf) -> Option<(Uuid, DiskPlaylist)> {
 fn get_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Stream<Item=PathBuf> {
     iter(rd)
     .filter_map(|entry| ready(entry.map(|e| e.path()).ok()))
+    .filter(|entry| ready(entry.is_file()))
     .filter(move |path_buffer| ready(path_buffer.extension() == Some(OsStr::new(filter))))    
 }
 
@@ -82,11 +85,11 @@ pub async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T
     .collect()
 }
 
-pub async fn create_db(path: &String) -> Result<Db, Error> {
+pub async fn create_db(path: &String) -> Result<(Db<Lyric>, Db<Playlist>), Error> {
     Ok(
-        Db {
-            lyrics: create_hashmap(get_lyrics(path).await?).await,
-            playlists: create_hashmap(get_playlists(path).await?).await,
-        }
+        (
+            create_hashmap(get_lyrics(path).await?).await,
+            create_hashmap(get_playlists(path).await?).await,
+        )
     )
 }

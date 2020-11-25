@@ -9,13 +9,13 @@ fn main() -> Result<(), std::io::Error> {
 
     let result = rt.block_on(async {
         let path = get_path()?;
-        let db = create_db(&path).await?;
+        let (lyrics, playlists) = create_db(&path).await?;
 
-        for lyric in db.lyrics.values() {
+        for lyric in lyrics.values() {
             println!("{}", lyric);
         };
 
-        for playlist in db.playlists.values() {
+        for playlist in playlists.values() {
             println!();
             println!("{}", playlist);
         }
