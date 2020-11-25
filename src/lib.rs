@@ -1,9 +1,10 @@
-use std::collections::HashMap;
+// use std::collections::HashMap;
 use std::ffi::{OsStr};
 use std::fs::{read_dir, read_to_string, File};
 use std::io::{Error};
 use std::path::{PathBuf};
 
+use dashmap::DashMap;
 use futures::future::ready;
 use futures::io::{AllowStdIo, BufReader};
 use futures::stream::{Stream, StreamExt, iter};
@@ -21,7 +22,7 @@ pub use crate::args::{get_path};
 pub use crate::model::Lyric;
 pub use crate::parts::to_parts_async;
 
-pub type Db<T> = HashMap<Uuid, T>;
+pub type Db<T> = DashMap<Uuid, T>;
 
 pub async fn get_lyric(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb)?;
@@ -76,7 +77,7 @@ pub async fn get_playlists(path: &str) -> Result<impl Stream<Item=Playlist>, Err
     )
 }
 
-pub async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T> {
+pub async fn create_dashmap<T: HasId>(s: impl Stream<Item=T>) -> DashMap<Uuid, T> {
     s
     .collect::<Vec<T>>()
     .await
@@ -88,8 +89,8 @@ pub async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T
 pub async fn create_db(path: &String) -> Result<(Db<Lyric>, Db<Playlist>), Error> {
     Ok(
         (
-            create_hashmap(get_lyrics(path).await?).await,
-            create_hashmap(get_playlists(path).await?).await,
+            create_dashmap(get_lyrics(path).await?).await,
+            create_dashmap(get_playlists(path).await?).await,
         )
     )
 }
