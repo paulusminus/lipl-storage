@@ -9,23 +9,26 @@ use futures::io::{AllowStdIo, BufReader};
 use futures::stream::{Stream, StreamExt, iter};
 use uuid::Uuid;
 
+mod args;
 mod model;
 mod parts;
 mod pathbuf_ext;
 mod uuid_ext;
-pub use parts::to_parts_async;
-use crate::pathbuf_ext::PathBufExt;
-pub use crate::uuid_ext::UuidExt;
-pub use crate::model::{DiskPlaylist, Frontmatter, HasId, Lyric, Playlist};
+use pathbuf_ext::PathBufExt;
+use uuid_ext::UuidExt;
+use model::{Db, DiskPlaylist, Frontmatter, HasId, Playlist};
+pub use crate::args::{get_path};
+pub use crate::model::Lyric;
+pub use crate::parts::to_parts_async;
 
 pub async fn get_lyric(pb: &PathBuf) -> Result<Lyric, Error> {
     let file = File::open(pb)?;
-    let test = AllowStdIo::new(file);
-    let reader = BufReader::new(test);
-    let (yaml, parts) = to_parts_async(reader).await?;
+    let reader = AllowStdIo::new(file);
+    let async_reader = BufReader::new(reader);
+    let (yaml, parts) = to_parts_async(async_reader).await?;
 
     let parsed = yaml.and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok());
-    let frontmatter = parsed.unwrap_or(Frontmatter { title: None });
+    let frontmatter = parsed.unwrap_or_default();
     let id = pb.to_uuid();
 
     Ok(
@@ -77,4 +80,13 @@ pub async fn create_hashmap<T: HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid, T
     .into_iter()
     .map(|e| (e.id(), e))
     .collect()
+}
+
+pub async fn create_db(path: &String) -> Result<Db, Error> {
+    Ok(
+        Db {
+            lyrics: create_hashmap(get_lyrics(path).await?).await,
+            playlists: create_hashmap(get_playlists(path).await?).await,
+        }
+    )
 }
