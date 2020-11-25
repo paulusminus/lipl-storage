@@ -1,34 +1,28 @@
+use std::sync::RwLock;
+use std::path::PathBuf;
 use warp::{Reply, Rejection};
-use super::model::{Store, Lyric};
+use lipl_io::{Db, Lyric, PathBufExt, Summary, Uuid};
+use std::sync::Arc;
 
-fn lyric_id_from_path(path: String) -> i32 {
-    path.parse::<i32>()
-    .unwrap_or_default()
-}
-
-pub async fn get_lyric_list(store: Store) -> Result<impl Reply, Rejection> {
+pub async fn get_lyric_list(db: Arc<RwLock<Db<Lyric>>>) -> Result<impl Reply, Rejection> {
+    let read = db.read().unwrap();
+    let result = read.values().map(|l| l.to_summary()).collect::<Vec<Summary>>();
     Ok(
         warp::reply::json(
-            &store.get_summaries()
+            &result
         )
     )
 }
 
-pub async fn get_lyric(path: String, store: Store) -> Result<impl Reply, Rejection> {
-    store
-    .get_lyric(
-        lyric_id_from_path(path)
-    )
+pub async fn get_lyric(path: String, db: Arc<RwLock<Db<Lyric>>>) -> Result<impl Reply, Rejection> {
+    let read = db.read().unwrap();
+    read.get(&PathBuf::from(&path).to_uuid())
     .map_or_else(
         |     | Err(warp::reject::not_found()),
-        |lyric| Ok(warp::reply::json(&lyric)),
+        |lyric| Ok(warp::reply::json(&*lyric)),
     )
 }
 
-pub async fn post_lyric(lyric: Lyric, store: Store) -> Result<impl Reply, Rejection> {
-    store.add_lyric(lyric.parts, lyric.title)
-    .map_or_else(
-        |     | Err(warp::reject::reject()),
-        |lyric| Ok(warp::reply::json(&lyric)),
-    )
+pub async fn post_lyric(lyric: Lyric, db: Arc<RwLock<Db<Lyric>>>) -> Result<impl Reply, Rejection> {
+    Ok(warp::reply::json(&Vec::<String>::from([])))
 }
