@@ -27,7 +27,7 @@ fn main() -> Result<(), std::io::Error> {
 
         let (lyrics, playlists) = create_db(&path).await?;
 
-        for lyric in lyrics.into_read_only().values() {
+        for lyric in lyrics.values() {
             let filename = format!("{}.txt", lyric.id.to_base58());
             let title_content = lyric.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
             let content = format!("{}{}", title_content, parts_to_string(&lyric.parts));
@@ -36,7 +36,7 @@ fn main() -> Result<(), std::io::Error> {
             zip.write_all(bytes)?;
         };
 
-        for playlist in playlists.into_read_only().values() {
+        for playlist in playlists.values() {
             let filename = format!("{}.yaml", playlist.id.to_base58());
             let disk_playlist = lipl_io::DiskPlaylist::from((playlist.title.clone(), playlist.members.clone()));
             let content = serde_yaml::to_string(&disk_playlist).unwrap();

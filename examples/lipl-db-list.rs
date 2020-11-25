@@ -11,11 +11,11 @@ fn main() -> Result<(), std::io::Error> {
         let path = get_path()?;
         let (lyrics, playlists) = create_db(&path).await?;
 
-        for lyric in lyrics.into_read_only().values() {
+        for lyric in lyrics.values() {
             println!("{}", lyric);
         };
 
-        for playlist in playlists.into_read_only().values() {
+        for playlist in playlists.values() {
             println!();
             println!("{}", playlist);
         }

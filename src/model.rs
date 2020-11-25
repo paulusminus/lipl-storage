@@ -5,10 +5,30 @@ use uuid::Uuid;
 use crate::PathBufExt;
 use crate::UuidExt;
 
+mod serde_uuid;
+
+#[derive(Deserialize, Serialize)]
 pub struct Lyric {
+    #[serde(with = "serde_uuid")]
     pub id: Uuid,
     pub title: Option<String>,
     pub parts: Vec<Vec<String>>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Summary {
+    #[serde(with = "serde_uuid")]
+    pub id: Uuid,
+    pub title: Option<String>,
+}
+
+impl Lyric {
+    pub fn to_summary(&self) -> Summary {
+        Summary {
+            id: self.id.clone(),
+            title: self.title.clone(),
+        }
+    }
 }
 
 impl fmt::Display for Lyric {

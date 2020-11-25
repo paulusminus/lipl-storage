@@ -1,10 +1,15 @@
 use std::fs::File;
-use std::io::Read;
+use std::path::PathBuf;
 use std::time::{Instant};
 use tokio::runtime::{Builder};
+use uuid::Uuid;
 use zip::read::ZipArchive;
 
-use lipl_io::{create_db, get_path, UuidExt, PathBufExt};
+use lipl_io::{PathBufExt};
+
+fn to_uuid(s: &str) -> Uuid {
+    PathBuf::from(s).to_uuid()
+}
 
 fn main() -> Result<(), std::io::Error> {
     let start = Instant::now();
@@ -18,11 +23,11 @@ fn main() -> Result<(), std::io::Error> {
             let file = zip.by_index(i)?;
             if file.is_file() {
                 if file.name().ends_with(".txt") {
-                    println!("Lyric: {}", file.sanitized_name().to_uuid());
+                    println!("Lyric: {}", to_uuid(file.name()));
 
                 }
                 if file.name().ends_with(".yaml") {
-                    println!("Playlist: {}", file.sanitized_name().to_uuid());
+                    println!("Playlist: {}", to_uuid(file.name()));
                 }
             }
         };
