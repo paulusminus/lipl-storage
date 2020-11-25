@@ -23,6 +23,7 @@ fn main() -> Result<(), std::io::Error> {
         let file = File::create("./out/lipl.zip")?;
         let zip = &mut zip::ZipWriter::new(file);
         let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        zip.set_comment("Lipl Database");
 
         let (lyrics, playlists) = create_db(&path).await?;
 

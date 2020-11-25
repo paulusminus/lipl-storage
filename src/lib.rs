@@ -50,7 +50,7 @@ pub fn get_playlist(pb: &PathBuf) -> Option<(Uuid, DiskPlaylist)> {
     .map(|d| (pb.to_uuid(), d))
 }
 
-fn get_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Stream<Item=PathBuf> {
+fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Stream<Item=PathBuf> {
     iter(rd)
     .filter_map(|entry| ready(entry.map(|e| e.path()).ok()))
     .filter(|entry| ready(entry.is_file()))
@@ -60,7 +60,7 @@ fn get_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Stream<Item=Pat
 pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
     read_dir(path)
     .map(|list|
-        get_files(list, "txt")
+        get_fs_files(list, "txt")
         .then(|path_buffer| async move {
             get_lyric(&path_buffer).await
         })
@@ -71,7 +71,7 @@ pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
 pub async fn get_playlists(path: &str) -> Result<impl Stream<Item=Playlist>, Error> {
     read_dir(path)
     .map(|list|
-        get_files(list, "yaml")
+        get_fs_files(list, "yaml")
         .filter_map(|path_buffer| ready(get_playlist(&path_buffer)))
         .map(Playlist::from)
     )
