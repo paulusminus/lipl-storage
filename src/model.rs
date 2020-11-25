@@ -29,6 +29,15 @@ pub struct DiskPlaylist {
     pub members: Vec<String>
 }
 
+impl From<(String, Vec<Uuid>)> for DiskPlaylist {
+    fn from(s: (String, Vec<Uuid>)) -> DiskPlaylist {
+        DiskPlaylist {
+            title: s.0,
+            members: s.1.iter().map(|uuid| uuid.to_base58()).collect()
+        }
+    }
+}
+
 pub struct Playlist {
     pub id: Uuid,
     pub title: String,

@@ -11,11 +11,11 @@ fn main() -> Result<(), std::io::Error> {
         let path = get_path()?;
         let (lyrics, playlists) = create_db(&path).await?;
 
-        for (_, lyric) in lyrics.into_read_only().iter() {
+        for lyric in lyrics.into_read_only().values() {
             println!("{}", lyric);
         };
 
-        for (_, playlist) in playlists.into_read_only().iter() {
+        for playlist in playlists.into_read_only().values() {
             println!();
             println!("{}", playlist);
         }
@@ -23,6 +23,6 @@ fn main() -> Result<(), std::io::Error> {
         Ok(())
     });
 
-    println!("Elapsed: {:?} ms", start.elapsed());
+    println!("Elapsed: {:?}", start.elapsed());
     result
 }

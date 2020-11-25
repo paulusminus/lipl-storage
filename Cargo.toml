@@ -16,3 +16,4 @@ dashmap = "3.11"
 
 [dev-dependencies]
 tokio = { version = "0.3", features = ["macros", "rt"] }
+zip = "0.5"

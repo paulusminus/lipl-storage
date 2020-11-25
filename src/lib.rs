@@ -15,11 +15,11 @@ mod model;
 mod parts;
 mod pathbuf_ext;
 mod uuid_ext;
-use pathbuf_ext::PathBufExt;
-use uuid_ext::UuidExt;
-use model::{DiskPlaylist, Frontmatter, HasId, Playlist};
+pub use pathbuf_ext::PathBufExt;
+pub use uuid_ext::UuidExt;
+use model::{Frontmatter, HasId, Playlist};
 pub use crate::args::{get_path};
-pub use crate::model::Lyric;
+pub use crate::model::{DiskPlaylist, Lyric};
 pub use crate::parts::to_parts_async;
 
 pub type Db<T> = DashMap<Uuid, T>;
