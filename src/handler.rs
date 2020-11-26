@@ -37,6 +37,7 @@ where T: Serialize + Clone {
     )
 }
 
+// TODO: check input validating members
 pub async fn post<T, U>(json: U, db: Db<T>) -> Result<impl Reply, Rejection> 
 where T: From<U> + Clone + Serialize + HasId {
     let t: T = json.into();
@@ -63,6 +64,7 @@ pub async fn delete<T>(path: String, db: Db<T>) -> Result<impl Reply, Rejection>
     )
 }
 
+// TODO: check input validating members
 pub async fn put<T, U>(path: String, json: U, db: Db<T>) -> Result<impl Reply, Rejection> 
 where T: From<U> {
     let db_result = {
