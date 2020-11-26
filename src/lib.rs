@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::{OsStr};
-use std::fs::{read_dir, read_to_string, File};
+use std::fs::{read_dir, File};
 use std::io::{Error};
 use std::path::{PathBuf};
 
@@ -23,15 +23,20 @@ pub use parts::to_parts_async;
 
 pub type Db<T> = HashMap<Uuid, T>;
 
-pub async fn get_lyric(pb: &PathBuf) -> Result<Lyric, Error> {
-    let file = File::open(pb)?;
+pub enum Entity {
+    Lyric(Lyric),
+    Playlist(Playlist),
+}
+
+pub async fn get_lyric(file: impl std::io::Read, id: Uuid) -> Result<Lyric, Error> {
+    // let file = File::open(pb)?;
     let reader = AllowStdIo::new(file);
     let async_reader = BufReader::new(reader);
     let (yaml, parts) = to_parts_async(async_reader).await?;
 
     let parsed = yaml.and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok());
     let frontmatter = parsed.unwrap_or_default();
-    let id = pb.to_uuid();
+    // let id = pb.to_uuid();
 
     Ok(
         Lyric {
@@ -42,11 +47,10 @@ pub async fn get_lyric(pb: &PathBuf) -> Result<Lyric, Error> {
     )
 }
 
-pub fn get_playlist(pb: &PathBuf) -> Option<(Uuid, DiskPlaylist)> {
-    read_to_string(pb)
+pub fn get_playlist<T: std::io::Read>(reader: Result<T, std::io::Error>) -> Option<DiskPlaylist> {
+    reader
     .ok()
-    .and_then(|s| serde_yaml::from_str::<DiskPlaylist>(&s).ok())
-    .map(|d| (pb.to_uuid(), d))
+    .and_then(|r| serde_yaml::from_reader::<T, DiskPlaylist>(r).ok())
 }
 
 fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator<Item=PathBuf> {
@@ -61,7 +65,7 @@ pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=Lyric>, Error> {
     .map(|list|
         iter(get_fs_files(list, "txt"))
         .then(|path_buffer| async move {
-            get_lyric(&path_buffer).await
+            get_lyric(File::open(&path_buffer)?, path_buffer.to_uuid()).await
         })
         .filter_map(|lyric_file| ready(lyric_file.ok()))
     )
@@ -71,7 +75,14 @@ pub async fn get_playlists(path: &str) -> Result<impl Stream<Item=Playlist>, Err
     read_dir(path)
     .map(|list|
         iter(get_fs_files(list, "yaml"))
-        .filter_map(|path_buffer| ready(get_playlist(&path_buffer)))
+        .filter_map(
+            |path_buffer| ready(
+                get_playlist(
+                    File::open(&path_buffer)
+                )
+                .map(|p| (path_buffer.to_uuid(), p))
+            )
+        )
         .map(Playlist::from)
     )
 }
