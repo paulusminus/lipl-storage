@@ -18,7 +18,7 @@ pub use pathbuf_ext::PathBufExt;
 pub use uuid_ext::UuidExt;
 use model::{Frontmatter, HasId, Playlist};
 pub use args::{get_path};
-pub use model::{DiskPlaylist, Lyric, Summary};
+pub use model::{DiskPlaylist, Lyric, LyricPost, Summary};
 pub use parts::to_parts_async;
 
 pub type Db<T> = HashMap<Uuid, T>;

@@ -6,14 +6,32 @@ use crate::PathBufExt;
 use crate::UuidExt;
 
 mod serde_uuid;
+mod serde_vec_uuid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Lyric {
     #[serde(with = "serde_uuid")]
     pub id: Uuid,
     pub title: Option<String>,
     pub parts: Vec<Vec<String>>,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct LyricPost {
+    pub title: Option<String>,
+    pub parts: Vec<Vec<String>>,
+}
+
+impl From<LyricPost> for Lyric {
+    fn from(lp: LyricPost) -> Lyric {
+        Lyric {
+            id: Uuid::new_v4(),
+            title: lp.title,
+            parts: lp.parts,
+        }
+    }
+}
+
 
 #[derive(Deserialize, Serialize)]
 pub struct Summary {
@@ -25,7 +43,7 @@ pub struct Summary {
 impl Lyric {
     pub fn to_summary(&self) -> Summary {
         Summary {
-            id: self.id.clone(),
+            id: self.id,
             title: self.title.clone(),
         }
     }
@@ -58,9 +76,12 @@ impl From<(String, Vec<Uuid>)> for DiskPlaylist {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Playlist {
+    #[serde(with = "serde_uuid")]
     pub id: Uuid,
     pub title: String,
+    #[serde(with = "serde_vec_uuid")]
     pub members: Vec<Uuid>
 }
 
