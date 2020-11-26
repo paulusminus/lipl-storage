@@ -29,14 +29,14 @@ pub enum Entity {
 }
 
 pub async fn get_lyric(file: impl std::io::Read, id: Uuid) -> Result<Lyric, Error> {
-    // let file = File::open(pb)?;
     let reader = AllowStdIo::new(file);
     let async_reader = BufReader::new(reader);
     let (yaml, parts) = to_parts_async(async_reader).await?;
 
-    let parsed = yaml.and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok());
-    let frontmatter = parsed.unwrap_or_default();
-    // let id = pb.to_uuid();
+    let frontmatter = 
+        yaml
+        .and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok())
+        .unwrap_or_default();
 
     Ok(
         Lyric {
