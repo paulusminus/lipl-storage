@@ -1,9 +1,11 @@
 use std::sync::{Arc, RwLock};
 use warp::{Filter};
+use lipl_io::{LyricPost, PlaylistPost};
 
 // mod model;
-mod lyric_handler;
-mod playlist_handler;
+mod handler;
+// mod lyric_handler;
+// mod playlist_handler;
 mod param;
 
 #[tokio::main]
@@ -22,7 +24,7 @@ async fn main() -> tokio::io::Result<()> {
         .and(warp::path("lyric"))
         .and(warp::path::end())
         .and(lyric_db_filter.clone())
-        .and_then(lyric_handler::get_lyric_list);
+        .and_then(handler::list);
 
     let get_lyric = 
         warp::get()
@@ -30,16 +32,16 @@ async fn main() -> tokio::io::Result<()> {
         .and(warp::path("lyric"))
         .and(warp::path::param())
         .and(lyric_db_filter.clone())
-        .and_then(lyric_handler::get_lyric);
+        .and_then(handler::item);
 
     let post_lyric = 
         warp::post()
         .and(warp::path("v1"))
         .and(warp::path("lyric"))
         .and(warp::path::end())
-        .and(warp::body::json())
+        .and(warp::body::json::<LyricPost>())
         .and(lyric_db_filter.clone())
-        .and_then(lyric_handler::post_lyric);
+        .and_then(handler::post);
 
     let delete_lyric = 
         warp::delete()
@@ -47,16 +49,16 @@ async fn main() -> tokio::io::Result<()> {
         .and(warp::path("lyric"))
         .and(warp::path::param())
         .and(lyric_db_filter.clone())
-        .and_then(lyric_handler::delete_lyric);
+        .and_then(handler::delete);
 
     let put_lyric = 
         warp::put()
         .and(warp::path("v1"))
         .and(warp::path("lyric"))
         .and(warp::path::param())
-        .and(warp::body::json())
+        .and(warp::body::json::<LyricPost>())
         .and(lyric_db_filter.clone())
-        .and_then(lyric_handler::put_lyric);
+        .and_then(handler::put);
 
     let get_playlists = 
         warp::get()
@@ -64,7 +66,7 @@ async fn main() -> tokio::io::Result<()> {
         .and(warp::path("playlist"))
         .and(warp::path::end())
         .and(playlist_db_filter.clone())
-        .and_then(playlist_handler::get_playlist_list);
+        .and_then(handler::list);
 
     let get_playlist = 
         warp::get()
@@ -72,16 +74,16 @@ async fn main() -> tokio::io::Result<()> {
         .and(warp::path("playlist"))
         .and(warp::path::param())
         .and(playlist_db_filter.clone())
-        .and_then(playlist_handler::get_playlist);
+        .and_then(handler::item);
 
     let post_playlist = 
         warp::post()
         .and(warp::path("v1"))
         .and(warp::path("playlist"))
         .and(warp::path::end())
-        .and(warp::body::json())
+        .and(warp::body::json::<PlaylistPost>())
         .and(playlist_db_filter.clone())
-        .and_then(playlist_handler::post_playlist);
+        .and_then(handler::post);
 
     let delete_playlist = 
         warp::delete()
@@ -89,16 +91,16 @@ async fn main() -> tokio::io::Result<()> {
         .and(warp::path("playlist"))
         .and(warp::path::param())
         .and(playlist_db_filter.clone())
-        .and_then(playlist_handler::delete_playlist);
+        .and_then(handler::delete);
 
     let put_playlist = 
         warp::put()
         .and(warp::path("v1"))
         .and(warp::path("lyric"))
         .and(warp::path::param())
-        .and(warp::body::json())
+        .and(warp::body::json::<PlaylistPost>())
         .and(playlist_db_filter.clone())
-        .and_then(playlist_handler::put_playlist);
+        .and_then(handler::put);
 
     let routes = 
         get_lyrics

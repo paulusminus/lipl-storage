@@ -1,14 +1,14 @@
 use std::collections::HashMap;
-// use std::collections::HashMap;
 use std::sync::RwLock;
 use std::path::PathBuf;
 use warp::{Reply, Rejection};
-use lipl_io::{Lyric, LyricPost, PathBufExt, Summary, Uuid};
+use lipl_io::{HasSummary, HasId, PathBufExt, Summary, Uuid, Serialize};
 use std::sync::Arc;
 
 type Db<T> = Arc<RwLock<HashMap<Uuid, T>>>;
 
-pub async fn get_lyric_list(db: Db<Lyric>) -> Result<impl Reply, Rejection> {
+pub async fn list<T>(db: Db<T>) -> Result<impl Reply, Rejection> 
+where T: HasSummary {
     let db_result = {
         let read = db.read().unwrap();
         read.values().map(|l| l.to_summary()).collect::<Vec<Summary>>()
@@ -20,7 +20,8 @@ pub async fn get_lyric_list(db: Db<Lyric>) -> Result<impl Reply, Rejection> {
     )
 }
 
-pub async fn get_lyric(path: String, db: Db<Lyric>) -> Result<impl Reply, Rejection> {
+pub async fn item<T>(path: String, db: Db<T>) -> Result<impl Reply, Rejection>
+where T: Serialize + Clone {
     let db_result = {
         PathBuf::from(&path).try_to_uuid().ok()
         .and_then(|uuid| {
@@ -36,17 +37,18 @@ pub async fn get_lyric(path: String, db: Db<Lyric>) -> Result<impl Reply, Reject
     )
 }
 
-pub async fn post_lyric(lyric_post: LyricPost, db: Db<Lyric>) -> Result<impl Reply, Rejection> {
-    let lyric: Lyric = lyric_post.into();
+pub async fn post<T, U>(json: U, db: Db<T>) -> Result<impl Reply, Rejection> 
+where T: From<U> + Clone + Serialize + HasId {
+    let t: T = json.into();
     {
         db.write()
         .unwrap()
-        .insert(lyric.id.clone(), lyric.clone());
+        .insert(t.id().clone(), t.clone());
     }
-    Ok(warp::reply::json(&lyric))
+    Ok(warp::reply::json(&t))
 }
 
-pub async fn delete_lyric(path: String, db: Db<Lyric>) -> Result<impl Reply, Rejection> {
+pub async fn delete<T>(path: String, db: Db<T>) -> Result<impl Reply, Rejection> {
     let db_result = {
         PathBuf::from(&path).try_to_uuid().ok()
         .and_then(|uuid| {
@@ -61,14 +63,15 @@ pub async fn delete_lyric(path: String, db: Db<Lyric>) -> Result<impl Reply, Rej
     )
 }
 
-pub async fn put_lyric(path: String, lyric_put: LyricPost, db: Db<Lyric>) -> Result<impl Reply, Rejection> {
+pub async fn put<T, U>(path: String, json: U, db: Db<T>) -> Result<impl Reply, Rejection> 
+where T: From<U> {
     let db_result = {
         PathBuf::from(&path).try_to_uuid().ok()
         .and_then(|uuid| {
             db.write()
             .unwrap()
             .get_mut(&uuid)
-            .map(|e| { *e = Lyric::from(lyric_put) })
+            .map(|e| { *e = T::from(json) })
         })
     };
     db_result.map_or_else(
