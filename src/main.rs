@@ -1,5 +1,5 @@
 use std::sync::{Arc, RwLock};
-use warp::{Filter};
+use warp::{body, path, Filter};
 use lipl_io::{LyricPost, PlaylistPost};
 
 mod handler;
@@ -14,108 +14,108 @@ const HOST: [u8; 4] = [0, 0, 0, 0];
 #[tokio::main]
 async fn main() -> tokio::io::Result<()> {
 
-    let path = param::parse_command_line()?;
-    let (lyrics, playlists) = lipl_io::create_db(&path).await?;
-    let lyric_arc = Arc::new(RwLock::new(lyrics));
-    let playlist_arc = Arc::new(RwLock::new(playlists));
-    let lyric_db_filter = warp::any().map(move || lyric_arc.clone());
-    let playlist_db_filter = warp::any().map(move || playlist_arc.clone());
+    let source_path         = param::parse_command_line()?;
+    let (lyrics, playlists) = lipl_io::create_db(&source_path).await?;
+    let lyric_arc           = Arc::new(RwLock::new(lyrics));
+    let playlist_arc        = Arc::new(RwLock::new(playlists));
+    let lyric_db            = warp::any().map(move || lyric_arc.clone());
+    let playlist_db         = warp::any().map(move || playlist_arc.clone());
 
-    let get_lyrics = 
+    let lyric_list = 
         warp::get()
-        .and(warp::path(VERSION))
-        .and(warp::path(LYRIC))
-        .and(warp::path::end())
-        .and(lyric_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(LYRIC))
+        .and(path::end())
+        .and(lyric_db.clone())
         .and_then(handler::list);
 
-    let get_lyric = 
+    let lyric_item = 
         warp::get()
-        .and(warp::path(VERSION))
-        .and(warp::path(LYRIC))
-        .and(warp::path::param())
-        .and(lyric_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(LYRIC))
+        .and(path::param())
+        .and(lyric_db.clone())
         .and_then(handler::item);
 
-    let post_lyric = 
+    let lyric_post = 
         warp::post()
-        .and(warp::path(VERSION))
-        .and(warp::path(LYRIC))
-        .and(warp::path::end())
-        .and(warp::body::json::<LyricPost>())
-        .and(lyric_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(LYRIC))
+        .and(path::end())
+        .and(body::json::<LyricPost>())
+        .and(lyric_db.clone())
         .and_then(handler::post);
 
-    let delete_lyric = 
+    let lyric_delete = 
         warp::delete()
         .and(warp::path(VERSION))
         .and(warp::path(LYRIC))
         .and(warp::path::param())
-        .and(lyric_db_filter.clone())
+        .and(lyric_db.clone())
         .and_then(handler::delete);
 
-    let put_lyric = 
+    let lyric_put = 
         warp::put()
-        .and(warp::path(VERSION))
-        .and(warp::path(LYRIC))
-        .and(warp::path::param())
-        .and(warp::body::json::<LyricPost>())
-        .and(lyric_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(LYRIC))
+        .and(path::param())
+        .and(body::json::<LyricPost>())
+        .and(lyric_db.clone())
         .and_then(handler::put);
 
-    let get_playlists = 
+    let playlist_list = 
         warp::get()
-        .and(warp::path(VERSION))
-        .and(warp::path(PLAYLIST))
-        .and(warp::path::end())
-        .and(playlist_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(PLAYLIST))
+        .and(path::end())
+        .and(playlist_db.clone())
         .and_then(handler::list);
 
-    let get_playlist = 
+    let playlist_item = 
         warp::get()
-        .and(warp::path(VERSION))
-        .and(warp::path(PLAYLIST))
-        .and(warp::path::param())
-        .and(playlist_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(PLAYLIST))
+        .and(path::param())
+        .and(playlist_db.clone())
         .and_then(handler::item);
 
-    let post_playlist = 
+    let playlist_post = 
         warp::post()
-        .and(warp::path(VERSION))
-        .and(warp::path(PLAYLIST))
-        .and(warp::path::end())
-        .and(warp::body::json::<PlaylistPost>())
-        .and(playlist_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(PLAYLIST))
+        .and(path::end())
+        .and(body::json::<PlaylistPost>())
+        .and(playlist_db.clone())
         .and_then(handler::post);
 
-    let delete_playlist = 
+    let playlist_delete = 
         warp::delete()
-        .and(warp::path(VERSION))
-        .and(warp::path(PLAYLIST))
-        .and(warp::path::param())
-        .and(playlist_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(PLAYLIST))
+        .and(path::param())
+        .and(playlist_db.clone())
         .and_then(handler::delete);
 
-    let put_playlist = 
+    let playlist_put = 
         warp::put()
-        .and(warp::path(VERSION))
-        .and(warp::path(PLAYLIST))
-        .and(warp::path::param())
-        .and(warp::body::json::<PlaylistPost>())
-        .and(playlist_db_filter.clone())
+        .and(path(VERSION))
+        .and(path(PLAYLIST))
+        .and(path::param())
+        .and(body::json::<PlaylistPost>())
+        .and(playlist_db.clone())
         .and_then(handler::put);
 
     let routes = 
-        get_lyrics
-        .or(get_lyric)
-        .or(post_lyric)
-        .or(delete_lyric)
-        .or(put_lyric)
-        .or(get_playlists)
-        .or(get_playlist)
-        .or(post_playlist)
-        .or(delete_playlist)
-        .or(put_playlist);
+        lyric_list
+        .or(lyric_item)
+        .or(lyric_post)
+        .or(lyric_delete)
+        .or(lyric_put)
+        .or(playlist_list)
+        .or(playlist_item)
+        .or(playlist_post)
+        .or(playlist_delete)
+        .or(playlist_put);
 
     warp::serve(routes)
         .run((HOST, PORT))
