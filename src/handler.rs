@@ -28,7 +28,7 @@ where T: Serialize + Clone {
             db.read()
             .unwrap()
             .get(&uuid)
-            .map(|l| l.clone())    
+            .cloned()
         })
     };
     db_result.map_or_else(
@@ -43,7 +43,7 @@ where T: From<U> + Clone + Serialize + HasId {
     {
         db.write()
         .unwrap()
-        .insert(t.id().clone(), t.clone());
+        .insert(t.id(), t.clone());
     }
     Ok(warp::reply::json(&t))
 }
