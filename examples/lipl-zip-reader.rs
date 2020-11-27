@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::time::{Instant};
@@ -5,7 +6,7 @@ use tokio::runtime::{Builder};
 use uuid::Uuid;
 use zip::read::{ZipArchive, ZipFile};
 
-use lipl_io::{PathBufExt, get_lyric, get_playlist, Playlist};
+use lipl_io::{PathBufExt, get_lyric, get_playlist, Playlist, Lyric};
 
 fn to_uuid(z: &ZipFile) -> Uuid {
     PathBuf::from(z.name()).to_uuid()
@@ -24,23 +25,25 @@ fn main() -> Result<(), std::io::Error> {
         let zip_file = File::open("./out/lipl.zip")?;
         let zip = &mut ZipArchive::new(zip_file)?;
 
+        let mut lyric_hm: HashMap<Uuid, Lyric> = HashMap::new();
+        let mut playlist_hm: HashMap<Uuid, Playlist> = HashMap::new();
+
         for i in 0..zip.len() {
             let file = zip.by_index(i)?;
             if file.is_file() {
                 let uuid = to_uuid(&file);
                 let filename = filename(&file);
                 if filename.ends_with(".txt") {
-                    let lyric = get_lyric(file, uuid).await?;
-                    println!("{}", lyric);
-
+                    lyric_hm.insert(
+                        uuid,
+                        get_lyric(file, uuid).await?
+                    );
                 }
                 else if filename.ends_with(".yaml") {
-                    let playlist_post = get_playlist(Ok(file)).unwrap();
-                    println!("{}", Playlist {
-                        id: uuid,
-                        title: playlist_post.title,
-                        members: playlist_post.members.iter().map(|s| PathBuf::from(s).to_uuid()).collect(),
-                    });
+                    playlist_hm.insert(
+                        uuid,
+                        (uuid, get_playlist(Ok(file)).unwrap()).into()
+                    );
                 }
             }
         };
