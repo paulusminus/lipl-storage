@@ -4,7 +4,8 @@ extern crate log;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use warp::{body, path, Filter};
-use lipl_io::{HasId, HasSummary, LyricPost, PlaylistPost, Lyric, Playlist, Uuid, Deserialize, Serialize};
+use lipl_io::{Uuid, Deserialize, Serialize};
+use lipl_io::model::{create_db, HasId, HasSummary, LyricPost, PlaylistPost, Lyric, Playlist};
 
 mod handler;
 mod param;
@@ -72,7 +73,7 @@ async fn main() -> tokio::io::Result<()> {
     info!("Starting up");
 
     let source_path         = param::parse_command_line()?;
-    let (lyrics, playlists) = lipl_io::create_db(&source_path).await?;
+    let (lyrics, playlists) = create_db(&source_path).await?;
 
     let routes = 
         get_routes::<Lyric, LyricPost>(lyrics, LYRIC)
