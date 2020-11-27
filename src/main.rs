@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use warp::{body, path, Filter};
@@ -65,13 +68,18 @@ U: for<'de> Deserialize<'de> + Send {
 
 #[tokio::main]
 async fn main() -> tokio::io::Result<()> {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    info!("Starting up");
 
     let source_path         = param::parse_command_line()?;
     let (lyrics, playlists) = lipl_io::create_db(&source_path).await?;
 
-    let lyric_routes = get_routes::<Lyric, LyricPost>(lyrics, LYRIC);
-    let playlist_routes = get_routes::<Playlist, PlaylistPost>(playlists, PLAYLIST);
-    let routes = lyric_routes.or(playlist_routes);
+    let routes = 
+        get_routes::<Lyric, LyricPost>(lyrics, LYRIC)
+        .or(
+            get_routes::<Playlist, PlaylistPost>(playlists, PLAYLIST)
+        )
+        .with(warp::log("request"));
 
     warp::serve(routes)
         .run((HOST, PORT))
