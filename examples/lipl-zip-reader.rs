@@ -16,7 +16,6 @@ fn filename(z: &ZipFile) -> String {
     z.name().into()
 }
 
-
 fn main() -> Result<(), std::io::Error> {
     let start = Instant::now();
     let rt = Builder::new_current_thread().enable_all().build().unwrap();
