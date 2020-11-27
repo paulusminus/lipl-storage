@@ -3,7 +3,9 @@ use std::io::Write;
 use std::time::{Instant};
 use tokio::runtime::{Builder};
 
-use lipl_io::{create_db, get_path, UuidExt};
+use lipl_io::{get_path};
+use lipl_io::model;
+use model::{UuidExt};
 
 fn parts_to_string(parts: &Vec<Vec<String>>) -> String {
     parts
@@ -25,7 +27,7 @@ fn main() -> Result<(), std::io::Error> {
         let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         zip.set_comment("Lipl Database");
 
-        let (lyrics, playlists) = create_db(&path).await?;
+        let (lyrics, playlists) = model::create_db(&path).await?;
 
         for lyric in lyrics.values() {
             let filename = format!("{}.txt", lyric.id.to_base58());
@@ -38,7 +40,7 @@ fn main() -> Result<(), std::io::Error> {
 
         for playlist in playlists.values() {
             let filename = format!("{}.yaml", playlist.id.to_base58());
-            let disk_playlist = lipl_io::PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
+            let disk_playlist = model::PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
             let content = serde_yaml::to_string(&disk_playlist).unwrap();
             let bytes = content.as_str().as_bytes();
             zip.start_file(&filename, options)?;

@@ -1,7 +1,8 @@
 use std::time::{Instant};
 use tokio::runtime::{Builder};
 
-use lipl_io::{create_db, get_path};
+use lipl_io::model;
+use lipl_io::{get_path};
 
 fn main() -> Result<(), std::io::Error> {
     let start = Instant::now();
@@ -9,7 +10,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let result = rt.block_on(async {
         let path = get_path()?;
-        let (lyrics, playlists) = create_db(&path).await?;
+        let (lyrics, playlists) = model::create_db(&path).await?;
 
         for lyric in lyrics.values() {
             println!("{}", lyric);

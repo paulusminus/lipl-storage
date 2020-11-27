@@ -1,11 +1,12 @@
 use futures::StreamExt;
-use lipl_io::{get_lyrics, Lyric};
+use lipl_io::io::{get_lyrics};
+use lipl_io::model;
 
 const DIR_NAME: &str = "./tests/fs/";
 
 #[tokio::test]
 async fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
-    let mut lyrics: Vec<Lyric> = get_lyrics(DIR_NAME).await?.collect::<Vec<Lyric>>().await;
+    let mut lyrics: Vec<model::Lyric> = get_lyrics(DIR_NAME).await?.collect::<Vec<model::Lyric>>().await;
     lyrics.sort_by(|a, b| a.id.cmp(&b.id));
 
     let song1 = &lyrics[0];

@@ -6,7 +6,9 @@ use tokio::runtime::{Builder};
 use uuid::Uuid;
 use zip::read::{ZipArchive, ZipFile};
 
-use lipl_io::{PathBufExt, get_lyric, get_playlist, Playlist, Lyric};
+use lipl_io::model;
+use lipl_io::io;
+use model::PathBufExt;
 
 fn to_uuid(z: &ZipFile) -> Uuid {
     PathBuf::from(z.name()).to_uuid()
@@ -24,8 +26,8 @@ fn main() -> Result<(), std::io::Error> {
         let zip_file = File::open("./out/lipl.zip")?;
         let zip = &mut ZipArchive::new(zip_file)?;
 
-        let mut lyric_hm: HashMap<Uuid, Lyric> = HashMap::new();
-        let mut playlist_hm: HashMap<Uuid, Playlist> = HashMap::new();
+        let mut lyric_hm: HashMap<Uuid, model::Lyric> = HashMap::new();
+        let mut playlist_hm: HashMap<Uuid, model::Playlist> = HashMap::new();
 
         for i in 0..zip.len() {
             let file = zip.by_index(i)?;
@@ -35,13 +37,13 @@ fn main() -> Result<(), std::io::Error> {
                 if filename.ends_with(".txt") {
                     lyric_hm.insert(
                         uuid,
-                        get_lyric(file, uuid).await?
+                        io::get_lyric(file, uuid).await?
                     );
                 }
                 else if filename.ends_with(".yaml") {
                     playlist_hm.insert(
                         uuid,
-                        (uuid, get_playlist(Ok(file)).unwrap()).into()
+                        (uuid, io::get_playlist(Ok(file)).unwrap()).into()
                     );
                 }
             }
