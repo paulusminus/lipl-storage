@@ -40,15 +40,6 @@ pub struct Summary {
     pub title: Option<String>,
 }
 
-impl Lyric {
-    pub fn to_summary(&self) -> Summary {
-        Summary {
-            id: self.id,
-            title: self.title.clone(),
-        }
-    }
-}
-
 impl fmt::Display for Lyric {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -62,14 +53,14 @@ impl fmt::Display for Lyric {
 }
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
-pub struct DiskPlaylist {
+pub struct PlaylistPost {
     pub title: String,
     pub members: Vec<String>
 }
 
-impl From<(String, Vec<Uuid>)> for DiskPlaylist {
-    fn from(s: (String, Vec<Uuid>)) -> DiskPlaylist {
-        DiskPlaylist {
+impl From<(String, Vec<Uuid>)> for PlaylistPost {
+    fn from(s: (String, Vec<Uuid>)) -> PlaylistPost {
+        PlaylistPost {
             title: s.0,
             members: s.1.iter().map(|uuid| uuid.to_base58()).collect()
         }
@@ -97,13 +88,47 @@ impl fmt::Display for Playlist {
     }
 }
 
+impl From<PlaylistPost> for Playlist {
+    fn from(pp: PlaylistPost) -> Playlist {
+        Playlist {
+            id: Uuid::new_v4(),
+            title: pp.title,
+            members: pp.members.iter().map(|s| PathBuf::from(s).to_uuid()).collect::<Vec<Uuid>>(),
+        }
+    }
+}
+
+impl Playlist {
+    pub fn to_summary(&self) -> Summary {
+        Summary {
+            id: self.id,
+            title: Some(self.title.clone()),
+        }
+    }
+}
+
+
 pub trait HasId {
     fn id(&self) -> Uuid;
 }
 
+pub trait HasSummary {
+    fn to_summary(&self) -> Summary;
+}
+
+
 impl HasId for Lyric {
     fn id(&self) -> Uuid {
         self.id
+    }
+}
+
+impl HasSummary for Lyric {
+    fn to_summary(&self) -> Summary {
+        Summary {
+            id: self.id,
+            title: self.title.clone(),
+        }
     }
 }
 
@@ -113,8 +138,17 @@ impl HasId for Playlist {
     }
 }
 
-impl From<(Uuid, DiskPlaylist)> for Playlist {
-    fn from(data: (Uuid, DiskPlaylist)) -> Playlist {
+impl HasSummary for Playlist {
+    fn to_summary(&self) -> Summary {
+        Summary {
+            id: self.id,
+            title: Some(self.title.clone()),
+        }
+    }
+}
+
+impl From<(Uuid, PlaylistPost)> for Playlist {
+    fn from(data: (Uuid, PlaylistPost)) -> Playlist {
         Playlist {
             id: data.0,
             title: data.1.title,

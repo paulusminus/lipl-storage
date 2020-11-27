@@ -16,9 +16,10 @@ mod pathbuf_ext;
 mod uuid_ext;
 pub use pathbuf_ext::PathBufExt;
 pub use uuid_ext::UuidExt;
-use model::{Frontmatter, HasId, Playlist};
+use model::{Frontmatter};
 pub use args::{get_path};
-pub use model::{DiskPlaylist, Lyric, LyricPost, Summary};
+pub use model::{PlaylistPost, Lyric, LyricPost, Playlist, Summary, HasSummary, HasId};
+pub use serde::{Deserialize, Serialize};
 pub use parts::to_parts_async;
 
 pub type Db<T> = HashMap<Uuid, T>;
@@ -47,10 +48,10 @@ pub async fn get_lyric(file: impl std::io::Read, id: Uuid) -> Result<Lyric, Erro
     )
 }
 
-pub fn get_playlist<T: std::io::Read>(reader: Result<T, std::io::Error>) -> Option<DiskPlaylist> {
+pub fn get_playlist<T: std::io::Read>(reader: Result<T, std::io::Error>) -> Option<PlaylistPost> {
     reader
     .ok()
-    .and_then(|r| serde_yaml::from_reader::<T, DiskPlaylist>(r).ok())
+    .and_then(|r| serde_yaml::from_reader::<T, PlaylistPost>(r).ok())
 }
 
 fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator<Item=PathBuf> {

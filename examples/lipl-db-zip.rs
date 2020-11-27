@@ -38,7 +38,7 @@ fn main() -> Result<(), std::io::Error> {
 
         for playlist in playlists.values() {
             let filename = format!("{}.yaml", playlist.id.to_base58());
-            let disk_playlist = lipl_io::DiskPlaylist::from((playlist.title.clone(), playlist.members.clone()));
+            let disk_playlist = lipl_io::PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
             let content = serde_yaml::to_string(&disk_playlist).unwrap();
             let bytes = content.as_str().as_bytes();
             zip.start_file(&filename, options)?;
