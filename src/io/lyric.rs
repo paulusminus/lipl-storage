@@ -1,4 +1,5 @@
 use std::fs::{read_dir, File};
+use std::path::Path;
 use std::io::Error;
 use futures::future::ready;
 use futures::io::{AllowStdIo, AsyncRead, AsyncBufReadExt, BufReader};
@@ -9,7 +10,7 @@ use crate::model;
 use super::fs::get_fs_files;
 use crate::model::PathBufExt;
 
-pub async fn get_lyrics(path: &str) -> Result<impl Stream<Item=model::Lyric>, Error> {
+pub async fn get_lyrics<P: AsRef<Path>>(path: P) -> Result<impl Stream<Item=model::Lyric>, Error> {
     read_dir(path)
     .map(|list|
         iter(get_fs_files(list, "txt"))

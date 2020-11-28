@@ -47,7 +47,7 @@ impl From<PlaylistPost> for Playlist {
         Playlist {
             id: Uuid::new_v4(),
             title: pp.title,
-            members: pp.members.iter().map(|s| PathBuf::from(s).to_uuid()).collect::<Vec<Uuid>>(),
+            members: pp.members.iter().map(|s| s.as_str().to_uuid()).collect::<Vec<Uuid>>(),
         }
     }
 }

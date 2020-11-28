@@ -1,7 +1,7 @@
-use std::path::PathBuf;
+use std::path::Path;
 use std::ffi::OsStr;
 
-pub fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator<Item=PathBuf> {
+pub fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator<Item=impl AsRef<Path>> {
     rd
     .filter_map(|entry| entry.ok().map(|e| e.path()))
     .filter(|entry| entry.is_file())

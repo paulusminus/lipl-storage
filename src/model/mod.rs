@@ -8,6 +8,7 @@ mod serde_uuid;
 mod serde_vec_uuid;
 mod summary;
 mod traits;
+mod uuid;
 mod uuid_ext;
 
 pub use db::{create_db};

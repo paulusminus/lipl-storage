@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::io::Error;
 use futures::stream::{Stream, StreamExt};
 use uuid::Uuid;
@@ -17,9 +18,9 @@ async fn create_hashmap<T: model::HasId>(s: impl Stream<Item=T>) -> HashMap<Uuid
     .collect()
 }
 
-pub async fn create_db(path: &str) -> Result<(Db<model::Lyric>, Db<model::Playlist>), Error> {
-    let hm_lyrics = create_hashmap(io::get_lyrics(path).await?).await;
-    let hm_playlists = create_hashmap(io::get_playlists(path).await?).await;
+pub async fn create_db<P: AsRef<Path>>(path: P) -> Result<(Db<model::Lyric>, Db<model::Playlist>), Error> {
+    let hm_lyrics = create_hashmap(io::get_lyrics(&path).await?).await;
+    let hm_playlists = create_hashmap(io::get_playlists(&path).await?).await;
     Ok(
         (
             hm_lyrics,

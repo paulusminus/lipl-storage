@@ -10,7 +10,13 @@ fn main() -> Result<(), std::io::Error> {
 
     let result = rt.block_on(async {
         let path = get_path()?;
-        let (lyrics, playlists) = model::create_db(&path).await?;
+        let (lyrics, playlists) = 
+            if path.is_file() {
+                lipl_io::io::zip_read(path).await?
+            }
+            else {
+                model::create_db(path).await?
+            };
 
         for lyric in lyrics.values() {
             println!("{}", lyric);
