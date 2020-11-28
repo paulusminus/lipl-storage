@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
-use std::path::PathBuf;
 use warp::{Reply, Rejection};
 use lipl_io::{Uuid, Serialize};
 use lipl_io::model::{HasSummary, HasId, PathBufExt, Summary};
@@ -24,7 +23,7 @@ where T: HasSummary {
 pub async fn item<T>(path: String, db: Db<T>) -> Result<impl Reply, Rejection>
 where T: Serialize + Clone {
     let db_result = {
-        PathBuf::from(&path).try_to_uuid().ok()
+        path.try_to_uuid().ok()
         .and_then(|uuid| {
             db.read()
             .unwrap()
@@ -52,7 +51,7 @@ where T: From<U> + Clone + Serialize + HasId {
 
 pub async fn delete<T>(path: String, db: Db<T>) -> Result<impl Reply, Rejection> {
     let db_result = {
-        PathBuf::from(&path).try_to_uuid().ok()
+        path.try_to_uuid().ok()
         .and_then(|uuid| {
             db.write()
             .unwrap()
@@ -69,7 +68,7 @@ pub async fn delete<T>(path: String, db: Db<T>) -> Result<impl Reply, Rejection>
 pub async fn put<T, U>(path: String, json: U, db: Db<T>) -> Result<impl Reply, Rejection> 
 where T: From<U> {
     let db_result = {
-        PathBuf::from(&path).try_to_uuid().ok()
+        path.try_to_uuid().ok()
         .and_then(|uuid| {
             db.write()
             .unwrap()

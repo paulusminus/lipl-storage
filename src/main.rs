@@ -1,37 +1,51 @@
 #[macro_use]
 extern crate log;
 
+mod constant;
 mod filter;
 mod handler;
+mod message;
+mod model;
 mod param;
 
 use warp::Filter;
+use tokio::sync::oneshot;
+use tokio::signal;
 use lipl_io::model::{create_db, LyricPost, PlaylistPost, Lyric, Playlist};
 use filter::get_routes;
 
-const PORT: u16 = 3030;
-const HOST: [u8; 4] = [0, 0, 0, 0];
-const LYRIC: &str = "lyric";
-const PLAYLIST: &str = "playlist";
 
 #[tokio::main]
 async fn main() -> tokio::io::Result<()> {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-    info!("Starting up");
+    let (tx, rx) = oneshot::channel::<()>();
+    let signals = signal::ctrl_c();
+    
+    tokio::task::spawn(async move {
+        signals.await
+        .map(|_| tx.send(()))
+    });
+
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(constant::LOG_LEVEL)).init();
+    info!("{}", message::STARTING);
 
     let source_path         = param::parse_command_line()?;
     let (lyrics, playlists) = create_db(&source_path).await?;
 
     let routes = 
-        get_routes::<Lyric, LyricPost>(lyrics, LYRIC)
+        get_routes::<Lyric, LyricPost>(lyrics, constant::LYRIC)
         .or(
-            get_routes::<Playlist, PlaylistPost>(playlists, PLAYLIST)
+            get_routes::<Playlist, PlaylistPost>(playlists, constant::PLAYLIST)
         )
-        .with(warp::log("request"));
+        .with(warp::log(constant::LOG_NAME));
 
-    warp::serve(routes)
-        .run((HOST, PORT))
-        .await;
+    let (_address, server) = 
+        warp::serve(routes)
+        .bind_with_graceful_shutdown((constant::HOST, constant::PORT), async {
+            rx.await.ok();
+            info!("{}", message::STOPPING);
+        });
+
+    server.await;
 
     Ok(())
 }

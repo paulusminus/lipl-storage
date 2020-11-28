@@ -4,8 +4,7 @@ use warp::{body, path, Filter};
 use lipl_io::{Uuid, Deserialize, Serialize};
 use lipl_io::model::{HasId, HasSummary};
 use super::handler;
-
-const VERSION: &str = "v1";
+use super::constant::VERSION;
 
 pub fn get_routes<T, U>(db: HashMap<Uuid, T>, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 where T: From<U> + HasSummary + HasId + Serialize + Clone + Send + Sync,
