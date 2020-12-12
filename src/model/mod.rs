@@ -1,24 +1,15 @@
-use serde::{Deserialize, Serialize};
-
 mod err;
 mod lyric;
-mod pathbuf_ext;
+mod pathbuf;
 mod playlist;
-mod serde_uuid;
-mod serde_vec_uuid;
 mod summary;
 mod traits;
-mod uuid_ext;
+mod uuid;
 
 pub use err::{LiplError, LiplResult};
-pub use lyric::{Lyric, LyricPost};
-pub use pathbuf_ext::PathBufExt;
-pub use playlist::{Playlist, PlaylistPost};
+pub use lyric::{parts_to_string, Lyric, LyricPost};
+pub use pathbuf::PathBufExt;
+pub use playlist::{Frontmatter, Playlist, PlaylistPost};
 pub use summary::{Summary};
 pub use traits::{HasId, HasSummary};
-pub use uuid_ext::UuidExt;
-
-#[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
-pub struct Frontmatter {
-    pub title: Option<String>,
-}
+pub use self::uuid::{serde_uuid, serde_vec_uuid, Uuid, UuidExt};

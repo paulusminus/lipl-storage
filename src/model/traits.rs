@@ -1,5 +1,4 @@
-use super::{Summary};
-use uuid::Uuid;
+use crate::model::{Summary, Uuid};
 
 pub trait HasId {
     fn id(&self) -> Uuid;

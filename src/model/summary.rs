@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-use super::serde_uuid;
+use crate::model::{serde_uuid, Uuid};
 
 #[derive(Deserialize, Serialize)]
 pub struct Summary {

@@ -1,5 +1,6 @@
 use thiserror::Error;
 use serde_yaml::Error as YamlError;
+use std::path::PathBuf;
 use std::io::Error as IOError;
 use zip::result::ZipError;
 use uuid::Error as UuidError;
@@ -34,4 +35,7 @@ pub enum LiplError {
 
     #[error("Argument error: {0}")]
     Argument(String),
+
+    #[error("Directory does not exist: {0}")]
+    NonExistingDirectory(PathBuf),
 }

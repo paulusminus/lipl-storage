@@ -2,9 +2,7 @@ use std::fmt;
 use std::path::PathBuf;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
-use super::{HasId, HasSummary, Summary, UuidExt, PathBufExt};
-use super::serde_uuid;
-use super::serde_vec_uuid;
+use crate::model::{serde_uuid, serde_vec_uuid, HasId, HasSummary, Summary, UuidExt, PathBufExt};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Playlist {
@@ -13,6 +11,11 @@ pub struct Playlist {
     pub title: String,
     #[serde(with = "serde_vec_uuid")]
     pub members: Vec<Uuid>
+}
+
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
+pub struct Frontmatter {
+    pub title: Option<String>,
 }
 
 impl fmt::Display for Playlist {

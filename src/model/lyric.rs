@@ -1,10 +1,6 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-use super::uuid_ext::{UuidExt};
-use super::traits::{HasId, HasSummary};
-use super::summary::Summary;
-use super::serde_uuid;
+use crate::model::{serde_uuid, HasId, HasSummary, Summary, Uuid, UuidExt};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Lyric {
@@ -56,3 +52,22 @@ impl From<LyricPost> for Lyric {
         }
     }
 }
+
+impl From<(Uuid, LyricPost)> for Lyric {
+    fn from(data: (Uuid, LyricPost)) -> Lyric {
+        Lyric {
+            id: data.0,
+            title: data.1.title,
+            parts: data.1.parts,
+        }
+    }
+}
+
+pub fn parts_to_string(parts: &[Vec<String>]) -> String {
+    parts
+    .iter()
+    .map(|part| part.join("\n"))
+    .collect::<Vec<String>>()
+    .join("\n\n")
+}
+

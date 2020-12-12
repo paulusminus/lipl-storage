@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::{read_dir, File};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use uuid::Uuid;
-
-use crate::model::{PathBufExt, Lyric, LiplResult, Playlist};
+use crate::model::{parts_to_string, PathBufExt, Lyric, LiplError, LiplResult, Playlist, PlaylistPost, Uuid, UuidExt};
 use crate::io::{get_lyric, get_playlist};
 
 pub fn fs_read<P>(dir_path: P) -> LiplResult<(HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>)>
@@ -19,14 +17,14 @@ where P: AsRef<Path> {
             let uuid = file_path.to_uuid();
             lyric_hm.insert(
                 uuid,
-                get_lyric(File::open(file_path)?, uuid)?
+                get_lyric(File::open(file_path)?).map(|lp| Lyric::from((uuid, lp)))?
             );
         }
         else if file_path.is_file() && file_path.extension() == Some(OsStr::new("yaml")) {
             let uuid = file_path.to_uuid();
             playlist_hm.insert(
                 uuid,
-                get_playlist(File::open(file_path)?).unwrap().into()
+                get_playlist(File::open(file_path)?).map(|pp| Playlist::from((uuid, pp)))?
             );
         }
     }
@@ -34,49 +32,29 @@ where P: AsRef<Path> {
     Ok((lyric_hm, playlist_hm))
 }
 
-/*
-enum FileType {
-    Yaml,
-    Text,
-}
-
-impl TryFrom<std::path::PathBuf> for FileType {
-    type Error = &'static str;
-    fn try_from(p: std::path::PathBuf) -> Result<Self, Self::Error> {
-        if p.extension() == Some(OsStr::new("yaml")) {
-            return Ok(FileType::Yaml);
-        }
-        if p.extension() == Some(OsStr::new("txt")) {
-            return Ok(FileType::Text);
-        }
-        Err("Wrong")
+pub fn fs_write<P: AsRef<Path>>(path: P, lyrics: HashMap<Uuid, Lyric>, playlists: HashMap<Uuid, Playlist>) -> LiplResult<()> {
+    let dir: PathBuf = path.as_ref().into();
+    if !dir.exists() {
+        return Err(LiplError::NonExistingDirectory(dir));
     }
+
+    for lyric in lyrics.values() {
+        let filename: PathBuf = format!("{}.txt", lyric.id.to_base58()).into();
+        let full_path: PathBuf = dir.join(filename);
+        let title_content = lyric.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
+        let content = format!("{}{}", title_content, parts_to_string(&lyric.parts));
+        let bytes = content.as_str().as_bytes();
+        std::fs::write(full_path, bytes)?;
+    };
+
+    for playlist in playlists.values() {
+        let filename = format!("{}.yaml", playlist.id.to_base58());
+        let full_path = dir.join(filename);
+        let disk_playlist = PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
+        let content = serde_yaml::to_string(&disk_playlist)?;
+        let bytes = content.as_str().as_bytes();
+        std::fs::write(full_path, bytes)?;
+    }
+    
+    Ok(())
 }
-
-pub async fn load2<P: AsRef<Path>>(dir_path: P) -> Result<(HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>), Error> {
-    let mut db = (HashMap::<Uuid, model::Lyric>::new(), HashMap::<Uuid, model::Playlist>::new());
-
-    let result = read_dir(dir_path)?
-    .filter_map(|e| e.ok())
-    .map(|e| e.path())
-    .filter(|p| p.is_file());
-
-    for p in result {
-        if p.extension() == Some(OsStr::new("yaml")) {
-            let uuid = p.to_uuid();
-            db.1.insert(
-                uuid,
-                io::get_playlist(File::open(p)?).unwrap().into()
-            );
-        }
-        else if p.extension() == Some(OsStr::new("txt")) {
-            let uuid = p.to_uuid();
-            db.0.insert(
-                uuid,
-                io::get_lyric(File::open(p)?, uuid)?
-            );
-        }
-    } 
-    Ok(db)
-}
-*/
