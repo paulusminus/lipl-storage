@@ -5,7 +5,6 @@ mod constant;
 mod filter;
 mod handler;
 mod message;
-mod model;
 mod param;
 
 use warp::Filter;
@@ -29,7 +28,7 @@ async fn main() -> tokio::io::Result<()> {
     info!("{}", message::STARTING);
 
     let source_path         = param::parse_command_line()?;
-    let (lyrics, playlists) = create_db(&source_path).await?;
+    let (lyrics, playlists) = create_db(&source_path)?;
 
     let routes = 
         get_routes::<Lyric, LyricPost>(lyrics, constant::LYRIC)
