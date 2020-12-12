@@ -10,7 +10,8 @@ mod param;
 use warp::Filter;
 use tokio::sync::oneshot;
 use tokio::signal;
-use lipl_io::model::{create_db, LyricPost, PlaylistPost, Lyric, Playlist};
+use lipl_io::model::{LyricPost, PlaylistPost, Lyric, Playlist};
+use lipl_io::io::fs_read;
 use filter::get_routes;
 
 
@@ -28,7 +29,7 @@ async fn main() -> tokio::io::Result<()> {
     info!("{}", message::STARTING);
 
     let source_path         = param::parse_command_line()?;
-    let (lyrics, playlists) = create_db(&source_path)?;
+    let (lyrics, playlists) = fs_read(&source_path).unwrap();
 
     let routes = 
         get_routes::<Lyric, LyricPost>(lyrics, constant::LYRIC)

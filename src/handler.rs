@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
 use warp::{Reply, Rejection};
-use lipl_io::{Uuid, Serialize};
-use lipl_io::model::{HasSummary, HasId, PathBufExt, Summary};
+use lipl_io::{Serialize};
+use lipl_io::model::{HasSummary, HasId, PathBufExt, Summary, Uuid};
 use std::sync::Arc;
 
 type Db<T> = Arc<RwLock<HashMap<Uuid, T>>>;

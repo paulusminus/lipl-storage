@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use warp::{body, path, Filter};
-use lipl_io::{Uuid, Deserialize, Serialize};
-use lipl_io::model::{HasId, HasSummary};
+use lipl_io::{Deserialize, Serialize};
+use lipl_io::model::{HasId, HasSummary, Uuid};
 use super::handler;
 use super::constant::VERSION;
 
