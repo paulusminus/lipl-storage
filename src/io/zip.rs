@@ -1,27 +1,19 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs::File;
-use std::io::{Error, Write};
+use std::io::{Write};
 use uuid::Uuid;
 use zip::{ZipArchive};
 use zip::read::ZipFile;
 use crate::model;
 use crate::io;
-use model::{UuidExt, PathBufExt};
+use model::{UuidExt, PathBufExt, LiplResult, Lyric, Playlist};
 
 fn to_uuid(z: &ZipFile) -> Uuid {
     z.name().to_uuid()
 }
 
-fn filename<'a>(z: &'a ZipFile) -> &'a str {
-    z.name()
-}
-
-fn has_extension(zf: &ZipFile, extension: &str) -> bool {
-    zf.is_file() && zf.name().ends_with(extension)
-}
-
-pub fn zip_read<P>(path: P) -> Result<(HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>), Error>
+pub fn zip_read<P>(path: P) -> LiplResult<(HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>)>
 where P: AsRef<Path> {
     let zip_file = File::open(path)?;
     let zip = &mut ZipArchive::new(zip_file)?;
@@ -57,7 +49,7 @@ fn parts_to_string(parts: &Vec<Vec<String>>) -> String {
     .join("\n\n")
 }
 
-pub fn zip_write<P: AsRef<Path>>(path: P, lyrics: HashMap<Uuid, model::Lyric>, playlists: HashMap<Uuid, model::Playlist>) -> Result<(), std::io::Error> {
+pub fn zip_write<P: AsRef<Path>>(path: P, lyrics: HashMap<Uuid, Lyric>, playlists: HashMap<Uuid, Playlist>) -> LiplResult<()> {
     let file = File::create(path)?;
     let zip = &mut zip::ZipWriter::new(file);
     let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);

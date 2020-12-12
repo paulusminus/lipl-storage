@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 use std::path::Path;
-use std::io::Error;
 use uuid::Uuid;
 
 use crate::io;
-use crate::model;
+use crate::model::{Lyric, Playlist, LiplResult, HasId};
 
 pub type Db<T> = HashMap<Uuid, T>;
 
-fn create_hashmap<T: model::HasId>(s: impl Iterator<Item=T>) -> HashMap<Uuid, T> {
+fn create_hashmap<T: HasId>(s: impl Iterator<Item=T>) -> HashMap<Uuid, T> {
     s
     .collect::<Vec<T>>()
     .into_iter()
@@ -16,7 +15,7 @@ fn create_hashmap<T: model::HasId>(s: impl Iterator<Item=T>) -> HashMap<Uuid, T>
     .collect()
 }
 
-pub fn create_db<P>(path: P) -> Result<(Db<model::Lyric>, Db<model::Playlist>), Error>
+pub fn create_db<P>(path: P) -> LiplResult<(Db<Lyric>, Db<Playlist>)>
 where P: AsRef<Path> 
 {
     let hm_lyrics = create_hashmap(io::get_lyrics(&path)?);

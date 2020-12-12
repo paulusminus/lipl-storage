@@ -1,18 +1,15 @@
 use std::ffi::OsString;
 use std::collections::HashMap;
 use uuid::Uuid;
-use std::io::Error;
 use std::path::{PathBuf};
+use crate::model::{LiplResult, Lyric, Playlist};
 
-use crate::model;
-
-type IOResult<T> = Result<T, Error>;
-type Collections = (HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>);
+type Collections = (HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>);
 
 pub trait Db<T>
 {
-    fn load(&self) -> IOResult<T>;
-    fn dump(&self, data: T) -> IOResult<()>;
+    fn load(&self) -> LiplResult<T>;
+    fn dump(&self, data: T) -> LiplResult<()>;
     fn name(&self) -> OsString;
 }
 
@@ -26,13 +23,9 @@ impl ZipDb {
     }
 }
 
-pub struct FsDb {
-    path: PathBuf,
-}
-
 impl Db<Collections> for ZipDb {
     
-    fn load(&self) -> IOResult<Collections> {
+    fn load(&self) -> LiplResult<Collections> {
         crate::io::zip_read(self.path.to_owned())
     }
 
@@ -40,7 +33,7 @@ impl Db<Collections> for ZipDb {
         self.path.to_owned().into_os_string()
     }
 
-    fn dump(&self, cols: Collections) -> IOResult<()> {
+    fn dump(&self, cols: Collections) -> LiplResult<()> {
         crate::io::zip_write(self.path.to_owned(), cols.0, cols.1)
     }
 }

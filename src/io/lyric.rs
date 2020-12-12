@@ -1,30 +1,31 @@
 use std::fs::{read_dir, File};
 use std::path::Path;
-use std::io::Error;
-use futures::future::ready;
-use futures::io::{AllowStdIo, AsyncRead, AsyncBufReadExt, BufReader};
-use futures::stream::{Stream, StreamExt, iter};
+use std::io::{Read, BufRead, BufReader};
 
 use uuid::Uuid;
 use crate::model;
 use super::fs::get_fs_files;
-use crate::model::PathBufExt;
+use crate::model::{LiplError, LiplResult, PathBufExt};
 
-pub async fn get_lyrics<P: AsRef<Path>>(path: P) -> Result<impl Stream<Item=model::Lyric>, Error> {
-    read_dir(path)
-    .map(|list|
-        iter(get_fs_files(list, "txt"))
-        .then(|path_buffer| async move {
-            get_lyric(File::open(&path_buffer)?, path_buffer.to_uuid()).await
-        })
-        .filter_map(|lyric_file| ready(lyric_file.ok()))
+pub fn get_lyrics<P: AsRef<Path>>(path: P) -> LiplResult<impl Iterator<Item=model::Lyric>> {
+    Ok(
+        read_dir(path)
+        .map(|list|
+            get_fs_files(list, "txt")
+            .filter_map(
+                |path_buffer| 
+                    File::open(&path_buffer)
+                    .map_err(LiplError::IO)
+                    .and_then(|f| get_lyric(f, path_buffer.to_uuid())
+                ).ok()
+            )
+        )?
     )
 }
 
-pub async fn get_lyric(file: impl std::io::Read, id: Uuid) -> Result<model::Lyric, Error> {
-    let reader = AllowStdIo::new(file);
+pub fn get_lyric(reader: impl Read, id: Uuid) -> LiplResult<model::Lyric> {
     let async_reader = BufReader::new(reader);
-    let (yaml, parts) = to_parts_async(async_reader).await?;
+    let (yaml, parts) = parts_from_reader(async_reader)?;
 
     let frontmatter = 
         yaml
@@ -40,8 +41,7 @@ pub async fn get_lyric(file: impl std::io::Read, id: Uuid) -> Result<model::Lyri
     )
 }
 
-pub async fn to_parts_async<T>(reader: BufReader<T>) -> Result<(Option<String>, Vec<Vec<String>>), Error>
-where T: AsyncRead + Unpin
+pub fn parts_from_reader<R: Read>(reader: BufReader<R>) -> LiplResult<(Option<String>, Vec<Vec<String>>)>
 {
     let mut lines = reader.lines();
     let mut new_part = true;
@@ -50,7 +50,7 @@ where T: AsyncRead + Unpin
     let mut yaml_start: bool = false;
 
     let mut line_no: u32 = 0;
-    while let Some(line) = lines.next().await {
+    while let Some(line) = lines.next() {
         line_no += 1;
         let line_result: String = line?;
         if line_result == *"---" {

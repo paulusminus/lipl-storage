@@ -1,18 +1,16 @@
 use std::fs::{read_dir, File};
 use std::path::Path;
-use std::io::{Read, Error as IOError};
-
-use serde_yaml::Error as YamlError;
+use std::io::{Read};
 
 use super::get_fs_files;
 use crate::model;
-use model::PathBufExt;
+use model::{LiplResult, PathBufExt, Playlist, PlaylistPost};
 
-pub fn get_playlist<R: Read>(reader: R) -> Result<model::PlaylistPost, YamlError> {
-    serde_yaml::from_reader::<R, model::PlaylistPost>(reader)
+pub fn get_playlist<R: Read>(reader: R) -> LiplResult<PlaylistPost> {
+    Ok(serde_yaml::from_reader::<R, PlaylistPost>(reader)?)
 }
 
-pub fn get_playlists<P: AsRef<Path>>(path: P) -> Result<impl Iterator<Item=model::Playlist>, IOError> {
+pub fn get_playlists<P: AsRef<Path>>(path: P) -> LiplResult<impl Iterator<Item=Playlist>> {
     Ok(
         read_dir(path)
         .map(|list|
@@ -23,7 +21,7 @@ pub fn get_playlists<P: AsRef<Path>>(path: P) -> Result<impl Iterator<Item=model
                     .and_then(|f| get_playlist(f).ok())
                     .map(|p| (path_buffer.to_uuid(), p))
             )
-            .map(model::Playlist::from)
+            .map(Playlist::from)
         )?
     )
 }

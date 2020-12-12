@@ -1,13 +1,13 @@
-use std::collections::HashMap;
-use crate::model;
-use crate::io;
-use uuid::Uuid;
+// use std::collections::HashMap;
+// use crate::model;
+// use crate::io;
+// use uuid::Uuid;
 use std::path::Path;
 use std::ffi::OsStr;
-use std::fs::{read_dir, File};
-use std::io::Error;
-use model::PathBufExt;
-use std::convert::TryFrom;
+// use std::fs::{read_dir, File};
+// use std::io::Error;
+// use model::PathBufExt;
+// use std::convert::TryFrom;
 
 pub fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator<Item=impl AsRef<Path>> {
     rd
@@ -16,6 +16,8 @@ pub fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator
     .filter(move |path_buffer| path_buffer.extension() == Some(OsStr::new(filter)))
 }
 
+
+/*
 pub fn load<P>(dir_path: P) -> Result<(HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>), Error>
 where P: AsRef<Path> {
     let mut lyric_hm: HashMap<Uuid, model::Lyric> = HashMap::new();
@@ -69,18 +71,6 @@ pub async fn load2<P: AsRef<Path>>(dir_path: P) -> Result<(HashMap<Uuid, model::
     .filter(|p| p.is_file());
 
     for p in result {
-        /*
-        if let Some(value) = FileType::try_from(p).ok() {
-            match value {
-                FileType::Yaml => {
-
-                },
-                FileType::Text => {
-
-                },
-            }
-        };
-        */
         if p.extension() == Some(OsStr::new("yaml")) {
             let uuid = p.to_uuid();
             db.1.insert(
@@ -98,3 +88,4 @@ pub async fn load2<P: AsRef<Path>>(dir_path: P) -> Result<(HashMap<Uuid, model::
     } 
     Ok(db)
 }
+*/

@@ -2,7 +2,7 @@ use std::time::{Instant};
 use lipl_io::model;
 use lipl_io::{get_path};
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> model::LiplResult<()> {
     let start = Instant::now();
 
     let path = get_path()?;

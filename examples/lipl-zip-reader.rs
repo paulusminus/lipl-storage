@@ -1,9 +1,8 @@
 use std::time::{Instant};
 use lipl_io::io::zip_read;
+use lipl_io::model::LiplResult;
 
-type IOResult<T> = Result<T, std::io::Error>;
-
-fn main() -> IOResult<()> {
+fn main() -> LiplResult<()> {
     let start = Instant::now();
 
     let path = "./out/lipl.zip";
