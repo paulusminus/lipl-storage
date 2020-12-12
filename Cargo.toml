@@ -1,6 +1,6 @@
 [package]
 name = "lipl-io"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2018"
 
