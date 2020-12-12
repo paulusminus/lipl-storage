@@ -1,6 +1,7 @@
 use std::time::{Instant};
 use lipl_io::model;
 use lipl_io::{get_path};
+use lipl_io::io::{fs_read, zip_read};
 
 fn main() -> model::LiplResult<()> {
     let start = Instant::now();
@@ -8,10 +9,10 @@ fn main() -> model::LiplResult<()> {
     let path = get_path()?;
     let (lyrics, playlists) = 
         if path.is_file() {
-            lipl_io::io::zip_read(path)?
+            zip_read(path)?
         }
         else {
-            model::create_db(path)?
+            fs_read(path)?
         };
 
     for lyric in lyrics.values() {

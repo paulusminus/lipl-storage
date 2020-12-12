@@ -1,42 +1,32 @@
-// use std::collections::HashMap;
-// use crate::model;
-// use crate::io;
-// use uuid::Uuid;
-use std::path::Path;
+use std::collections::HashMap;
 use std::ffi::OsStr;
-// use std::fs::{read_dir, File};
-// use std::io::Error;
-// use model::PathBufExt;
-// use std::convert::TryFrom;
+use std::fs::{read_dir, File};
+use std::path::Path;
 
-pub fn get_fs_files(rd: std::fs::ReadDir, filter: &'static str) -> impl Iterator<Item=impl AsRef<Path>> {
-    rd
-    .filter_map(|entry| entry.ok().map(|e| e.path()))
-    .filter(|entry| entry.is_file())
-    .filter(move |path_buffer| path_buffer.extension() == Some(OsStr::new(filter)))
-}
+use uuid::Uuid;
 
+use crate::model::{PathBufExt, Lyric, LiplResult, Playlist};
+use crate::io::{get_lyric, get_playlist};
 
-/*
-pub fn load<P>(dir_path: P) -> Result<(HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>), Error>
+pub fn fs_read<P>(dir_path: P) -> LiplResult<(HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>)>
 where P: AsRef<Path> {
-    let mut lyric_hm: HashMap<Uuid, model::Lyric> = HashMap::new();
-    let mut playlist_hm: HashMap<Uuid, model::Playlist> = HashMap::new();
+    let mut lyric_hm: HashMap<Uuid, Lyric> = HashMap::new();
+    let mut playlist_hm: HashMap<Uuid, Playlist> = HashMap::new();
 
     for entry in read_dir(&dir_path)? {
         let file_path = entry?.path();
-        if file_path.is_file() && file_path.extension() == Some(OsStr::new(".txt")) {
+        if file_path.is_file() && file_path.extension() == Some(OsStr::new("txt")) {
             let uuid = file_path.to_uuid();
             lyric_hm.insert(
                 uuid,
-                io::get_lyric(File::open(file_path)?, uuid)?
+                get_lyric(File::open(file_path)?, uuid)?
             );
         }
-        else if file_path.is_file() && file_path.extension() == Some(OsStr::new(".yaml")) {
+        else if file_path.is_file() && file_path.extension() == Some(OsStr::new("yaml")) {
             let uuid = file_path.to_uuid();
             playlist_hm.insert(
                 uuid,
-                io::get_playlist(File::open(file_path)?).unwrap().into()
+                get_playlist(File::open(file_path)?).unwrap().into()
             );
         }
     }
@@ -44,6 +34,7 @@ where P: AsRef<Path> {
     Ok((lyric_hm, playlist_hm))
 }
 
+/*
 enum FileType {
     Yaml,
     Text,

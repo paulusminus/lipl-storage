@@ -1,11 +1,11 @@
-use lipl_io::io::{get_lyrics};
-use lipl_io::model;
+use lipl_io::io::{fs_read};
+use lipl_io::model::{LiplResult, Lyric};
 
 const DIR_NAME: &str = "./tests/fs/";
 
 #[test]
-fn test_get_lyrics() -> Result<(), Box<dyn std::error::Error>> {
-    let mut lyrics: Vec<model::Lyric> = get_lyrics(DIR_NAME)?.collect::<Vec<model::Lyric>>();
+fn test_get_lyrics() -> LiplResult<()> {
+    let mut lyrics: Vec<Lyric> = fs_read(DIR_NAME)?.0.values().cloned().collect();
     lyrics.sort_by(|a, b| a.id.cmp(&b.id));
 
     let song1 = &lyrics[0];

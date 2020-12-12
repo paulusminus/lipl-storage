@@ -1,35 +1,16 @@
-use std::fs::{read_dir, File};
-use std::path::Path;
 use std::io::{Read, BufRead, BufReader};
 
 use uuid::Uuid;
 use crate::model;
-use super::fs::get_fs_files;
-use crate::model::{LiplError, LiplResult, PathBufExt};
+use crate::model::{Frontmatter, LiplResult, Lyric};
 
-pub fn get_lyrics<P: AsRef<Path>>(path: P) -> LiplResult<impl Iterator<Item=model::Lyric>> {
-    Ok(
-        read_dir(path)
-        .map(|list|
-            get_fs_files(list, "txt")
-            .filter_map(
-                |path_buffer| 
-                    File::open(&path_buffer)
-                    .map_err(LiplError::IO)
-                    .and_then(|f| get_lyric(f, path_buffer.to_uuid())
-                ).ok()
-            )
-        )?
-    )
-}
-
-pub fn get_lyric(reader: impl Read, id: Uuid) -> LiplResult<model::Lyric> {
+pub fn get_lyric(reader: impl Read, id: Uuid) -> LiplResult<Lyric> {
     let async_reader = BufReader::new(reader);
     let (yaml, parts) = parts_from_reader(async_reader)?;
 
     let frontmatter = 
         yaml
-        .and_then(|text| serde_yaml::from_str::<model::Frontmatter>(&text).ok())
+        .and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok())
         .unwrap_or_default();
 
     Ok(

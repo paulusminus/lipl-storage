@@ -31,4 +31,7 @@ pub enum LiplError {
 
     #[error("No Path error: {0}")]
     NoPath(String),
+
+    #[error("Argument error: {0}")]
+    Argument(String),
 }

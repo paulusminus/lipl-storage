@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-mod db;
 mod err;
 mod lyric;
 mod pathbuf_ext;
@@ -11,7 +10,6 @@ mod summary;
 mod traits;
 mod uuid_ext;
 
-pub use db::{create_db};
 pub use err::{LiplError, LiplResult};
 pub use lyric::{Lyric, LyricPost};
 pub use pathbuf_ext::PathBufExt;
