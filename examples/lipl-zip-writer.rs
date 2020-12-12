@@ -14,7 +14,7 @@ fn main() -> Result<(), std::io::Error> {
         let path = get_path()?;
 
         let zip_path = "./out/lipl.zip";
-        let (lyrics, playlists) = model::create_db(&path).await?;
+        let (lyrics, playlists) = model::create_db(&path)?;
 
         zip_write(zip_path, lyrics, playlists)?;
     

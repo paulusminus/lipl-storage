@@ -17,7 +17,12 @@ fn filename<'a>(z: &'a ZipFile) -> &'a str {
     z.name()
 }
 
-pub async fn zip_read<P: AsRef<Path>>(path: P) -> Result<(HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>), Error> {
+fn has_extension(zf: &ZipFile, extension: &str) -> bool {
+    zf.is_file() && zf.name().ends_with(extension)
+}
+
+pub fn zip_read<P>(path: P) -> Result<(HashMap<Uuid, model::Lyric>, HashMap<Uuid, model::Playlist>), Error>
+where P: AsRef<Path> {
     let zip_file = File::open(path)?;
     let zip = &mut ZipArchive::new(zip_file)?;
 
@@ -26,23 +31,21 @@ pub async fn zip_read<P: AsRef<Path>>(path: P) -> Result<(HashMap<Uuid, model::L
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        if file.is_file() {
-            let uuid = to_uuid(&file);
-            let filename = filename(&file);
-            if filename.ends_with(".txt") {
-                lyric_hm.insert(
-                    uuid,
-                    io::get_lyric(file, uuid).await?
-                );
-            }
-            else if filename.ends_with(".yaml") {
-                playlist_hm.insert(
-                    uuid,
-                    (uuid, io::get_playlist(Ok(file)).unwrap()).into()
-                );
-            }
+        let uuid = to_uuid(&file);
+        if file.is_file() && file.name().ends_with(".txt") {
+            lyric_hm.insert(
+                uuid,
+                io::get_lyric(file, uuid)?
+            );
+        }
+        else if file.is_file() && file.name().ends_with(".yaml") {
+            playlist_hm.insert(
+                uuid,
+                (uuid, io::get_playlist(file).unwrap()).into()
+            );
         }
     };
+    
     Ok((lyric_hm, playlist_hm))
 }
 

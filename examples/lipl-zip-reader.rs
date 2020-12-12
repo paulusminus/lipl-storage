@@ -1,28 +1,23 @@
 use std::time::{Instant};
-use tokio::runtime::{Builder};
-
 use lipl_io::io::zip_read;
 
-fn main() -> Result<(), std::io::Error> {
+type IOResult<T> = Result<T, std::io::Error>;
+
+fn main() -> IOResult<()> {
     let start = Instant::now();
-    let rt = Builder::new_current_thread().enable_all().build().unwrap();
 
-    let result = rt.block_on(async {
-        let path = "./out/lipl.zip";
-        let (lyrics, playlists) = zip_read(path).await?;
+    let path = "./out/lipl.zip";
+    let (lyrics, playlists) = zip_read(path)?;
 
-        for lyric in lyrics.values() {
-            println!("{}", lyric);
-        }
+    for lyric in lyrics.values() {
+        println!("{}", lyric);
+    }
 
-        for playlist in playlists.values() {
-            println!();
-            println!("{}", playlist);
-        }
-
-        Ok(())
-    });
+    for playlist in playlists.values() {
+        println!();
+        println!("{}", playlist);
+    }
 
     println!("Elapsed: {:?}", start.elapsed());
-    result
+    Ok(())
 }

@@ -1,31 +1,29 @@
 use std::fs::{read_dir, File};
 use std::path::Path;
-use std::io::Error;
-use futures::future::ready;
-use futures::stream::{Stream, StreamExt, iter};
+use std::io::{Read, Error as IOError};
+
+use serde_yaml::Error as YamlError;
 
 use super::get_fs_files;
 use crate::model;
 use model::PathBufExt;
 
-pub fn get_playlist<T: std::io::Read>(reader: Result<T, std::io::Error>) -> Option<model::PlaylistPost> {
-    reader
-    .ok()
-    .and_then(|r| serde_yaml::from_reader::<T, model::PlaylistPost>(r).ok())
+pub fn get_playlist<R: Read>(reader: R) -> Result<model::PlaylistPost, YamlError> {
+    serde_yaml::from_reader::<R, model::PlaylistPost>(reader)
 }
 
-pub async fn get_playlists<P: AsRef<Path>>(path: P) -> Result<impl Stream<Item=model::Playlist>, Error> {
-    read_dir(path)
-    .map(|list|
-        iter(get_fs_files(list, "yaml"))
-        .filter_map(
-            |path_buffer| ready(
-                get_playlist(
-                    File::open(&path_buffer)
-                )
-                .map(|p| (path_buffer.to_uuid(), p))
+pub fn get_playlists<P: AsRef<Path>>(path: P) -> Result<impl Iterator<Item=model::Playlist>, IOError> {
+    Ok(
+        read_dir(path)
+        .map(|list|
+            get_fs_files(list, "yaml")
+            .filter_map(
+                |path_buffer|
+                    File::open(&path_buffer).ok()
+                    .and_then(|f| get_playlist(f).ok())
+                    .map(|p| (path_buffer.to_uuid(), p))
             )
-        )
-        .map(model::Playlist::from)
+            .map(model::Playlist::from)
+        )?
     )
 }
