@@ -1,5 +1,4 @@
 use std::fmt;
-use std::path::PathBuf;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 use crate::model::{serde_uuid, serde_vec_uuid, HasId, HasSummary, Summary, UuidExt, PathBufExt};
@@ -45,13 +44,10 @@ impl From<(String, Vec<Uuid>)> for PlaylistPost {
     }
 }
 
+
 impl From<PlaylistPost> for Playlist {
     fn from(pp: PlaylistPost) -> Playlist {
-        Playlist {
-            id: Uuid::new_v4(),
-            title: pp.title,
-            members: pp.members.iter().map(|s| s.as_str().to_uuid()).collect::<Vec<Uuid>>(),
-        }
+        (None, pp).into()
     }
 }
 
@@ -70,13 +66,12 @@ impl HasSummary for Playlist {
     }
 }
 
-impl From<(Uuid, PlaylistPost)> for Playlist {
-    fn from(data: (Uuid, PlaylistPost)) -> Playlist {
+impl From<(Option<Uuid>, PlaylistPost)> for Playlist {
+    fn from(data: (Option<Uuid>, PlaylistPost)) -> Playlist {
         Playlist {
-            id: data.0,
+            id: data.0.unwrap_or(Uuid::new_v4()),
             title: data.1.title,
-            members: data.1.members.iter().map(|m| PathBuf::from(m).to_uuid())
-            .collect()
+            members: data.1.members.iter().map(|m| m.to_uuid()).collect()
         }
     }
 }

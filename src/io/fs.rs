@@ -24,7 +24,7 @@ where P: AsRef<Path> {
             let uuid = file_path.to_uuid();
             playlist_hm.insert(
                 uuid,
-                get_playlist(File::open(file_path)?).map(|pp| Playlist::from((uuid, pp)))?
+                get_playlist(File::open(file_path)?).map(|pp| Playlist::from((Some(uuid), pp)))?
             );
         }
     }

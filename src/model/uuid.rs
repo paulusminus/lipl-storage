@@ -37,15 +37,13 @@ impl UuidExt for Uuid {
 
 pub mod serde_uuid {
     use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
-    use uuid::Uuid;
-    use bs58::{decode, encode};
+    use crate::model::{Uuid, UuidExt};
     
     pub fn serialize<S>(val: &Uuid, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let bs58_encoded: String = encode(val.as_bytes()).into_string();
-        bs58_encoded.serialize(serializer)
+        val.to_base58().serialize(serializer)
     }
     
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Uuid, D::Error>
@@ -53,23 +51,20 @@ pub mod serde_uuid {
         D: Deserializer<'de>,
     {
         let val: &str = Deserialize::deserialize(deserializer)?;
-        let mut decoded = [0xFF; 16];
-        decode(val).into(&mut decoded).map_err(D::Error::custom)?;
-        Uuid::from_slice(&decoded).map_err(D::Error::custom)
+        Uuid::try_from_base58(val).map_err(D::Error::custom)
     }    
 }
 
 pub mod serde_vec_uuid {
     use serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer};
-    use uuid::Uuid;
-    use bs58::{decode, encode};
+    use crate::model::{Uuid, UuidExt};
     
     pub fn serialize<S>(val: &[Uuid], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let vec_value = val.iter().map(|uuid| encode(uuid.as_bytes()).into_string()).collect::<Vec<String>>();
-        vec_value.serialize(serializer)
+        let result: Vec<String> = val.iter().map(|uuid| uuid.to_base58()).collect() ;
+        result.serialize(serializer)
     }
     
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Uuid>, D::Error>
@@ -79,10 +74,7 @@ pub mod serde_vec_uuid {
         let val: Vec<String> = Deserialize::deserialize(deserializer)?;
         let mut result: Vec<Uuid> = vec![];
         for s in val {
-            let mut decoded = [0xFF; 16];
-            decode(s).into(&mut decoded).map_err(D::Error::custom)?;
-            let uuid = Uuid::from_slice(&decoded).map_err(D::Error::custom)?;
-            result.push(uuid);
+            result.push(Uuid::try_from_base58(s).map_err(D::Error::custom)?);
         }
         Ok(result)
     }   

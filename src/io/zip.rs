@@ -31,7 +31,7 @@ where P: AsRef<Path> {
         else if file.is_file() && file.name().ends_with(".yaml") {
             playlist_hm.insert(
                 uuid,
-                get_playlist(file).map(|pp| Playlist::from((uuid, pp)))?
+                get_playlist(file).map(|pp| Playlist::from((Some(uuid), pp)))?
             );
         }
     };
@@ -57,7 +57,7 @@ pub fn zip_write<P: AsRef<Path>>(path: P, lyrics: HashMap<Uuid, Lyric>, playlist
     for playlist in playlists.values() {
         let filename = format!("{}.yaml", playlist.id.to_base58());
         let disk_playlist = PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
-        let content = serde_yaml::to_string(&disk_playlist).unwrap();
+        let content = serde_yaml::to_string(&disk_playlist)?;
         let bytes = content.as_str().as_bytes();
         zip.start_file(&filename, options)?;
         zip.write_all(bytes)?;

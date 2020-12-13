@@ -15,7 +15,7 @@ impl fmt::Display for Lyric {
         write!(
             f,
             "Lyric: {}, {} parts, id = {}",
-            self.title.as_ref().unwrap_or(&"<< onbekend >>".to_owned()),
+            self.title.as_ref().unwrap_or(&"<< !! >>".to_owned()),
             self.parts.len(),
             self.id.to_base58()
         )
