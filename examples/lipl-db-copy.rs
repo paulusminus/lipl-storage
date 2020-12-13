@@ -16,18 +16,15 @@ struct Opt {
 
 fn main() -> LiplResult<()> {
     let start = Instant::now();
-
     let opt = Opt::parse();
-    let source_path = opt.source;
-    let target_path = opt.target;
 
-    let (lyrics, playlists) = if source_path.has_extension(ZIP) { zip_read(source_path)? } else { fs_read(source_path)? };
+    let (lyrics, playlists) = if opt.source.has_extension(ZIP) { zip_read(opt.source)? } else { fs_read(opt.source)? };
 
-    if target_path.has_extension(ZIP) { 
-        zip_write(target_path, lyrics, playlists)?
+    if opt.target.has_extension(ZIP) { 
+        zip_write(opt.target, lyrics, playlists)?
     }
     else {
-        fs_write(target_path, lyrics, playlists)?;
+        fs_write(opt.target, lyrics, playlists)?;
     };
 
     println!("Elapsed: {:?}", start.elapsed());

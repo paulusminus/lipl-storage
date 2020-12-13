@@ -1,16 +1,12 @@
 use std::collections::HashMap;
-use std::path::Path;
 use std::fs::File;
 use std::io::{Write};
-use zip::{ZipArchive};
-use zip::read::ZipFile;
+use std::path::Path;
+
+use zip::read::{ZipArchive};
+
 use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt, TXT, YAML};
 use crate::io::{get_lyric, get_playlist};
-// use serde_yaml::{to_string};
-
-fn to_uuid(z: &ZipFile) -> Uuid {
-    z.name().to_uuid()
-}
 
 pub fn zip_read<P>(path: P) -> LiplResult<(HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>)>
 where P: AsRef<Path> {
@@ -22,7 +18,7 @@ where P: AsRef<Path> {
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        let uuid = to_uuid(&file);
+        let uuid = (&file.name()).to_uuid();
         if file.is_file() && file.name().has_extension(TXT) {
             lyric_hm.insert(
                 uuid,
