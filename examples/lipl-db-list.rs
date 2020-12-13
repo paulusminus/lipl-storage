@@ -29,11 +29,11 @@ fn main() -> LiplResult<()> {
 }
 
 mod clap {
-    use clap::{crate_authors, Arg, App, ArgMatches};
+    use clap::{crate_authors, crate_version, Arg, App, ArgMatches};
     pub fn args() -> ArgMatches {
         App::new("lipl-db-list")
         .about("List lyrics and playlists from directory or zipfile")
-        .version("1.0")
+        .version(crate_version!())
         .author(crate_authors!("\n"))
         .arg(
             Arg::new("source")

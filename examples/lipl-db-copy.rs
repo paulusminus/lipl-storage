@@ -1,15 +1,15 @@
 use std::path::PathBuf;
 use std::time::{Instant};
 use lipl_io::model;
-
 use lipl_io::io::{fs_read, zip_write};
 
 fn main() -> model::LiplResult<()> {
     let start = Instant::now();
 
     let matches = clap::args();
-    let source_path: PathBuf = matches.value_of("source").unwrap().into();
-    let target_path: PathBuf = matches.value_of("target").unwrap().into();
+    let get_value = |s: &str| matches.value_of(s).unwrap();
+    let source_path: PathBuf = get_value("source").into();
+    let target_path: PathBuf = get_value("target").into();
 
     let (lyrics, playlists) = fs_read(&source_path)?;
 
@@ -20,11 +20,11 @@ fn main() -> model::LiplResult<()> {
 }
 
 mod clap {
-    use clap::{crate_authors, Arg, App, ArgMatches};
+    use clap::{crate_authors, crate_version, Arg, App, ArgMatches};
     pub fn args() -> ArgMatches {
         App::new("lipl-db-copy")
         .about("List lyrics and playlists from directory or zipfile")
-        .version("1.0")
+        .version(crate_version!())
         .author(crate_authors!("\n"))
         .arg(
             Arg::new("source")

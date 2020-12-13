@@ -25,7 +25,7 @@ where P: AsRef<Path> {
         if file.is_file() && file.name().ends_with(".txt") {
             lyric_hm.insert(
                 uuid,
-                get_lyric(file).map(|lp| Lyric::from((uuid, lp)))?
+                get_lyric(file).map(|lp| Lyric::from((Some(uuid), lp)))?
             );
         }
         else if file.is_file() && file.name().ends_with(".yaml") {

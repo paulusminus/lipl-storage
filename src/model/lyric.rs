@@ -45,18 +45,14 @@ pub struct LyricPost {
 
 impl From<LyricPost> for Lyric {
     fn from(lp: LyricPost) -> Lyric {
-        Lyric {
-            id: Uuid::new_v4(),
-            title: lp.title,
-            parts: lp.parts,
-        }
+        (None, lp).into()
     }
 }
 
-impl From<(Uuid, LyricPost)> for Lyric {
-    fn from(data: (Uuid, LyricPost)) -> Lyric {
+impl From<(Option<Uuid>, LyricPost)> for Lyric {
+    fn from(data: (Option<Uuid>, LyricPost)) -> Lyric {
         Lyric {
-            id: data.0,
+            id: data.0.unwrap_or(Uuid::new_v4()),
             title: data.1.title,
             parts: data.1.parts,
         }

@@ -50,8 +50,8 @@ pub mod serde_uuid {
     where
         D: Deserializer<'de>,
     {
-        let val: &str = Deserialize::deserialize(deserializer)?;
-        Uuid::try_from_base58(val).map_err(D::Error::custom)
+        let s: &str = Deserialize::deserialize(deserializer)?;
+        Uuid::try_from_base58(s).map_err(D::Error::custom)
     }    
 }
 

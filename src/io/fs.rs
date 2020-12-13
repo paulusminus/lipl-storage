@@ -17,7 +17,7 @@ where P: AsRef<Path> {
             let uuid = file_path.to_uuid();
             lyric_hm.insert(
                 uuid,
-                get_lyric(File::open(file_path)?).map(|lp| Lyric::from((uuid, lp)))?
+                get_lyric(File::open(file_path)?).map(|lp| Lyric::from((Some(uuid), lp)))?
             );
         }
         else if file_path.is_file() && file_path.extension() == Some(OsStr::new("yaml")) {
