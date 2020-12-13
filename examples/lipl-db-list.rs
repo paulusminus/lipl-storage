@@ -24,13 +24,22 @@ fn main() -> LiplResult<()> {
             fs_read(path)?
         };
 
+    println!("Lyrics");
     for lyric in lyrics.values() {
-        println!("{}", lyric);
+        if let Some(title) = &lyric.title {
+            println!("  - {}", title);
+        }
+        // println!("{}", lyric);
     };
 
     for playlist in playlists.values() {
         println!();
-        println!("{}", playlist);
+        println!("Playlist: {}", playlist.title);
+        for member in playlist.members.iter() {
+            if let Some(title) = &lyrics[member].title {
+                println!("  - {}", title);
+            }
+        }
     }
     
     println!("Elapsed: {:?}", start.elapsed());
