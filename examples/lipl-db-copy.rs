@@ -1,45 +1,35 @@
 use std::path::PathBuf;
 use std::time::{Instant};
-use lipl_io::model;
-use lipl_io::io::{fs_read, zip_write};
+use lipl_io::model::{LiplResult, PathBufExt, ZIP};
+use lipl_io::io::{fs_read, fs_write, zip_read, zip_write};
+use clap::{Clap, ValueHint};
 
-fn main() -> model::LiplResult<()> {
+#[derive(Clap, Debug)]
+#[clap(about = "Copy Lipl Db", author, version, name = "lipl-db-copy") ]
+struct Opt {
+    #[clap(required = true, index = 1, parse(from_os_str), value_hint = ValueHint::FilePath)]
+    source: PathBuf,
+    #[clap(required = true, index = 2, parse(from_os_str), value_hint = ValueHint::FilePath)]
+    target: PathBuf,
+}
+
+
+fn main() -> LiplResult<()> {
     let start = Instant::now();
 
-    let matches = clap::args();
-    let get_value = |s: &str| matches.value_of(s).unwrap();
-    let source_path: PathBuf = get_value("source").into();
-    let target_path: PathBuf = get_value("target").into();
+    let opt = Opt::parse();
+    let source_path = opt.source;
+    let target_path = opt.target;
 
-    let (lyrics, playlists) = fs_read(&source_path)?;
+    let (lyrics, playlists) = if source_path.has_extension(ZIP) { zip_read(source_path)? } else { fs_read(source_path)? };
 
-    zip_write(target_path, lyrics, playlists)?;
+    if target_path.has_extension(ZIP) { 
+        zip_write(target_path, lyrics, playlists)?
+    }
+    else {
+        fs_write(target_path, lyrics, playlists)?;
+    };
 
     println!("Elapsed: {:?}", start.elapsed());
     Ok(())
-}
-
-mod clap {
-    use clap::{crate_authors, crate_version, Arg, App, ArgMatches};
-    pub fn args() -> ArgMatches {
-        App::new("lipl-db-copy")
-        .about("List lyrics and playlists from directory or zipfile")
-        .version(crate_version!())
-        .author(crate_authors!("\n"))
-        .arg(
-            Arg::new("source")
-            .value_name("source")
-            .about("the source directory or zipfile")
-            .required(true)
-            .index(1)
-        )
-        .arg(
-            Arg::new("target")
-            .value_name("target")
-            .about("the target directory or zipfile")
-            .required(true)
-            .index(2)
-        )
-        .get_matches()
-    }
 }

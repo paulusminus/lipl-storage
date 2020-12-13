@@ -2,11 +2,20 @@ use std::time::{Instant};
 use lipl_io::model::{LiplResult};
 use lipl_io::io::{fs_read, zip_read};
 use std::path::PathBuf;
+use clap::{Clap, ValueHint};
+
+#[derive(Clap, Debug)]
+#[clap(about = "List lyrics and playlists", author, version, name = "lipl-db-list") ]
+struct Opt {
+    #[clap(required = true, index = 1, parse(from_os_str), value_hint = ValueHint::FilePath)]
+    source: PathBuf
+}
 
 fn main() -> LiplResult<()> {
     let start = Instant::now();
 
-    let path: PathBuf = clap::args().value_of("source").unwrap().into();
+    let opt = Opt::parse();
+    let path = opt.source;
     let (lyrics, playlists) = 
         if path.is_file() {
             zip_read(path)?
@@ -26,22 +35,4 @@ fn main() -> LiplResult<()> {
     
     println!("Elapsed: {:?}", start.elapsed());
     Ok(())
-}
-
-mod clap {
-    use clap::{crate_authors, crate_version, Arg, App, ArgMatches};
-    pub fn args() -> ArgMatches {
-        App::new("lipl-db-list")
-        .about("List lyrics and playlists from directory or zipfile")
-        .version(crate_version!())
-        .author(crate_authors!("\n"))
-        .arg(
-            Arg::new("source")
-            .value_name("source")
-            .about("the source directory or zipfile")
-            .required(true)
-            .index(1)
-        )
-        .get_matches()
-    }
 }

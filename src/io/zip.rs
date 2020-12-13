@@ -4,8 +4,9 @@ use std::fs::File;
 use std::io::{Write};
 use zip::{ZipArchive};
 use zip::read::ZipFile;
-use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt};
+use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt, TXT, YAML};
 use crate::io::{get_lyric, get_playlist};
+// use serde_yaml::{to_string};
 
 fn to_uuid(z: &ZipFile) -> Uuid {
     z.name().to_uuid()
@@ -22,13 +23,13 @@ where P: AsRef<Path> {
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
         let uuid = to_uuid(&file);
-        if file.is_file() && file.name().ends_with(".txt") {
+        if file.is_file() && file.name().has_extension(TXT) {
             lyric_hm.insert(
                 uuid,
                 get_lyric(file).map(|lp| Lyric::from((Some(uuid), lp)))?
             );
         }
-        else if file.is_file() && file.name().ends_with(".yaml") {
+        else if file.is_file() && file.name().has_extension(YAML) {
             playlist_hm.insert(
                 uuid,
                 get_playlist(file).map(|pp| Playlist::from((Some(uuid), pp)))?
@@ -46,7 +47,7 @@ pub fn zip_write<P: AsRef<Path>>(path: P, lyrics: HashMap<Uuid, Lyric>, playlist
     zip.set_comment("Lipl Database");
 
     for lyric in lyrics.values() {
-        let filename = format!("{}.txt", lyric.id.to_base58());
+        let filename = format!("{}.{}", lyric.id.to_base58(), TXT);
         let title_content = lyric.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
         let content = format!("{}{}", title_content, parts_to_string(&lyric.parts));
         let bytes = content.as_str().as_bytes();
@@ -55,7 +56,7 @@ pub fn zip_write<P: AsRef<Path>>(path: P, lyrics: HashMap<Uuid, Lyric>, playlist
     };
 
     for playlist in playlists.values() {
-        let filename = format!("{}.yaml", playlist.id.to_base58());
+        let filename = format!("{}.{}", playlist.id.to_base58(), YAML);
         let disk_playlist = PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
         let content = serde_yaml::to_string(&disk_playlist)?;
         let bytes = content.as_str().as_bytes();
