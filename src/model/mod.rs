@@ -6,6 +6,7 @@ mod playlist;
 mod summary;
 mod traits;
 mod uuid;
+mod zip_archive;
 
 pub use constant::{YAML, TXT, ZIP};
 pub use err::{LiplError, LiplResult};
@@ -15,3 +16,4 @@ pub use playlist::{Frontmatter, Playlist, PlaylistPost};
 pub use summary::{Summary};
 pub use traits::{HasId, HasSummary};
 pub use self::uuid::{serde_uuid, serde_vec_uuid, Uuid, UuidExt};
+pub use zip_archive::{ZipArchiveExt};

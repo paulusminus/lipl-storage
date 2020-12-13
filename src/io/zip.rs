@@ -5,13 +5,19 @@ use std::path::Path;
 
 use zip::read::{ZipArchive};
 
-use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt, TXT, YAML};
+use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt, TXT, YAML, ZipArchiveExt};
 use crate::io::{get_lyric, get_playlist};
 
 pub fn zip_read<P>(path: P) -> LiplResult<(HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>)>
 where P: AsRef<Path> {
     let zip_file = File::open(path)?;
     let zip = &mut ZipArchive::new(zip_file)?;
+
+    /*
+    zip.list().into_iter().for_each(|zf| {
+
+    });
+    */
 
     let mut lyric_hm: HashMap<Uuid, Lyric> = HashMap::new();
     let mut playlist_hm: HashMap<Uuid, Playlist> = HashMap::new();
