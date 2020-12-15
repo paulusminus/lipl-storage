@@ -1,4 +1,5 @@
 mod constant;
+mod db;
 mod err;
 mod id;
 mod lyric;
@@ -10,6 +11,7 @@ mod uuid;
 mod vfile;
 
 pub use constant::{YAML, TXT, ZIP};
+pub use db::{Db};
 pub use err::{LiplError, LiplResult};
 pub use lyric::{parts_to_string, Lyric, LyricPost};
 pub use pathbuf::PathBufExt;

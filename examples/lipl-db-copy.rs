@@ -1,7 +1,6 @@
 use std::path::PathBuf;
-use std::time::{Instant};
-use lipl_io::model::{LiplResult, PathBufExt, ZIP};
-use lipl_io::io::{fs_read, fs_write, zip_read, zip_write};
+use lipl_io::model::{LiplResult};
+use lipl_io::io::{copy};
 use clap::{Clap, ValueHint};
 
 #[derive(Clap, Debug)]
@@ -14,18 +13,6 @@ struct Opt {
 }
 
 fn main() -> LiplResult<()> {
-    let start = Instant::now();
     let opt = Opt::parse();
-
-    let (lyrics, playlists) = if opt.source.has_extension(ZIP) { zip_read(opt.source)? } else { fs_read(opt.source)? };
-
-    if opt.target.has_extension(ZIP) { 
-        zip_write(opt.target, lyrics, playlists)?
-    }
-    else {
-        fs_write(opt.target, lyrics, playlists)?;
-    };
-
-    println!("Elapsed: {:?}", start.elapsed());
-    Ok(())
+    copy(opt.source, opt.target)
 }

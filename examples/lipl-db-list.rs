@@ -1,6 +1,5 @@
-use std::time::{Instant};
 use lipl_io::model::{LiplResult};
-use lipl_io::io::{fs_read, zip_read};
+use lipl_io::io::{list};
 use std::path::PathBuf;
 use clap::{Clap, ValueHint};
 
@@ -12,36 +11,6 @@ struct Opt {
 }
 
 fn main() -> LiplResult<()> {
-    let start = Instant::now();
-
     let opt = Opt::parse();
-    let path = opt.source;
-    let (lyrics, playlists) = 
-        if path.is_file() {
-            zip_read(path)?
-        }
-        else {
-            fs_read(path)?
-        };
-
-    println!("Lyrics");
-    for lyric in lyrics.values() {
-        if let Some(title) = &lyric.title {
-            println!("  - {}", title);
-        }
-        // println!("{}", lyric);
-    };
-
-    for playlist in playlists.values() {
-        println!();
-        println!("Playlist: {}", playlist.title);
-        for member in playlist.members.iter() {
-            if let Some(title) = &lyrics[member].title {
-                println!("  - {}", title);
-            }
-        }
-    }
-    
-    println!("Elapsed: {:?}", start.elapsed());
-    Ok(())
+    list(opt.source)
 }
