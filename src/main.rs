@@ -7,16 +7,18 @@ mod handler;
 mod message;
 mod param;
 
-use warp::Filter;
+use anyhow::Result;
 use tokio::sync::oneshot;
 use tokio::signal;
+use warp::Filter;
+
 use lipl_io::model::{LyricPost, PlaylistPost, Lyric, Playlist};
 use lipl_io::io::fs_read;
+
 use filter::get_routes;
 
-
 #[tokio::main]
-async fn main() -> tokio::io::Result<()> {
+async fn main() -> Result<()> {
     let (tx, rx) = oneshot::channel::<()>();
     let signals = signal::ctrl_c();
     
@@ -29,7 +31,7 @@ async fn main() -> tokio::io::Result<()> {
     info!("{}", message::STARTING);
 
     let source_path         = param::parse_command_line()?;
-    let (lyrics, playlists) = fs_read(&source_path).unwrap();
+    let (lyrics, playlists) = fs_read(&source_path)?;
 
     let routes = 
         get_routes::<Lyric, LyricPost>(lyrics, constant::LYRIC)
@@ -40,10 +42,10 @@ async fn main() -> tokio::io::Result<()> {
 
     let (_address, server) = 
         warp::serve(routes)
-        .bind_with_graceful_shutdown((constant::HOST, constant::PORT), async {
+        .try_bind_with_graceful_shutdown((constant::HOST, constant::PORT), async {
             rx.await.ok();
             info!("{}", message::STOPPING);
-        });
+        })?;
 
     server.await;
 

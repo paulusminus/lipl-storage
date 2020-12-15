@@ -3,18 +3,20 @@ use std::sync::{Arc, RwLock};
 use warp::{body, path, Filter};
 use lipl_io::{Deserialize, Serialize};
 use lipl_io::model::{HasId, HasSummary, Uuid};
-use super::handler;
-use super::constant::VERSION;
+use crate::handler;
+use crate::constant::{API, VERSION};
 
 pub fn get_routes<T, U>(db: HashMap<Uuid, T>, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 where T: From<U> + HasSummary + HasId + Serialize + Clone + Send + Sync,
-U: for<'de> Deserialize<'de> + Send {
+U: for<'de> Deserialize<'de> + Send
+{
     let arc = Arc::new(RwLock::new(db));
     let db  = warp::any().map(move || arc.clone());
+    let prefix = warp::path(API).and(warp::path(VERSION));
 
     let list = 
         warp::get()
-        .and(path(VERSION))
+        .and(prefix)
         .and(path(name))
         .and(path::end())
         .and(db.clone())
@@ -22,7 +24,7 @@ U: for<'de> Deserialize<'de> + Send {
 
     let item =
         warp::get()
-        .and(path(VERSION))
+        .and(prefix)
         .and(path(name))
         .and(path::param())
         .and(db.clone())
@@ -30,7 +32,7 @@ U: for<'de> Deserialize<'de> + Send {
 
     let post =
         warp::post()
-        .and(path(VERSION))
+        .and(prefix)
         .and(path(name))
         .and(path::end())
         .and(body::json::<U>())
@@ -39,7 +41,7 @@ U: for<'de> Deserialize<'de> + Send {
 
     let delete =
         warp::delete()
-        .and(warp::path(VERSION))
+        .and(prefix)
         .and(warp::path(name))
         .and(warp::path::param())
         .and(db.clone())
@@ -47,7 +49,7 @@ U: for<'de> Deserialize<'de> + Send {
 
     let put =
         warp::put()
-        .and(path(VERSION))
+        .and(prefix)
         .and(path(name))
         .and(path::param())
         .and(body::json::<U>())
