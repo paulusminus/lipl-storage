@@ -5,7 +5,8 @@ const DIR_NAME: &str = "./tests/fs/";
 
 #[test]
 fn test_get_lyrics() -> LiplResult<()> {
-    let mut lyrics: Vec<Lyric> = fs_read(DIR_NAME)?.0.values().cloned().collect();
+    let db = fs_read(DIR_NAME)?;
+    let mut lyrics: Vec<Lyric> = db.get_lyric_list().into_iter().cloned().collect();
     lyrics.sort_by(|a, b| a.id.cmp(&b.id));
 
     let song1 = &lyrics[0];

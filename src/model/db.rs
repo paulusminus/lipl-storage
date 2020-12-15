@@ -27,13 +27,14 @@ impl Db {
         self.lyrics.get(id)
     }
 
-    pub fn add_lyric(&mut self, lyric: Lyric) {
-        self.lyrics.insert(lyric.id, lyric);
+    pub fn add_lyric(&mut self, lyric: &Lyric) {
+        self.lyrics.insert(lyric.id, lyric.clone());
     }
 
-    pub fn add_lyric_post(&mut self, lyric_post: LyricPost) {
+    pub fn add_lyric_post(&mut self, lyric_post: LyricPost) -> Lyric {
         let lyric: Lyric = lyric_post.into();
-        self.add_lyric(lyric);
+        self.add_lyric(&lyric);
+        lyric
     }
 
     pub fn _remove_lyric_from_playlists(&mut self, lyric_id: &Uuid) {
@@ -63,9 +64,9 @@ impl Db {
         members.iter().cloned().filter(|id| self.lyrics.contains_key(id)).collect()
     }
 
-    pub fn add_playlist(&mut self, mut playlist: Playlist) {
+    pub fn add_playlist(&mut self, playlist: &mut Playlist) {
         playlist.members = self._valid_members(&playlist.members);
-        self.playlists.insert(playlist.id, playlist);
+        self.playlists.insert(playlist.id, playlist.clone());
     }
 
     pub fn add_playlist_post(&mut self, playlist_post: &PlaylistPost) {
@@ -74,8 +75,8 @@ impl Db {
         self.playlists.insert(playlist.id, playlist);
     }
 
-    pub fn delete_playlist(&mut self, id: Uuid) {
-        self.playlists.remove(&id);
+    pub fn delete_playlist(&mut self, id: &Uuid) {
+        self.playlists.remove(id);
     }
 
     pub fn update_playlist(&mut self, playlist_update: &Playlist) {

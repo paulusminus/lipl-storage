@@ -12,6 +12,12 @@ impl Id {
     }
 }
 
+impl Id {
+    fn uuid(&self) -> Uuid {
+        self.0
+    }
+}
+
 impl Display for Id {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.0.to_base58())

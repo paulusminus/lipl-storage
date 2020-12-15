@@ -13,7 +13,7 @@ where P: AsRef<Path> {
         if file_path.is_file() && file_path.has_extension(TXT) {
             let uuid = file_path.to_uuid();
             db.add_lyric(
-                get_lyric(File::open(file_path)?).map(|lp| Lyric::from((Some(uuid), lp)))?
+                &get_lyric(File::open(file_path)?).map(|lp| Lyric::from((Some(uuid), lp)))?
             );
         }
     }
@@ -23,7 +23,7 @@ where P: AsRef<Path> {
         if file_path.is_file() && file_path.has_extension(YAML) {
             let uuid = file_path.to_uuid();
             db.add_playlist(
-                get_playlist(File::open(file_path)?).map(|pp| Playlist::from((Some(uuid), pp)))?
+                &mut get_playlist(File::open(file_path)?).map(|pp| Playlist::from((Some(uuid), pp)))?
             );
         }
     }
