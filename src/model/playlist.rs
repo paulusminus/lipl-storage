@@ -29,7 +29,7 @@ impl fmt::Display for Playlist {
     }
 }
 
-#[derive(Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct PlaylistPost {
     pub title: String,
     pub members: Vec<String>

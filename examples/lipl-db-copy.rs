@@ -13,7 +13,6 @@ struct Opt {
     target: PathBuf,
 }
 
-
 fn main() -> LiplResult<()> {
     let start = Instant::now();
     let opt = Opt::parse();

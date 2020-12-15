@@ -5,33 +5,28 @@ use std::path::Path;
 
 use zip::read::{ZipArchive};
 
-use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt, TXT, YAML, ZipArchiveExt};
+use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, Uuid, UuidExt, TXT, YAML};
 use crate::io::{get_lyric, get_playlist};
 
 pub fn zip_read<P>(path: P) -> LiplResult<(HashMap<Uuid, Lyric>, HashMap<Uuid, Playlist>)>
 where P: AsRef<Path> {
     let zip_file = File::open(path)?;
-    let zip = &mut ZipArchive::new(zip_file)?;
-
-    /*
-    zip.list().into_iter().for_each(|zf| {
-
-    });
-    */
+    let mut zip = ZipArchive::new(zip_file)?;
 
     let mut lyric_hm: HashMap<Uuid, Lyric> = HashMap::new();
     let mut playlist_hm: HashMap<Uuid, Playlist> = HashMap::new();
 
+
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
         let uuid = (&file.name()).to_uuid();
-        if file.is_file() && file.name().has_extension(TXT) {
+        if file.name().is_file_type(TXT) {
             lyric_hm.insert(
                 uuid,
                 get_lyric(file).map(|lp| Lyric::from((Some(uuid), lp)))?
             );
         }
-        else if file.is_file() && file.name().has_extension(YAML) {
+        else if file.name().is_file_type(YAML) {
             playlist_hm.insert(
                 uuid,
                 get_playlist(file).map(|pp| Playlist::from((Some(uuid), pp)))?
