@@ -64,24 +64,27 @@ impl Db {
         members.iter().cloned().filter(|id| self.lyrics.contains_key(id)).collect()
     }
 
-    pub fn add_playlist(&mut self, playlist: &mut Playlist) {
+    pub fn add_playlist(&mut self, playlist: &mut Playlist) -> Playlist {
         playlist.members = self._valid_members(&playlist.members);
         self.playlists.insert(playlist.id, playlist.clone());
+        playlist.clone()
     }
 
-    pub fn add_playlist_post(&mut self, playlist_post: &PlaylistPost) {
+    pub fn add_playlist_post(&mut self, playlist_post: &PlaylistPost) -> Playlist {
         let mut playlist: Playlist = playlist_post.clone().into();
         playlist.members = self._valid_members(&playlist.members);
-        self.playlists.insert(playlist.id, playlist);
+        self.playlists.insert(playlist.id, playlist.clone());
+        playlist
     }
 
-    pub fn delete_playlist(&mut self, id: &Uuid) {
-        self.playlists.remove(id);
+    pub fn delete_playlist(&mut self, id: &Uuid) -> Option<Playlist> {
+        self.playlists.remove(id)
     }
 
-    pub fn update_playlist(&mut self, playlist_update: &Playlist) {
+    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> Playlist {
         let mut playlist = playlist_update.clone();
         playlist.members = self._valid_members(&playlist.members);
-        self.playlists.entry(playlist.id).and_modify(|e| *e = playlist);
+        self.playlists.entry(playlist.id).and_modify(|e| *e = playlist.clone());
+        playlist
     }
 }
