@@ -1,25 +1,20 @@
-use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use warp::{body, path, Filter};
-use lipl_io::{Deserialize, Serialize};
-use lipl_io::model::{HasId, HasSummary, Uuid};
-use crate::handler;
+use lipl_io::model::{Db};
+use crate::playlist_handler as handler;
 use crate::constant::{API, VERSION};
 
-pub fn get_routes<T, U>(db: HashMap<Uuid, T>, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
-where T: From<U> + HasSummary + HasId + Serialize + Clone + Send + Sync,
-U: for<'de> Deserialize<'de> + Send
+pub fn get_routes(db: Arc<RwLock<Db>>, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
 {
-    let arc = Arc::new(RwLock::new(db));
-    let db  = warp::any().map(move || arc.clone());
-    let prefix = warp::path(API).and(warp::path(VERSION));
+    let db_filter  = warp::any().map(move || db.clone());
+    let prefix     = warp::path(API).and(warp::path(VERSION));
 
     let list = 
         warp::get()
         .and(prefix)
         .and(path(name))
         .and(path::end())
-        .and(db.clone())
+        .and(db_filter.clone())
         .and_then(handler::list);
 
     let item =
@@ -27,7 +22,7 @@ U: for<'de> Deserialize<'de> + Send
         .and(prefix)
         .and(path(name))
         .and(path::param())
-        .and(db.clone())
+        .and(db_filter.clone())
         .and_then(handler::item);
 
     let post =
@@ -35,8 +30,8 @@ U: for<'de> Deserialize<'de> + Send
         .and(prefix)
         .and(path(name))
         .and(path::end())
-        .and(body::json::<U>())
-        .and(db.clone())
+        .and(body::json())
+        .and(db_filter.clone())
         .and_then(handler::post);
 
     let delete =
@@ -44,7 +39,7 @@ U: for<'de> Deserialize<'de> + Send
         .and(prefix)
         .and(warp::path(name))
         .and(warp::path::param())
-        .and(db.clone())
+        .and(db_filter.clone())
         .and_then(handler::delete);
 
     let put =
@@ -52,8 +47,8 @@ U: for<'de> Deserialize<'de> + Send
         .and(prefix)
         .and(path(name))
         .and(path::param())
-        .and(body::json::<U>())
-        .and(db.clone())
+        .and(body::json())
+        .and(db_filter.clone())
         .and_then(handler::put);
 
     list.or(item).or(post).or(put).or(delete)

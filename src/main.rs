@@ -2,20 +2,23 @@
 extern crate log;
 
 mod constant;
-mod filter;
-mod handler;
+mod lyric_filter;
+mod lyric_handler;
 mod message;
 mod param;
+mod playlist_filter;
+mod playlist_handler;
 
+use std::sync::{Arc, RwLock};
 use anyhow::Result;
 use tokio::sync::oneshot;
 use tokio::signal;
 use warp::Filter;
 
-use lipl_io::model::{LyricPost, PlaylistPost, Lyric, Playlist};
 use lipl_io::io::fs_read;
 
-use filter::get_routes;
+use lyric_filter::get_routes as get_lyric_routes;
+use playlist_filter::get_routes as get_playlist_routes;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,13 +33,13 @@ async fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(constant::LOG_LEVEL)).init();
     info!("{}", message::STARTING);
 
-    let source_path         = param::parse_command_line()?;
-    let (lyrics, playlists) = fs_read(&source_path)?;
+    let source_path = param::parse_command_line()?;
+    let db          = Arc::new(RwLock::new(fs_read(&source_path)?));
 
     let routes = 
-        get_routes::<Lyric, LyricPost>(lyrics, constant::LYRIC)
+        get_lyric_routes(db.clone(), constant::LYRIC)
         .or(
-            get_routes::<Playlist, PlaylistPost>(playlists, constant::PLAYLIST)
+            get_playlist_routes(db.clone(), constant::PLAYLIST)
         )
         .with(warp::log(constant::LOG_NAME));
 
