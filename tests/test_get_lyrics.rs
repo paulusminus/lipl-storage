@@ -1,11 +1,11 @@
-use lipl_io::io::{fs_read};
-use lipl_io::model::{LiplResult, Lyric};
+use lipl_io::model::{LiplResult, Lyric, Db, Persist};
 
 const DIR_NAME: &str = "./tests/fs/";
 
 #[test]
 fn test_get_lyrics() -> LiplResult<()> {
-    let db = fs_read(DIR_NAME)?;
+    let mut db = Db::new(DIR_NAME.into());
+    db.load()?;
     let mut lyrics: Vec<Lyric> = db.get_lyric_list().into_iter().cloned().collect();
     lyrics.sort_by(|a, b| a.id.cmp(&b.id));
 

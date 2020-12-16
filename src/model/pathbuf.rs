@@ -1,5 +1,5 @@
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use crate::model::{LiplResult, Uuid, UuidExt};
 
 pub trait PathBufExt {
@@ -19,12 +19,10 @@ impl<T> PathBufExt for T where T: AsRef<Path> {
     }
 
     fn has_extension(&self, ext: &str) -> bool {
-        let pb: PathBuf = self.as_ref().into();
-        pb.extension() == Some(OsStr::new(ext))
+        self.as_ref().extension() == Some(OsStr::new(ext))
     }
 
     fn is_file_type(&self, ext: &str) -> bool {
-        let pb: PathBuf = self.as_ref().into();
-        pb.is_file() && self.has_extension(ext)
+        self.as_ref().is_file() && self.has_extension(ext)
     }
 }

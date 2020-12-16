@@ -1,19 +1,14 @@
 use std::path::{Path};
 use std::time::{Instant};
-use crate::model::{LiplResult, PathBufExt, ZIP};
-use crate::io::{fs_read, fs_write, zip_read, zip_write};
+use crate::model::{LiplResult, Db, Persist};
 
 pub fn copy<P: AsRef<Path>>(source: P, target: P) -> LiplResult<()> {
     let start = Instant::now();
 
-    let db = if source.is_file_type(ZIP) { zip_read(source)? } else { fs_read(source)? };
+    let mut db = Db::new(source.as_ref().into());
+    db.load()?;
 
-    if target.is_file_type(ZIP) { 
-        zip_write(target, db)?
-    }
-    else {
-        fs_write(target, db)?;
-    };
+    db.save_to(target.as_ref().into())?;
 
     println!("Elapsed: {:?}", start.elapsed());
     Ok(())

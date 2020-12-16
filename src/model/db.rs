@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::path::{PathBuf};
-use crate::model::{Lyric, LyricPost, Playlist, PlaylistPost, Uuid};
+use crate::model::{LiplResult, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP};
+use crate::io::{fs_read, fs_write, zip_read, zip_write};
 
 type Collection<T> = HashMap<Uuid, T>;
 
@@ -86,5 +88,44 @@ impl Db {
         playlist.members = self._valid_members(&playlist.members);
         self.playlists.entry(playlist.id).and_modify(|e| *e = playlist.clone());
         playlist
+    }
+}
+
+pub trait Persist {
+    fn load(&mut self) -> LiplResult<()>;
+    fn save(&self) -> LiplResult<()>;
+    fn save_to(&self, path: PathBuf) -> LiplResult<()>;
+    fn clear(&mut self);
+}
+
+impl Persist for Db {
+    fn load(&mut self) -> LiplResult<()> {
+        self.clear();
+        if self.path.extension() == Some(OsStr::new(ZIP)) { 
+            zip_read(self.path.clone(), self)?
+        }
+        else {
+            fs_read(self.path.clone(), self)?
+        };
+        Ok(())
+    }
+
+    fn clear(&mut self) {
+        self.lyrics.clear();
+        self.playlists.clear();
+    }
+
+    fn save(&self) -> LiplResult<()> {
+        self.save_to(self.path.clone())
+    }
+
+    fn save_to(&self, path: PathBuf) -> LiplResult<()> {
+        if path.extension() == Some(OsStr::new(ZIP)) { 
+            zip_write(path, self)?
+        }
+        else {
+            fs_write(path, self)?
+        };
+        Ok(())
     }
 }

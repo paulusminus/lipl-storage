@@ -11,7 +11,7 @@ mod uuid;
 mod vfile;
 
 pub use constant::{YAML, TXT, ZIP};
-pub use db::{Db};
+pub use db::{Db, Persist};
 pub use err::{LiplError, LiplResult};
 pub use lyric::{parts_to_string, Lyric, LyricPost};
 pub use id::{Id};
