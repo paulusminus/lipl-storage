@@ -36,9 +36,11 @@ pub async fn serve(param: param::Serve) -> Result<()> {
 
     let (_address, server) = 
         warp::serve(routes)
-        .try_bind_with_graceful_shutdown((constant::HOST, param.port), async {
+        .try_bind_with_graceful_shutdown((constant::HOST, param.port), async move {
             rx.await.ok();
             info!("{}", message::STOPPING);
+            arc_db.write().unwrap().save().unwrap();
+            info!("{}", message::BACKUP_COMPLETE);
         })?;
 
     server.await;
