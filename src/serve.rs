@@ -11,7 +11,7 @@ use crate::param;
 use crate::lyric_filter::get_routes as get_lyric_routes;
 use crate::playlist_filter::get_routes as get_playlist_routes;
 
-use lipl_io::io::fs_read;
+use lipl_io::model::{Db, Persist};
 
 pub async fn serve(param: param::Serve) -> Result<()> {
     let (tx, rx) = oneshot::channel::<()>();
@@ -22,15 +22,15 @@ pub async fn serve(param: param::Serve) -> Result<()> {
         .map(|_| tx.send(()))
     });
 
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(constant::LOG_LEVEL)).init();
-    info!("{}", message::STARTING);
+    let mut db = Db::new(param.source);
+    db.load()?;
 
-    let db = Arc::new(RwLock::new(fs_read(&param.source)?));
+    let arc_db = Arc::new(RwLock::new(db));
 
     let routes = 
-        get_lyric_routes(db.clone(), constant::LYRIC)
+        get_lyric_routes(arc_db.clone(), constant::LYRIC)
         .or(
-            get_playlist_routes(db.clone(), constant::PLAYLIST)
+            get_playlist_routes(arc_db.clone(), constant::PLAYLIST)
         )
         .with(warp::log(constant::LOG_NAME));
 

@@ -32,7 +32,6 @@ pub async fn item(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejec
     )
 }
 
-// TODO: check input validating members
 pub async fn post(json: LyricPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let result = {
@@ -58,7 +57,6 @@ pub async fn delete(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rej
     )
 }
 
-// TODO: check input validating members
 pub async fn put(path: String, json: LyricPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let db_result = {

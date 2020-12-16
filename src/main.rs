@@ -16,6 +16,8 @@ use clap::Clap;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(constant::LOG_LEVEL)).init();
+    info!("{}", message::STARTING);
 
     let arguments = param::Arguments::parse();
     match arguments.command {
