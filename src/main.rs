@@ -2,55 +2,37 @@
 extern crate log;
 
 mod constant;
+mod db;
 mod lyric_filter;
 mod lyric_handler;
 mod message;
 mod param;
 mod playlist_filter;
 mod playlist_handler;
+mod serve;
 
-use std::sync::{Arc, RwLock};
 use anyhow::Result;
-use tokio::sync::oneshot;
-use tokio::signal;
-use warp::Filter;
-
-use lipl_io::io::fs_read;
-
-use lyric_filter::get_routes as get_lyric_routes;
-use playlist_filter::get_routes as get_playlist_routes;
+use clap::Clap;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (tx, rx) = oneshot::channel::<()>();
-    let signals = signal::ctrl_c();
-    
-    tokio::task::spawn(async move {
-        signals.await
-        .map(|_| tx.send(()))
-    });
 
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(constant::LOG_LEVEL)).init();
-    info!("{}", message::STARTING);
-
-    let source_path = param::parse_command_line()?;
-    let db          = Arc::new(RwLock::new(fs_read(&source_path)?));
-
-    let routes = 
-        get_lyric_routes(db.clone(), constant::LYRIC)
-        .or(
-            get_playlist_routes(db.clone(), constant::PLAYLIST)
-        )
-        .with(warp::log(constant::LOG_NAME));
-
-    let (_address, server) = 
-        warp::serve(routes)
-        .try_bind_with_graceful_shutdown((constant::HOST, constant::PORT), async {
-            rx.await.ok();
-            info!("{}", message::STOPPING);
-        })?;
-
-    server.await;
+    let arguments = param::Arguments::parse();
+    match arguments.command {
+        param::Command::Serve(serve_args) => {
+            serve::serve(serve_args).await?;
+        },
+        param::Command::Db(db) => {
+            match db {
+                param::DbCommand::Copy(copy_args) => {
+                    db::copy(copy_args)?;
+                },
+                param::DbCommand::List(list_args) => {
+                    db::list(list_args)?;
+                },
+            }
+        }
+    }
 
     Ok(())
 }

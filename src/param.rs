@@ -1,14 +1,47 @@
-use std::path::{Path};
-use std::io::{Error, ErrorKind};
+use std::path::{PathBuf};
+use clap::{Clap, ValueHint};
 
-pub fn parse_command_line() -> Result<String, Error> {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2 {
-        return Err(Error::new(ErrorKind::InvalidInput, "Te weinig parameters!"));
-    }
-    let path = &args[1];
-    if !Path::new(&path).exists() {
-        return Err(Error::new(ErrorKind::NotFound, "Directory bestaat niet"));
-    }
-    Ok(path.clone())
+#[derive(Clap, Debug)]
+pub struct Serve {
+    #[clap(short, long, required = true)]
+    pub port: u16,
+    #[clap(value_hint = ValueHint::AnyPath)]
+    pub source: PathBuf,
+}
+
+#[derive(Clap, Debug)]
+pub struct ListCommand {
+    #[clap(name = "source", parse(from_os_str), value_hint = ValueHint::AnyPath)]
+    pub source: PathBuf,
+}
+
+#[derive(Clap, Debug)]
+pub struct CopyCommand {
+    #[clap(name = "source", parse(from_os_str), value_hint = ValueHint::AnyPath)]
+    pub source: PathBuf,
+    #[clap(name = "target", parse(from_os_str), value_hint = ValueHint::AnyPath)]
+    pub target: PathBuf,
+}
+
+#[derive(Clap, Debug)]
+pub enum DbCommand {
+    #[clap(name = "list")]
+    List(ListCommand),
+    #[clap(name="copy")]
+    Copy(CopyCommand),
+}
+
+#[derive(Clap, Debug)]
+#[clap(name = "lipl-repo", author, version)]
+pub enum Command {
+    #[clap(name = "db")]
+    Db(DbCommand),
+    #[clap(name = "serve")]
+    Serve(Serve),
+}
+
+#[derive(Clap, Debug)]
+pub struct Arguments {
+    #[clap(subcommand)]
+    pub command: Command,
 }
