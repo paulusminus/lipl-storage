@@ -14,6 +14,7 @@ pub use constant::{YAML, TXT, ZIP};
 pub use db::{Db};
 pub use err::{LiplError, LiplResult};
 pub use lyric::{parts_to_string, Lyric, LyricPost};
+pub use id::{Id};
 pub use pathbuf::PathBufExt;
 pub use playlist::{Frontmatter, Playlist, PlaylistPost};
 pub use summary::{Summary};

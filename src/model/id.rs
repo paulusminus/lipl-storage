@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use crate::model::{LiplError, UuidExt};
 
-struct Id(Uuid);
+pub struct Id(Uuid);
 
 impl Id {
     fn new(uuid: Uuid) -> Self {
