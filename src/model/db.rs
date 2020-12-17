@@ -1,7 +1,8 @@
-use std::collections::HashMap;
-use std::ffi::OsStr;
+use std::collections::{HashMap};
+use std::ffi::{OsStr};
+use std::fs::{metadata};
 use std::path::{PathBuf};
-use crate::model::{LiplResult, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP};
+use crate::model::{LiplResult, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, LiplError};
 use crate::io::{fs_read, fs_write, zip_read, zip_write};
 
 type Collection<T> = HashMap<Uuid, T>;
@@ -101,13 +102,15 @@ pub trait Persist {
 impl Persist for Db {
     fn load(&mut self) -> LiplResult<()> {
         self.clear();
-        if self.path.extension() == Some(OsStr::new(ZIP)) { 
-            zip_read(self.path.clone(), self)?
+        if metadata(self.path.clone())?.is_file() && self.path.extension() == Some(OsStr::new(ZIP)) { 
+            zip_read(self.path.clone(), self)
+        }
+        else if metadata(self.path.clone())?.is_dir() {
+            fs_read(self.path.clone(), self)
         }
         else {
-            fs_read(self.path.clone(), self)?
-        };
-        Ok(())
+            Err(LiplError::NoPath(self.path.clone().to_string_lossy().to_owned().to_string()))
+        }
     }
 
     fn clear(&mut self) {
@@ -120,12 +123,14 @@ impl Persist for Db {
     }
 
     fn save_to(&self, path: PathBuf) -> LiplResult<()> {
-        if path.extension() == Some(OsStr::new(ZIP)) { 
-            zip_write(path, self)?
+        if metadata(&path)?.is_file() && (&path).extension() == Some(OsStr::new(ZIP)) { 
+            zip_write(&path, self)
+        }
+        else if metadata(&path)?.is_dir() {
+            fs_write(&path, self)
         }
         else {
-            fs_write(path, self)?
-        };
-        Ok(())
+            Err(LiplError::NoPath((&path).to_string_lossy().to_owned().to_string()))
+        }
     }
 }
