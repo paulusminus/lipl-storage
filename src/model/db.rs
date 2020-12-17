@@ -1,6 +1,6 @@
 use std::collections::{HashMap};
 use std::ffi::{OsStr};
-use std::fs::{metadata};
+use std::fs::{metadata, remove_file};
 use std::path::{PathBuf};
 use crate::model::{LiplResult, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, LiplError};
 use crate::io::{fs_read, fs_write, zip_read, zip_write};
@@ -11,6 +11,7 @@ pub struct Db {
     lyrics: Collection<Lyric>,
     playlists: Collection<Playlist>,
     path: PathBuf,
+    files: Vec<PathBuf>,
 }
 
 impl Db {
@@ -19,6 +20,7 @@ impl Db {
             lyrics: HashMap::new(),
             playlists: HashMap::new(),
             path,
+            files: vec![],
         }
     }
 
@@ -63,7 +65,7 @@ impl Db {
         self.playlists.get(uuid)
     }
 
-    pub fn _valid_members(&self, members: &Vec<Uuid>) -> Vec<Uuid> {
+    pub fn _valid_members(&self, members: &[Uuid]) -> Vec<Uuid> {
         members.iter().cloned().filter(|id| self.lyrics.contains_key(id)).collect()
     }
 
@@ -92,6 +94,11 @@ impl Db {
     }
 }
 
+pub enum DataType {
+    Lyric(Lyric),
+    Playlist(Playlist),
+}
+
 pub trait Persist {
     fn load(&mut self) -> LiplResult<()>;
     fn save(&self) -> LiplResult<()>;
@@ -106,7 +113,20 @@ impl Persist for Db {
             zip_read(self.path.clone(), self)
         }
         else if metadata(self.path.clone())?.is_dir() {
-            fs_read(self.path.clone(), self)
+            fs_read(
+                self.path.clone(), 
+                |pathbuf, item| {
+                    match item {
+                        DataType::Lyric(lyric) => {
+                            self.add_lyric(lyric);
+                        },
+                        DataType::Playlist(playlist) => {
+                            self.add_playlist(playlist);
+                        }
+                    } 
+                    self.files.push(pathbuf.clone());
+                },
+            )
         }
         else {
             Err(LiplError::NoPath(self.path.clone().to_string_lossy().to_owned().to_string()))
@@ -127,6 +147,10 @@ impl Persist for Db {
             zip_write(&path, self)
         }
         else if metadata(&path)?.is_dir() {
+            // TODO: remove files first
+            for file in self.files.iter() {
+                remove_file(file)?;
+            }
             fs_write(&path, self)
         }
         else {

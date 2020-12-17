@@ -69,7 +69,7 @@ impl HasSummary for Playlist {
 impl From<(Option<Uuid>, PlaylistPost)> for Playlist {
     fn from(data: (Option<Uuid>, PlaylistPost)) -> Playlist {
         Playlist {
-            id: data.0.unwrap_or(Uuid::new_v4()),
+            id: data.0.unwrap_or_else(Uuid::new_v4),
             title: data.1.title,
             members: data.1.members.iter().map(|m| m.to_uuid()).collect()
         }

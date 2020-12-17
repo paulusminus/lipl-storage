@@ -23,7 +23,7 @@ impl<'a> VFile<'a> for DirEntry {
     }
 
     fn path(&self) -> PathBuf {
-        self.path().into()
+        self.path()
     }
 
     fn is_file(&self) -> bool {

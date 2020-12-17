@@ -52,7 +52,7 @@ impl From<LyricPost> for Lyric {
 impl From<(Option<Uuid>, LyricPost)> for Lyric {
     fn from(data: (Option<Uuid>, LyricPost)) -> Lyric {
         Lyric {
-            id: data.0.unwrap_or(Uuid::new_v4()),
+            id: data.0.unwrap_or_else(Uuid::new_v4),
             title: data.1.title,
             parts: data.1.parts,
         }
