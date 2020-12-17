@@ -48,7 +48,7 @@ pub fn get_routes(db: Arc<RwLock<Db>>, name: &'static str) -> impl Filter<Extrac
         .and(path(name))
         .and(path::param())
         .and(body::json())
-        .and(db_filter.clone())
+        .and(db_filter)
         .and_then(handler::put);
 
     list.or(item).or(post).or(put).or(delete)
