@@ -3,7 +3,7 @@ use warp::{Reply, Rejection};
 use warp::reply::{with_status};
 use warp::http::status::StatusCode;
 
-use lipl_io::model::{Db, HasSummary, Playlist, PlaylistPost, PathBufExt, Summary};
+use lipl_io::model::{Db, HasSummary, Id, Playlist, PlaylistPost, Summary};
 use crate::constant::{CREATED, NO_CONTENT};
 
 pub async fn list(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
@@ -19,16 +19,13 @@ pub async fn list(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
     )
 }
 
-pub async fn item(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
+pub async fn item(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
 {
     let db_result = {
-        path.try_to_uuid().ok()
-        .and_then(|uuid| {
-            db.read()
-            .unwrap()
-            .get_playlist(&uuid)
-            .cloned()
-        })
+        db.read()
+        .unwrap()
+        .get_playlist(&id.uuid())
+        .cloned()
     };
     db_result.map_or_else(
         | | Err(warp::reject::not_found()),
@@ -46,14 +43,11 @@ pub async fn post(json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply,
     Ok(with_status(warp::reply::json(&result), StatusCode::from_u16(CREATED).unwrap()))
 }
 
-pub async fn delete(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
+pub async fn delete(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
     let db_result = {
-        path.try_to_uuid().ok()
-        .map(|uuid| {
-            db.write()
-            .unwrap()
-            .delete_playlist(&uuid)
-        })
+        db.write()
+        .unwrap()
+        .delete_playlist(&id.uuid())
     };
     db_result.map_or_else(
         | | Err(warp::reject::not_found()),
@@ -61,16 +55,14 @@ pub async fn delete(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rej
     )
 }
 
-pub async fn put(path: String, json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
+pub async fn put(id: Id, json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let db_result = {
-        path.try_to_uuid().ok()
-        .map(|uuid| {
-            let playlist: Playlist = (Some(uuid), json).into();
-            db.write()
-            .unwrap()
-            .update_playlist(&playlist)
-        })
+        let playlist: Playlist = (Some(id.uuid()), json).into();
+        db.write()
+        .unwrap()
+        .update_playlist(&playlist)
+        .ok()
     };
     db_result.map_or_else(
         | | Err(warp::reject::not_found()),
