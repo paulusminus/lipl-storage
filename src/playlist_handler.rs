@@ -1,7 +1,8 @@
 use std::sync::{Arc, RwLock};
 use warp::{Reply, Rejection};
 use warp::reply::{with_status};
-use warp::http::{StatusCode};
+use warp::http::status::StatusCode;
+
 use lipl_io::model::{Db, HasSummary, Playlist, PlaylistPost, PathBufExt, Summary};
 use crate::constant::{CREATED, NO_CONTENT};
 
@@ -35,7 +36,6 @@ pub async fn item(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejec
     )
 }
 
-// TODO: check input validating members
 pub async fn post(json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let result = {
