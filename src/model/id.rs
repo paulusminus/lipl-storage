@@ -13,7 +13,7 @@ impl Id {
 }
 
 impl Id {
-    fn uuid(&self) -> Uuid {
+    pub fn uuid(&self) -> Uuid {
         self.0
     }
 }

@@ -38,4 +38,8 @@ pub enum LiplError {
 
     #[error("Directory does not exist: {0}")]
     NonExistingDirectory(PathBuf),
+
+    #[error("No Path error: {0}")]
+    NoKey(String),
+
 }

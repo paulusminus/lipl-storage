@@ -2,7 +2,7 @@ use std::collections::{HashMap};
 use std::ffi::{OsStr};
 use std::fs::{metadata, remove_file};
 use std::path::{PathBuf};
-use crate::model::{LiplResult, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, LiplError};
+use crate::model::{LiplResult, LiplError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP};
 use crate::io::{fs_read, fs_write, zip_read, zip_write};
 
 type Collection<T> = HashMap<Uuid, T>;
@@ -48,13 +48,17 @@ impl Db {
         };
     }
 
-    pub fn delete_lyric(&mut self, id: &Uuid) {
+    pub fn delete_lyric(&mut self, id: &Uuid) -> LiplResult<()> {
         self._remove_lyric_from_playlists(&id);
-        self.lyrics.remove(id);
+        self.lyrics.remove(id)
+        .ok_or(LiplError::NoKey("Lyric".to_owned()))
+        .map(|_| {})
     }
 
-    pub fn update_lyric(&mut self, lyric: &Lyric) {
-        self.lyrics.entry(lyric.id).and_modify(|e| *e = lyric.clone());
+    pub fn update_lyric(&mut self, lyric: &Lyric) -> LiplResult<()> {
+        let e = self.lyrics.get_mut(&lyric.id).ok_or(LiplError::NoKey("".to_owned()))?;
+        *e = lyric.clone();
+        Ok(())
     }
 
     pub fn get_playlist_list(&self) -> Vec<&Playlist> {
@@ -86,11 +90,12 @@ impl Db {
         self.playlists.remove(id)
     }
 
-    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> Playlist {
+    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> LiplResult<Playlist> {
         let mut playlist = playlist_update.clone();
         playlist.members = self._valid_members(&playlist.members);
-        self.playlists.entry(playlist.id).and_modify(|e| *e = playlist.clone());
-        playlist
+        let e = self.playlists.get_mut(&playlist_update.id).ok_or(LiplError::NoKey("".to_owned()))?;
+        *e = playlist.clone();
+        Ok(playlist)
     }
 }
 
