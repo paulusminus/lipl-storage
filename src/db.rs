@@ -9,8 +9,18 @@ pub fn list(args: ListCommand) -> Result<()> {
 }
 
 pub fn copy(args: CopyCommand) -> Result<()> {
-    info!("Copy source: {}", args.source.to_string_lossy());
-    info!("Copy target: {}", args.target.to_string_lossy());
-    db_copy(args.source, args.target)?;
+    info!(
+        "Start copying {} to {}",
+        &args.source.to_string_lossy(),
+        &args.target.to_string_lossy(),
+     );
+
+     db_copy(&args.source, &args.target)?;
+
+     info!(
+        "Finished copying {} to {}",
+        args.source.to_string_lossy(),
+        args.target.to_string_lossy(),
+    );
     Ok(())
 }

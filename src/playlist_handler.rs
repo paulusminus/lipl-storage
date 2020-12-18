@@ -1,6 +1,9 @@
 use std::sync::{Arc, RwLock};
 use warp::{Reply, Rejection};
+use warp::reply::{with_status};
+use warp::http::{StatusCode};
 use lipl_io::model::{Db, HasSummary, Playlist, PlaylistPost, PathBufExt, Summary};
+use crate::constant::{CREATED, NO_CONTENT};
 
 pub async fn list(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
@@ -40,7 +43,7 @@ pub async fn post(json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply,
         .unwrap()
         .add_playlist_post(&json)
     };
-    Ok(warp::reply::json(&result))
+    Ok(with_status(warp::reply::json(&result), StatusCode::from_u16(CREATED).unwrap()))
 }
 
 pub async fn delete(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
@@ -54,11 +57,10 @@ pub async fn delete(path: String, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rej
     };
     db_result.map_or_else(
         | | Err(warp::reject::not_found()),
-        |_| Ok(warp::reply::reply()),
+        |_| Ok(with_status(warp::reply::reply(), StatusCode::from_u16(NO_CONTENT).unwrap())),
     )
 }
 
-// TODO: check input validating members
 pub async fn put(path: String, json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let db_result = {
@@ -72,6 +74,6 @@ pub async fn put(path: String, json: PlaylistPost, db: Arc<RwLock<Db>>) -> Resul
     };
     db_result.map_or_else(
         | | Err(warp::reject::not_found()),
-        |_| Ok(warp::reply::reply()),
+        |p| Ok(warp::reply::json(&p)),
     )
 }
