@@ -7,12 +7,6 @@ use crate::model::{LiplError, UuidExt};
 pub struct Id(Uuid);
 
 impl Id {
-    fn new(uuid: Uuid) -> Self {
-        Id(uuid)
-    }
-}
-
-impl Id {
     pub fn uuid(&self) -> Uuid {
         self.0
     }
