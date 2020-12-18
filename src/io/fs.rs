@@ -18,7 +18,10 @@ F: FnMut(&PathBuf, &mut DataType),
             adder(
                 &file_path,
                 &mut DataType::Lyric(
-                    get_lyric(File::open(&file_path)?).map(|lp| Lyric::from((Some(uuid), lp)))?,
+                    get_lyric(
+                        File::open(&file_path)?)
+                        .map(|lp| Lyric::from((Some(uuid), lp))
+                    )?,
                 )
             );
         }
