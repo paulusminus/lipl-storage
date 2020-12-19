@@ -8,7 +8,6 @@ mod playlist;
 mod summary;
 mod traits;
 mod uuid;
-mod vfile;
 
 pub use constant::{YAML, TXT, ZIP};
 pub use db::{Db, Persist, DataType};
@@ -20,4 +19,3 @@ pub use playlist::{Frontmatter, Playlist, PlaylistPost};
 pub use summary::{Summary};
 pub use traits::{HasId, HasSummary};
 pub use self::uuid::{serde_uuid, serde_vec_uuid, Uuid, UuidExt};
-pub use vfile::VFile;

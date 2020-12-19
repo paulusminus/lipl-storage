@@ -1,6 +1,6 @@
 [package]
 name = "lipl-repo"
-version = "0.1.1"
+version = "0.1.7"
 authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2018"
 
