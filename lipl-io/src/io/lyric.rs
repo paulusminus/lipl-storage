@@ -1,9 +1,11 @@
 use std::io::{Read, BufRead, BufReader};
 use crate::model::{Frontmatter, LiplResult, LyricPost};
 
-pub fn get_lyric(reader: impl Read) -> LiplResult<LyricPost> {
-    let async_reader = BufReader::new(reader);
-    let (yaml, parts) = parts_from_reader(async_reader)?;
+pub fn get_lyric<R>(reader: R) -> LiplResult<LyricPost>
+where R: Read 
+{
+    let buf_reader = BufReader::new(reader);
+    let (yaml, parts) = parts_from_reader(buf_reader)?;
 
     let frontmatter = 
         yaml
@@ -18,7 +20,8 @@ pub fn get_lyric(reader: impl Read) -> LiplResult<LyricPost> {
     )
 }
 
-pub fn parts_from_reader<R: Read>(reader: BufReader<R>) -> LiplResult<(Option<String>, Vec<Vec<String>>)>
+pub fn parts_from_reader<R>(reader: BufReader<R>) -> LiplResult<(Option<String>, Vec<Vec<String>>)>
+where R: Read
 {
     let lines = reader.lines();
     let mut new_part = true;

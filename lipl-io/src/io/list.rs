@@ -2,7 +2,9 @@ use std::path::{Path};
 use std::time::{Instant};
 use crate::model::{LiplResult, Db, Persist};
 
-pub fn list<P: AsRef<Path>>(source: P) -> LiplResult<()> {
+pub fn list<P>(source: P) -> LiplResult<()> 
+where P: AsRef<Path>,
+{
     let start = Instant::now();
 
     let mut db = Db::new(source.as_ref().into());

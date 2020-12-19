@@ -152,7 +152,6 @@ impl Persist for Db {
             zip_write(&path, self)
         }
         else if metadata(&path)?.is_dir() {
-            // TODO: remove files first
             for file in self.files.iter() {
                 remove_file(file)?;
             }
