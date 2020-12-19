@@ -51,12 +51,12 @@ impl Db {
     pub fn delete_lyric(&mut self, id: &Uuid) -> LiplResult<()> {
         self._remove_lyric_from_playlists(&id);
         self.lyrics.remove(id)
-        .ok_or(LiplError::NoKey("Lyric".to_owned()))
+        .ok_or_else(|| LiplError::NoKey("Lyric".to_owned()))
         .map(|_| {})
     }
 
     pub fn update_lyric(&mut self, lyric: &Lyric) -> LiplResult<()> {
-        let e = self.lyrics.get_mut(&lyric.id).ok_or(LiplError::NoKey("".to_owned()))?;
+        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| LiplError::NoKey("".to_owned()))?;
         *e = lyric.clone();
         Ok(())
     }
@@ -93,7 +93,7 @@ impl Db {
     pub fn update_playlist(&mut self, playlist_update: &Playlist) -> LiplResult<Playlist> {
         let mut playlist = playlist_update.clone();
         playlist.members = self._valid_members(&playlist.members);
-        let e = self.playlists.get_mut(&playlist_update.id).ok_or(LiplError::NoKey("".to_owned()))?;
+        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| LiplError::NoKey("".to_owned()))?;
         *e = playlist.clone();
         Ok(playlist)
     }
