@@ -57,6 +57,7 @@ where P: AsRef<Path>
         let bytes = content.as_str().as_bytes();
         zip.start_file(&filename, options)?;
         zip.write_all(bytes)?;
+        info!("{} written to zip", filename);
     };
 
     for playlist in db.get_playlist_list() {
@@ -67,6 +68,7 @@ where P: AsRef<Path>
         let bytes = content.as_str().as_bytes();
         zip.start_file(&filename, options)?;
         zip.write_all(bytes)?;
+        info!("{} written to zip", filename);
     }
 
     zip.finish()?;

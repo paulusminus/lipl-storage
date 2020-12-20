@@ -2,6 +2,7 @@ use std::collections::{HashMap};
 use std::ffi::{OsStr};
 use std::fs::{metadata, remove_file};
 use std::path::{PathBuf};
+use log::info;
 use crate::model::{LiplResult, LiplError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP};
 use crate::io::{fs_read, fs_write, zip_read, zip_write};
 
@@ -107,14 +108,14 @@ pub enum DataType {
 pub trait Persist {
     fn load(&mut self) -> LiplResult<()>;
     fn save(&self) -> LiplResult<()>;
-    fn save_to(&self, path: PathBuf) -> LiplResult<()>;
+    fn save_to(&self, path: &PathBuf) -> LiplResult<()>;
     fn clear(&mut self);
 }
 
 impl Persist for Db {
     fn load(&mut self) -> LiplResult<()> {
         self.clear();
-        if metadata(self.path.clone())?.is_file() && self.path.extension() == Some(OsStr::new(ZIP)) { 
+        if self.path.extension() == Some(OsStr::new(ZIP)) { 
             zip_read(self.path.clone(), self)
         }
         else if metadata(self.path.clone())?.is_dir() {
@@ -144,21 +145,23 @@ impl Persist for Db {
     }
 
     fn save(&self) -> LiplResult<()> {
-        self.save_to(self.path.clone())
+        self.save_to(&self.path)
     }
 
-    fn save_to(&self, path: PathBuf) -> LiplResult<()> {
-        if metadata(&path)?.is_file() && (&path).extension() == Some(OsStr::new(ZIP)) { 
-            zip_write(&path, self)
+    fn save_to(&self, path: &PathBuf) -> LiplResult<()> {
+        info!("{:?}", path.extension());
+        if path.extension() == Some(OsStr::new(ZIP)) { 
+            info!("Target is a zipfile");
+            zip_write(path, self)
         }
-        else if metadata(&path)?.is_dir() {
+        else if metadata(path)?.is_dir() {
             for file in self.files.iter() {
                 remove_file(file)?;
             }
-            fs_write(&path, self)
+            fs_write(path, self)
         }
         else {
-            Err(LiplError::NoPath((&path).to_string_lossy().to_owned().to_string()))
+            Err(LiplError::NoPath(path.to_string_lossy().to_owned().to_string()))
         }
     }
 }
