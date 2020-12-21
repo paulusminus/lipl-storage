@@ -2,7 +2,7 @@ extern crate lipl_io;
 
 use std::fs::File;
 use std::io::BufReader;
-use lipl_io::io::parts_from_reader;
+use lipl_io::io::lyricpost_from_reader;
 
 const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5.txt";
 
@@ -10,10 +10,10 @@ const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5.txt";
 fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
     let file = File::open(FILE_NAME)?;
     let reader = BufReader::new(file);
-    let result = parts_from_reader(reader)?;
+    let result = lyricpost_from_reader(reader)?.parts;
 
     assert_eq!(
-        result.1,
+        result,
         vec![
             vec![
                 "Hallo allemaal".to_owned(),
@@ -27,7 +27,7 @@ fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     assert_eq!(
-        result.0,
+        result,
         Some("title: Whatever\n".to_owned()),
     );
 

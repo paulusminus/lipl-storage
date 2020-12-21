@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use log::{info};
 
 use crate::model::{parts_to_string, Db, PathBufExt, Lyric, LiplError, LiplResult, Playlist, PlaylistPost, UuidExt, YAML, TXT, DataType};
-use crate::io::{get_lyric, get_playlist};
+use crate::io::{lyricpost_from_reader, playlistpost_from_reader};
 
 pub fn fs_read<P, F>(dir_path: P, mut adder: F) -> LiplResult<()>
 where P: AsRef<Path>,
@@ -18,7 +18,7 @@ F: FnMut(&PathBuf, &mut DataType),
             adder(
                 &file_path,
                 &mut DataType::Lyric(
-                    get_lyric(
+                    lyricpost_from_reader(
                         File::open(&file_path)?)
                         .map(|lp| Lyric::from((Some(uuid), lp))
                     )?,
@@ -34,7 +34,7 @@ F: FnMut(&PathBuf, &mut DataType),
             adder(
                 &file_path,
                 &mut DataType::Playlist(
-                    get_playlist(File::open(&file_path)?).map(|pp| Playlist::from((Some(uuid), pp)))?
+                    playlistpost_from_reader(File::open(&file_path)?).map(|pp| Playlist::from((Some(uuid), pp)))?
                 )
             );
         }

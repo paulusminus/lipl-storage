@@ -1,6 +1,7 @@
 use std::io::{Read, BufRead, BufReader};
 use crate::model::{Frontmatter, LiplResult, LyricPost};
 
+/*
 pub fn get_lyric<R>(reader: R) -> LiplResult<LyricPost>
 where R: Read 
 {
@@ -19,13 +20,15 @@ where R: Read
         }
     )
 }
+*/
 
-pub fn parts_from_reader<R>(reader: BufReader<R>) -> LiplResult<(Option<String>, Vec<Vec<String>>)>
+pub fn lyricpost_from_reader<R>(reader: R) -> LiplResult<LyricPost>
 where R: Read
 {
-    let lines = reader.lines();
+    let buf_reader = BufReader::new(reader);
+    let lines = buf_reader.lines();
     let mut new_part = true;
-    let mut result: Vec<Vec<String>> = vec![];
+    let mut parts: Vec<Vec<String>> = vec![];
     let mut yaml: Option<String> = None;
     let mut yaml_start: bool = false;
 
@@ -56,18 +59,25 @@ where R: Read
         }
         
         if new_part {
-            result.push(vec![line_result.trim().into()]);
+            parts.push(vec![line_result.trim().into()]);
             new_part = false;
             continue;
         }
 
-        result.last_mut().unwrap().push(line_result.trim().into());
+        parts.last_mut().unwrap().push(line_result.trim().into());
     }
 
-    Ok(
-        (
-            yaml,
-            result,
+    let frontmatter = 
+        yaml
+        .and_then(|text| 
+            serde_yaml::from_str::<Frontmatter>(&text).ok()
         )
+        .unwrap_or_default();
+
+    Ok(
+        LyricPost {
+            title: frontmatter.title,
+            parts: parts,
+        }
     )
 }

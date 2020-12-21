@@ -6,7 +6,7 @@ use log::{info};
 use zip::read::{ZipArchive};
 
 use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, UuidExt, TXT, YAML, Db};
-use crate::io::{get_lyric, get_playlist};
+use crate::io::{lyricpost_from_reader, playlistpost_from_reader};
 
 pub fn zip_read<P>(path: P, db: &mut Db) -> LiplResult<()>
 where P: AsRef<Path> {
@@ -20,7 +20,7 @@ where P: AsRef<Path> {
         if file.is_file() && file.name().ends_with(&format!(".{}", TXT)) {
             info!("Adding: {}", &file.name());
             db.add_lyric(
-                &get_lyric(file).map(|lp| Lyric::from((Some(uuid), lp)))?
+                &lyricpost_from_reader(file).map(|lp| Lyric::from((Some(uuid), lp)))?
             );
         }
     }
@@ -31,7 +31,7 @@ where P: AsRef<Path> {
         if file.is_file() && file.name().ends_with(&format!(".{}", YAML)) {
             info!("Adding: {}", &file.name());
             db.add_playlist(
-                &mut get_playlist(file).map(|pp| Playlist::from((Some(uuid), pp)))?
+                &mut playlistpost_from_reader(file).map(|pp| Playlist::from((Some(uuid), pp)))?
             );
         }
     };

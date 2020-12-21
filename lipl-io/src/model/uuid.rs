@@ -25,7 +25,7 @@ impl UuidExt for Uuid {
         decode(
             p.as_ref().file_stem()
             .ok_or_else(
-                || LiplError::NoPath(format!("{:?}", p.as_ref())))?
+                || LiplError::NoPath(p.as_ref().to_path_buf()))?
             .to_string_lossy().to_string().as_str()
         )
         .into(&mut decoded)?;

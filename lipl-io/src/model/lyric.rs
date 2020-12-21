@@ -67,3 +67,39 @@ pub fn parts_to_string(parts: &[Vec<String>]) -> String {
     .join("\n\n")
 }
 
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_lyric_clone() {
+        use super::Uuid;
+        use super::Lyric;
+        
+        const CHRISTMAS: &'static str = "And so this is Christmas";
+        const TITLE1: &'static str = "Whatever";
+        const TITLE2: &'static str = "JaJa";
+        let uuid1 = Uuid::new_v4();
+        let title1 = Some(TITLE1.to_owned());
+        let parts1: Vec<Vec<String>> = vec![vec![CHRISTMAS.to_owned()]]; 
+        let lyric1 = Lyric {
+            id: uuid1,
+            title: title1.clone(),
+            parts: parts1.clone(),
+        };
+        assert_eq!(lyric1.id, uuid1);
+        assert_eq!(lyric1.title, title1);
+        assert_eq!(lyric1.parts, parts1);
+
+        let mut lyric2 = (&lyric1).clone();
+        let uuid2 = Uuid::new_v4();
+        let title2 = Some(TITLE2.to_owned());
+        lyric2.title = title2;
+        lyric2.id = uuid2;
+        assert_eq!(lyric1.title, title1);
+        assert_eq!(lyric2.title, Some(TITLE2.to_owned()));
+        assert_eq!(lyric2.id, uuid2);
+        assert_eq!(lyric1.id, uuid1);
+        assert_eq!(lyric1.parts[0][0], CHRISTMAS.to_owned());
+        assert_eq!(lyric2.parts[0][0], CHRISTMAS.to_owned());
+    }
+}

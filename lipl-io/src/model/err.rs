@@ -31,7 +31,7 @@ pub enum LiplError {
     Decode (#[from] DecodeError),
 
     #[error("No Path error: {0}")]
-    NoPath(String),
+    NoPath(PathBuf),
 
     #[error("Argument error: {0}")]
     Argument(String),
