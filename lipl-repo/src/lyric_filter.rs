@@ -1,5 +1,6 @@
 use std::sync::{Arc, RwLock};
 use warp::{body, path, Filter};
+use warp::filters::query;
 use lipl_io::model::{Db};
 use crate::lyric_handler as handler;
 use crate::constant::{API, VERSION};
@@ -15,6 +16,7 @@ pub fn get_routes(db: Arc<RwLock<Db>>, name: &'static str) -> impl Filter<Extrac
         .and(path(name))
         .and(path::end())
         .and(db_filter.clone())
+        .and(query::raw())
         .and_then(handler::list);
 
     let item =

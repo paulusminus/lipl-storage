@@ -10,10 +10,10 @@ const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5.txt";
 fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
     let file = File::open(FILE_NAME)?;
     let reader = BufReader::new(file);
-    let result = lyricpost_from_reader(reader)?.parts;
+    let result = lyricpost_from_reader(reader)?;
 
     assert_eq!(
-        result,
+        result.parts,
         vec![
             vec![
                 "Hallo allemaal".to_owned(),
@@ -27,8 +27,8 @@ fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     assert_eq!(
-        result,
-        Some("title: Whatever\n".to_owned()),
+        result.title,
+        Some("Whatever".to_owned()),
     );
 
     Ok(())

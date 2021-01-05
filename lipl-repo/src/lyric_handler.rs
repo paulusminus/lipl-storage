@@ -5,17 +5,30 @@ use warp::http::status::StatusCode;
 use lipl_io::model::{Db, HasSummary, Id, Lyric, LyricPost, Summary};
 use crate::constant::{CREATED, NO_CONTENT};
 
-pub async fn list(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
+pub async fn list(db: Arc<RwLock<Db>>, query: String) -> Result<impl Reply, Rejection> 
 {
-    let db_result = {
-        let read = db.read().unwrap();
-        read.get_lyric_list().iter().map(|l| l.to_summary()).collect::<Vec<Summary>>()
-    };
-    Ok(
-        warp::reply::json(
-            &db_result
+    if query == "full".to_owned() {
+        let db_result: Vec<Lyric> = {
+            let read = db.read().unwrap();
+            read.get_lyric_list().into_iter().cloned().collect()
+        };
+        Ok(
+            warp::reply::json(
+                &db_result
+            )
         )
-    )
+    }
+    else {
+        let db_result = {
+            let read = db.read().unwrap();
+            read.get_lyric_list().iter().map(|l| l.to_summary()).collect::<Vec<Summary>>()
+        };
+        Ok(
+            warp::reply::json(
+                &db_result
+            )
+        )
+    }
 }
 
 pub async fn item(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>

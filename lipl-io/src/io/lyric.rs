@@ -77,7 +77,7 @@ where R: Read
     Ok(
         LyricPost {
             title: frontmatter.title,
-            parts: parts,
+            parts,
         }
     )
 }
