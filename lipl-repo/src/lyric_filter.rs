@@ -10,13 +10,21 @@ pub fn get_routes(db: Arc<RwLock<Db>>, name: &'static str) -> impl Filter<Extrac
     let db_filter  = warp::any().map(move || db.clone());
     let prefix     = warp::path(API).and(warp::path(VERSION));
 
+    let list_summary = 
+        warp::get()
+        .and(prefix)
+        .and(path(name))
+        .and(path::end())
+        .and(db_filter.clone())
+        .and_then(handler::list_summary);
+
     let list = 
         warp::get()
         .and(prefix)
         .and(path(name))
         .and(path::end())
         .and(db_filter.clone())
-        .and(query::raw())
+        .and(query::query())
         .and_then(handler::list);
 
     let item =
@@ -53,5 +61,5 @@ pub fn get_routes(db: Arc<RwLock<Db>>, name: &'static str) -> impl Filter<Extrac
         .and(db_filter)
         .and_then(handler::put);
 
-    list.or(item).or(post).or(put).or(delete)
+    list.or(list_summary).or(item).or(post).or(put).or(delete)
 }

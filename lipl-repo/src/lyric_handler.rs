@@ -2,11 +2,25 @@ use std::sync::{Arc, RwLock};
 use warp::{Reply, Rejection};
 use warp::reply::with_status;
 use warp::http::status::StatusCode;
+use crate::model::Query;
 use lipl_io::model::{Db, HasSummary, Id, Lyric, LyricPost, Summary};
 
-pub async fn list(db: Arc<RwLock<Db>>, query: String) -> Result<impl Reply, Rejection> 
+pub async fn list_summary(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
-    if query == *"full" {
+    let db_result = {
+        let read = db.read().unwrap();
+        read.get_lyric_list().iter().map(|l| l.to_summary()).collect::<Vec<Summary>>()
+    };
+    Ok(
+        warp::reply::json(
+            &db_result
+        )
+    )
+}
+
+pub async fn list(db: Arc<RwLock<Db>>, query: Query) -> Result<impl Reply, Rejection> 
+{
+    if query.full {
         let db_result: Vec<Lyric> = {
             let read = db.read().unwrap();
             read.get_lyric_list().into_iter().cloned().collect()
@@ -18,17 +32,10 @@ pub async fn list(db: Arc<RwLock<Db>>, query: String) -> Result<impl Reply, Reje
         )
     }
     else {
-        let db_result = {
-            let read = db.read().unwrap();
-            read.get_lyric_list().iter().map(|l| l.to_summary()).collect::<Vec<Summary>>()
-        };
-        Ok(
-            warp::reply::json(
-                &db_result
-            )
-        )
+        Err(warp::reject::not_found())
     }
 }
+
 
 pub async fn item(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
 {

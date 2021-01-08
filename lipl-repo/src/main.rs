@@ -6,6 +6,7 @@ mod db;
 mod lyric_filter;
 mod lyric_handler;
 mod message;
+mod model;
 mod param;
 mod playlist_filter;
 mod playlist_handler;
