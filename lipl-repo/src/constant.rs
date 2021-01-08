@@ -5,5 +5,3 @@ pub const LYRIC: &str = "lyric";
 pub const PLAYLIST: &str = "playlist";
 pub const LOG_LEVEL: &str = "info";
 pub const LOG_NAME: &str = "request";
-pub const NO_CONTENT: u16 = 204;
-pub const CREATED: u16 = 201;
