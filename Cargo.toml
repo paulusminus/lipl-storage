@@ -4,3 +4,6 @@ members = [
     "lipl-repo",
     "lipl-io",
 ]
+
+[profile.release]
+lto = true

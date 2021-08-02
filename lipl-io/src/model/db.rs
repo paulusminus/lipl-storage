@@ -1,6 +1,6 @@
 use std::collections::{HashMap};
 use std::fs::{metadata, remove_file};
-use std::path::{PathBuf};
+use std::path::{PathBuf, Path};
 use log::info;
 use crate::model::{LiplResult, LiplError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, PathBufExt};
 use crate::io::{fs_read, fs_write, zip_read, zip_write};
@@ -49,7 +49,7 @@ impl Db {
     }
 
     pub fn delete_lyric(&mut self, id: &Uuid) -> LiplResult<()> {
-        self._remove_lyric_from_playlists(&id);
+        self._remove_lyric_from_playlists(id);
         self.lyrics.remove(id)
         .ok_or_else(|| LiplError::NoKey("Lyric".to_owned()))
         .map(|_| {})
@@ -107,7 +107,7 @@ pub enum DataType {
 pub trait Persist {
     fn load(&mut self) -> LiplResult<()>;
     fn save(&self) -> LiplResult<()>;
-    fn save_to(&self, path: &PathBuf) -> LiplResult<()>;
+    fn save_to(&self, path: &Path) -> LiplResult<()>;
     fn clear(&mut self);
 }
 
@@ -147,7 +147,7 @@ impl Persist for Db {
         self.save_to(&self.path)
     }
 
-    fn save_to(&self, path: &PathBuf) -> LiplResult<()> {
+    fn save_to(&self, path: &Path) -> LiplResult<()> {
         info!("{:?}", path.extension());
         if path.has_extension(ZIP) { 
             info!("Target is a zipfile");
