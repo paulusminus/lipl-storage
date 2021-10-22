@@ -13,7 +13,7 @@ mod playlist_handler;
 mod serve;
 
 use anyhow::Result;
-use clap::Clap;
+use clap::Parser;
 
 #[tokio::main(flavor = "current_thread") ]
 async fn main() -> Result<()> {

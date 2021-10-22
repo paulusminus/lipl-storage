@@ -1,7 +1,7 @@
 use std::path::{PathBuf};
-use clap::{Clap, ValueHint, Subcommand};
+use clap::{Parser, ValueHint, Subcommand};
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(about = "Serving the db through http")]
 pub struct Serve {
     #[clap(short, long, required = true)]
@@ -10,14 +10,14 @@ pub struct Serve {
     pub source: PathBuf,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(about = "Show db summary on console")]
 pub struct ListCommand {
     #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath)]
     pub source: PathBuf,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(about = "Copy db to another destination")]
 pub struct CopyCommand {
     #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath)]
@@ -44,7 +44,7 @@ pub enum Command {
     Serve(Serve),
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Arguments {
     #[clap(subcommand)]
     pub command: Command,
