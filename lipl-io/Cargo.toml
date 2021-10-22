@@ -2,7 +2,7 @@
 name = "lipl-io"
 version = "0.1.7"
 authors = ["Paul Min <info@paulmin.nl>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 bs58 = "0.4"
