@@ -16,7 +16,7 @@ where P: AsRef<Path> {
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        let uuid = (&file.name()).parse::<Uuid>()?;
+        let uuid = (&file.mangled_name().file_stem().unwrap().to_string_lossy()).parse::<Uuid>()?;
         if file.is_file() && file.name().ends_with(&format!(".{}", TXT)) {
             info!("Adding: {}", &file.name());
             db.add_lyric(
@@ -27,7 +27,7 @@ where P: AsRef<Path> {
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        let uuid = (&file.name()).parse::<Uuid>()?;
+        let uuid = (&file.mangled_name().file_stem().unwrap().to_string_lossy()).parse::<Uuid>()?;
         if file.is_file() && file.name().ends_with(&format!(".{}", YAML)) {
             info!("Adding: {}", &file.name());
             db.add_playlist(
