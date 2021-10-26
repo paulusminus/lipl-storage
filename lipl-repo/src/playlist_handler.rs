@@ -4,7 +4,7 @@ use warp::reply::{with_status};
 use warp::http::status::StatusCode;
 use crate::model::Query;
 
-use lipl_io::model::{Db, HasSummary, Id, Playlist, PlaylistPost, Summary};
+use lipl_io::model::{Db, HasSummary, Uuid, Playlist, PlaylistPost, Summary};
 
 pub async fn list_summary(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
@@ -37,12 +37,12 @@ pub async fn list(db: Arc<RwLock<Db>>, query: Query) -> Result<impl Reply, Rejec
     }
 }
 
-pub async fn item(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
+pub async fn item(id: Uuid, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
 {
     let db_result = {
         db.read()
         .unwrap()
-        .get_playlist(&id.uuid())
+        .get_playlist(&id)
         .cloned()
     };
     db_result.map_or_else(
@@ -61,11 +61,11 @@ pub async fn post(json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply,
     Ok(with_status(warp::reply::json(&result), StatusCode::CREATED))
 }
 
-pub async fn delete(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
+pub async fn delete(id: Uuid, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
     let db_result = {
         db.write()
         .unwrap()
-        .delete_playlist(&id.uuid())
+        .delete_playlist(&id)
     };
     db_result.map_or_else(
         | | Err(warp::reject::not_found()),
@@ -73,10 +73,10 @@ pub async fn delete(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection
     )
 }
 
-pub async fn put(id: Id, json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
+pub async fn put(id: Uuid, json: PlaylistPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let db_result = {
-        let playlist: Playlist = (Some(id.uuid()), json).into();
+        let playlist: Playlist = (Some(id), json).into();
         db.write()
         .unwrap()
         .update_playlist(&playlist)

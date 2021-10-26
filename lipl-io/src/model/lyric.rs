@@ -1,10 +1,9 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use crate::model::{serde_uuid, HasId, HasSummary, Summary, Uuid, UuidExt};
+use crate::model::{HasId, HasSummary, Summary, Uuid};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Lyric {
-    #[serde(with = "serde_uuid")]
     pub id: Uuid,
     pub title: Option<String>,
     pub parts: Vec<Vec<String>>,
@@ -17,21 +16,21 @@ impl fmt::Display for Lyric {
             "Lyric: {}, {} parts, id = {}",
             self.title.as_ref().unwrap_or(&"<< !! >>".to_owned()),
             self.parts.len(),
-            self.id.to_base58()
+            self.id,
         )
     }
 }
 
 impl HasId for Lyric {
     fn id(&self) -> Uuid {
-        self.id
+        self.id.clone()
     }
 }
 
 impl HasSummary for Lyric {
     fn to_summary(&self) -> Summary {
         Summary {
-            id: self.id,
+            id: self.id.clone(),
             title: self.title.clone(),
         }
     }
@@ -52,7 +51,7 @@ impl From<LyricPost> for Lyric {
 impl From<(Option<Uuid>, LyricPost)> for Lyric {
     fn from(data: (Option<Uuid>, LyricPost)) -> Lyric {
         Lyric {
-            id: data.0.unwrap_or_else(Uuid::new_v4),
+            id: data.0.unwrap_or_default(),
             title: data.1.title,
             parts: data.1.parts,
         }
@@ -78,11 +77,11 @@ mod tests {
         const CHRISTMAS: &'static str = "And so this is Christmas";
         const TITLE1: &'static str = "Whatever";
         const TITLE2: &'static str = "JaJa";
-        let uuid1 = Uuid::new_v4();
+        let uuid1 = Uuid::default();
         let title1 = Some(TITLE1.to_owned());
         let parts1: Vec<Vec<String>> = vec![vec![CHRISTMAS.to_owned()]]; 
         let lyric1 = Lyric {
-            id: uuid1,
+            id: uuid1.clone(),
             title: title1.clone(),
             parts: parts1.clone(),
         };
@@ -91,10 +90,10 @@ mod tests {
         assert_eq!(lyric1.parts, parts1);
 
         let mut lyric2 = (&lyric1).clone();
-        let uuid2 = Uuid::new_v4();
+        let uuid2 = Uuid::default();
         let title2 = Some(TITLE2.to_owned());
         lyric2.title = title2;
-        lyric2.id = uuid2;
+        lyric2.id = uuid2.clone();
         assert_eq!(lyric1.title, title1);
         assert_eq!(lyric2.title, Some(TITLE2.to_owned()));
         assert_eq!(lyric2.id, uuid2);

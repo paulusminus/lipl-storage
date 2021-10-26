@@ -33,7 +33,7 @@ impl Db {
     }
 
     pub fn add_lyric(&mut self, lyric: &Lyric) {
-        self.lyrics.insert(lyric.id, lyric.clone());
+        self.lyrics.insert(lyric.id.clone(), lyric.clone());
     }
 
     pub fn add_lyric_post(&mut self, lyric_post: LyricPost) -> Lyric {
@@ -75,14 +75,14 @@ impl Db {
 
     pub fn add_playlist(&mut self, playlist: &mut Playlist) -> Playlist {
         playlist.members = self._valid_members(&playlist.members);
-        self.playlists.insert(playlist.id, playlist.clone());
+        self.playlists.insert(playlist.id.clone(), playlist.clone());
         playlist.clone()
     }
 
     pub fn add_playlist_post(&mut self, playlist_post: &PlaylistPost) -> Playlist {
         let mut playlist: Playlist = playlist_post.clone().into();
         playlist.members = self._valid_members(&playlist.members);
-        self.playlists.insert(playlist.id, playlist.clone());
+        self.playlists.insert(playlist.id.clone(), playlist.clone());
         playlist
     }
 

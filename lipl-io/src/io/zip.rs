@@ -5,7 +5,7 @@ use std::path::Path;
 use log::{info};
 use zip::read::{ZipArchive};
 
-use crate::model::{parts_to_string, PathBufExt, LiplResult, Lyric, Playlist, PlaylistPost, UuidExt, TXT, YAML, Db};
+use crate::model::{parts_to_string, LiplResult, Lyric, Playlist, PlaylistPost, TXT, YAML, Db, Uuid};
 use crate::io::{lyricpost_from_reader, playlistpost_from_reader};
 
 pub fn zip_read<P>(path: P, db: &mut Db) -> LiplResult<()>
@@ -16,7 +16,7 @@ where P: AsRef<Path> {
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        let uuid = (&file.name()).to_uuid();
+        let uuid = (&file.name()).parse::<Uuid>()?;
         if file.is_file() && file.name().ends_with(&format!(".{}", TXT)) {
             info!("Adding: {}", &file.name());
             db.add_lyric(
@@ -27,7 +27,7 @@ where P: AsRef<Path> {
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        let uuid = (&file.name()).to_uuid();
+        let uuid = (&file.name()).parse::<Uuid>()?;
         if file.is_file() && file.name().ends_with(&format!(".{}", YAML)) {
             info!("Adding: {}", &file.name());
             db.add_playlist(
@@ -50,7 +50,7 @@ where P: AsRef<Path>
     zip.set_comment("Lipl Database");
 
     for lyric in db.get_lyric_list() {
-        let filename = format!("{}.{}", lyric.id.to_base58(), TXT);
+        let filename = format!("{}.{}", lyric.id.to_string(), TXT);
         info!("Writing: {}", &filename);
         let title_content = lyric.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
         let content = format!("{}{}", title_content, parts_to_string(&lyric.parts));
@@ -61,7 +61,7 @@ where P: AsRef<Path>
     };
 
     for playlist in db.get_playlist_list() {
-        let filename = format!("{}.{}", playlist.id.to_base58(), YAML);
+        let filename = format!("{}.{}", playlist.id.to_string(), YAML);
         info!("Writing: {}", &filename);
         let disk_playlist = PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
         let content = serde_yaml::to_string(&disk_playlist)?;

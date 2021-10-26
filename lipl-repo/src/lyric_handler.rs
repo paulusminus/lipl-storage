@@ -3,7 +3,7 @@ use warp::{Reply, Rejection};
 use warp::reply::with_status;
 use warp::http::status::StatusCode;
 use crate::model::Query;
-use lipl_io::model::{Db, HasSummary, Id, Lyric, LyricPost, Summary};
+use lipl_io::model::{Db, HasSummary, Uuid, Lyric, LyricPost, Summary};
 
 pub async fn list_summary(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
@@ -37,12 +37,12 @@ pub async fn list(db: Arc<RwLock<Db>>, query: Query) -> Result<impl Reply, Rejec
 }
 
 
-pub async fn item(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
+pub async fn item(id: Uuid, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection>
 {
     let db_result = {
         db.read()
         .unwrap()
-        .get_lyric(&id.uuid())
+        .get_lyric(&id)
         .cloned()
     };
     db_result.map_or_else(
@@ -61,11 +61,11 @@ pub async fn post(json: LyricPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Re
     Ok(with_status(warp::reply::json(&result), StatusCode::CREATED))
 }
 
-pub async fn delete(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
+pub async fn delete(id: Uuid, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
     let db_result = {
         db.write()
         .unwrap()
-        .delete_lyric(&id.uuid())
+        .delete_lyric(&id)
         .ok()
     };
     db_result.map_or_else(
@@ -74,10 +74,10 @@ pub async fn delete(id: Id, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection
     )
 }
 
-pub async fn put(id: Id, json: LyricPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
+pub async fn put(id: Uuid, json: LyricPost, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> 
 {
     let db_result = {
-        let lyric: Lyric = (Some(id.uuid()), json).into();
+        let lyric: Lyric = (Some(id), json).into();
         db.write()
         .unwrap()
         .update_lyric(&lyric)
