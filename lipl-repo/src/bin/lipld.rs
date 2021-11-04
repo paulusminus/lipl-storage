@@ -1,19 +1,10 @@
 #[macro_use]
 extern crate log;
 
-mod constant;
-mod db;
-mod lyric_filter;
-mod lyric_handler;
-mod message;
-mod model;
-mod param;
-mod playlist_filter;
-mod playlist_handler;
-mod serve;
-
 use anyhow::Result;
 use clap::Parser;
+
+use lipl_repo::{constant, param, serve, db, message};
 
 #[tokio::main(flavor = "current_thread") ]
 async fn main() -> Result<()> {
@@ -41,8 +32,4 @@ async fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
 
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }

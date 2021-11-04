@@ -2,7 +2,7 @@ use std::collections::{HashMap};
 use std::fs::{metadata, remove_file};
 use std::path::{PathBuf, Path};
 use log::info;
-use crate::model::{LiplResult, LiplError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, PathBufExt};
+use crate::model::{LiplResult, LiplError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, HasExtension};
 use crate::io::{fs_read, fs_write, zip_read, zip_write};
 
 type Collection<T> = HashMap<Uuid, T>;
@@ -24,20 +24,20 @@ impl Db {
         }
     }
 
-    pub fn get_lyric_list(&self) -> Vec<&Lyric> {
-        self.lyrics.values().collect()
+    pub fn get_lyric_list(&self) -> Vec<Lyric> {
+        self.lyrics.values().cloned().collect()
     }
 
-    pub fn get_lyric(&self, id: &Uuid) -> Option<&Lyric> {
-        self.lyrics.get(id)
+    pub fn get_lyric(&self, id: &Uuid) -> Option<Lyric> {
+        self.lyrics.get(id).cloned()
     }
 
     pub fn add_lyric(&mut self, lyric: &Lyric) {
         self.lyrics.insert(lyric.id.clone(), lyric.clone());
     }
 
-    pub fn add_lyric_post(&mut self, lyric_post: LyricPost) -> Lyric {
-        let lyric: Lyric = lyric_post.into();
+    pub fn add_lyric_post(&mut self, lyric_post: &LyricPost) -> Lyric {
+        let lyric: Lyric = lyric_post.clone().into();
         self.add_lyric(&lyric);
         lyric
     }
@@ -55,18 +55,18 @@ impl Db {
         .map(|_| {})
     }
 
-    pub fn update_lyric(&mut self, lyric: &Lyric) -> LiplResult<()> {
+    pub fn update_lyric(&mut self, lyric: &Lyric) -> LiplResult<Lyric> {
         let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| LiplError::NoKey("".to_owned()))?;
         *e = lyric.clone();
-        Ok(())
+        Ok(lyric.clone())
     }
 
-    pub fn get_playlist_list(&self) -> Vec<&Playlist> {
-        self.playlists.values().collect()
+    pub fn get_playlist_list(&self) -> Vec<Playlist> {
+        self.playlists.values().cloned().collect()
     }
 
-    pub fn get_playlist(&self, uuid: &Uuid) -> Option<&Playlist> {
-        self.playlists.get(uuid)
+    pub fn get_playlist(&self, uuid: &Uuid) -> Option<Playlist> {
+        self.playlists.get(uuid).map(|p| p.clone())
     }
 
     pub fn _valid_members(&self, members: &[Uuid]) -> Vec<Uuid> {
@@ -86,8 +86,10 @@ impl Db {
         playlist
     }
 
-    pub fn delete_playlist(&mut self, id: &Uuid) -> Option<Playlist> {
+    pub fn delete_playlist(&mut self, id: &Uuid) -> LiplResult<()> {
         self.playlists.remove(id)
+        .ok_or_else(|| LiplError::NoKey("Playlist".to_owned()))
+        .map(|_| {})
     }
 
     pub fn update_playlist(&mut self, playlist_update: &Playlist) -> LiplResult<Playlist> {

@@ -6,7 +6,7 @@ const DIR_NAME: &str = "./tests/fs/";
 fn test_get_lyrics() -> LiplResult<()> {
     let mut db = Db::new(DIR_NAME.into());
     db.load()?;
-    let mut lyrics: Vec<Lyric> = db.get_lyric_list().into_iter().cloned().collect();
+    let mut lyrics: Vec<Lyric> = db.get_lyric_list();
     lyrics.sort_by(|a, b| a.id.cmp(&b.id));
 
     let song1 = &lyrics[0];
@@ -33,13 +33,13 @@ fn test_get_lyrics() -> LiplResult<()> {
 
     assert_eq!(
         song1.id.to_string(),
-        "0ba4ef4d-0ce3-41d0-ac81-605ad1ae9358".to_owned(),
+        "2SQ3bh2LfXfcTbbHqyRjF5".to_owned(),
     );
 
     
     assert_eq!(
         song2.id.to_string(),
-        "388b39a0-9acc-4cf0-98cb-a3d2035ecc3a".to_owned(),
+        "7yyNirdwBpAh3BdoGxvJ25".to_owned(),
     );
 
     assert_eq!(

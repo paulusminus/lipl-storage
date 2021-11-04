@@ -1,11 +1,11 @@
 use std::fs::File;
 use std::io::{Write};
-use std::path::Path;
+use std::path::{Path};
 
 use log::{info};
 use zip::read::{ZipArchive};
 
-use crate::model::{parts_to_string, LiplResult, Lyric, Playlist, PlaylistPost, TXT, YAML, Db, Uuid};
+use crate::model::{LiplResult, TXT, YAML, Db, HasExtension, HasId, ToDiskFormat, ExtractUuid};
 use crate::io::{lyricpost_from_reader, playlistpost_from_reader};
 
 pub fn zip_read<P>(path: P, db: &mut Db) -> LiplResult<()>
@@ -16,26 +16,35 @@ where P: AsRef<Path> {
 
     for i in 0..zip.len() {
         let file = zip.by_index(i)?;
-        let uuid = (&file.mangled_name().file_stem().unwrap().to_string_lossy()).parse::<Uuid>()?;
-        if file.is_file() && file.name().ends_with(&format!(".{}", TXT)) {
-            info!("Adding: {}", &file.name());
-            db.add_lyric(
-                &lyricpost_from_reader(file).map(|lp| Lyric::from((Some(uuid), lp)))?
+        if file.mangled_name().has_extension(YAML) {
+            let uuid = file.mangled_name().extract_uuid()?;
+            info!("Adding playlist: {}", &file.name());
+            db.add_playlist(
+                &mut playlistpost_from_reader(file).map(|pp| (Some(uuid), pp).into())?
             );
         }
-    }
-
-    for i in 0..zip.len() {
-        let file = zip.by_index(i)?;
-        let uuid = (&file.mangled_name().file_stem().unwrap().to_string_lossy()).parse::<Uuid>()?;
-        if file.is_file() && file.name().ends_with(&format!(".{}", YAML)) {
-            info!("Adding: {}", &file.name());
-            db.add_playlist(
-                &mut playlistpost_from_reader(file).map(|pp| Playlist::from((Some(uuid), pp)))?
+        else if file.mangled_name().has_extension(TXT) {
+            let uuid = file.mangled_name().extract_uuid()?;
+            info!("Adding lyric: {}", &file.name());
+            db.add_lyric(
+                &lyricpost_from_reader(file).map(|lp| (Some(uuid), lp).into())?
             );
         }
     };
     
+    Ok(())
+}
+
+fn write_zip_item<T>(item: T, ext: &str, zip: &mut zip::ZipWriter<std::fs::File>) -> LiplResult<()> where T: HasId + ToDiskFormat {
+    let filename = format!("{}.{}", item.id().to_string(), ext);
+    info!("Writing: {}", &filename);
+    let content = item.to_disk_format()?;
+    let bytes = content.as_str().as_bytes();
+
+    let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    zip.start_file(&filename, options)?;
+    zip.write_all(bytes)?;
+
     Ok(())
 }
 
@@ -46,29 +55,22 @@ where P: AsRef<Path>
 
     let file = File::create(path)?;
     let zip = &mut zip::ZipWriter::new(file);
-    let options = zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
     zip.set_comment("Lipl Database");
 
     for lyric in db.get_lyric_list() {
-        let filename = format!("{}.{}", lyric.id.to_string(), TXT);
-        info!("Writing: {}", &filename);
-        let title_content = lyric.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
-        let content = format!("{}{}", title_content, parts_to_string(&lyric.parts));
-        let bytes = content.as_str().as_bytes();
-        zip.start_file(&filename, options)?;
-        zip.write_all(bytes)?;
-        info!("{} written to zip", filename);
-    };
+        write_zip_item(
+            lyric.clone(),
+            TXT,
+            zip,
+        )?;
+    }
 
     for playlist in db.get_playlist_list() {
-        let filename = format!("{}.{}", playlist.id.to_string(), YAML);
-        info!("Writing: {}", &filename);
-        let disk_playlist = PlaylistPost::from((playlist.title.clone(), playlist.members.clone()));
-        let content = serde_yaml::to_string(&disk_playlist)?;
-        let bytes = content.as_str().as_bytes();
-        zip.start_file(&filename, options)?;
-        zip.write_all(bytes)?;
-        info!("{} written to zip", filename);
+        write_zip_item(
+            playlist.clone(),
+            YAML,
+            zip,
+        )?;
     }
 
     zip.finish()?;

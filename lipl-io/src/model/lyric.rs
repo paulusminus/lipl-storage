@@ -1,6 +1,6 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
-use crate::model::{HasId, HasSummary, Summary, Uuid};
+use crate::model::{HasId, HasSummary, HasSummaries, Summary, Uuid, ToDiskFormat, LiplResult};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Lyric {
@@ -36,7 +36,13 @@ impl HasSummary for Lyric {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+impl HasSummaries for Vec<Lyric> {
+    fn to_summaries(&self) -> Vec<Summary> {
+        self.into_iter().map(|l| l.to_summary()).collect()
+    }
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct LyricPost {
     pub title: Option<String>,
     pub parts: Vec<Vec<String>>,
@@ -55,6 +61,13 @@ impl From<(Option<Uuid>, LyricPost)> for Lyric {
             title: data.1.title,
             parts: data.1.parts,
         }
+    }
+}
+
+impl ToDiskFormat for Lyric {
+    fn to_disk_format(&self) -> LiplResult<String> {
+        let title_content = self.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
+        Ok(format!("{}{}", title_content, parts_to_string(&self.parts)))   
     }
 }
 

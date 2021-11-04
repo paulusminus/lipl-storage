@@ -8,8 +8,9 @@ use warp::Filter;
 use crate::constant;
 use crate::message;
 use crate::param;
-use crate::lyric_filter::get_routes as get_lyric_routes;
-use crate::playlist_filter::get_routes as get_playlist_routes;
+// use crate::lyric_filter::get_routes as get_lyric_routes;
+// use crate::playlist_filter::get_routes as get_playlist_routes;
+use crate::filter::{get_lyric_routes, get_playlist_routes};
 
 use lipl_io::model::{Db, Persist};
 

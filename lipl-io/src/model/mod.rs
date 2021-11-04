@@ -1,6 +1,7 @@
 mod constant;
 mod db;
 mod err;
+// mod lipl_file;
 mod lyric;
 mod pathbuf;
 mod playlist;
@@ -14,6 +15,5 @@ pub use err::{LiplError, LiplResult};
 pub use lyric::{parts_to_string, Lyric, LyricPost};
 pub use playlist::{Frontmatter, Playlist, PlaylistPost};
 pub use summary::{Summary};
-pub use traits::{HasId, HasSummary};
+pub use traits::{HasId, HasSummary, HasSummaries, HasExtension, TryFromDiskFormat, ToDiskFormat, ExtractUuid};
 pub use self::uuid::{Uuid};
-pub use pathbuf::PathBufExt;

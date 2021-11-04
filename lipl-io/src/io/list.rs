@@ -21,7 +21,7 @@ where P: AsRef<Path>,
         println!();
         println!("Playlist: {}", playlist.title);
         for member in playlist.members.iter() {
-            if let Some(title) = db.get_lyric(member).and_then(|l| l.title.as_ref()) {
+            if let Some(title) = db.get_lyric(member).and_then(|l| l.title) {
                 println!("  - {}", title);
             }
         }
