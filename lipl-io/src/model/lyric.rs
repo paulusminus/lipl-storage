@@ -66,7 +66,12 @@ impl From<(Option<Uuid>, LyricPost)> for Lyric {
 
 impl ToDiskFormat for Lyric {
     fn to_disk_format(&self) -> LiplResult<String> {
-        let title_content = self.title.as_ref().map(|s| format!("---\ntitle: {}\n---\n\n", s)).unwrap_or_default();
+        let mut map = std::collections::BTreeMap::new();
+        if let Some(title) = self.title.clone() {
+            map.insert("title".to_owned(), title);
+        }
+        let yaml = serde_yaml::to_string(&map)?;
+        let title_content = format!("{}---\n\n", yaml);
         Ok(format!("{}{}", title_content, parts_to_string(&self.parts)))   
     }
 }
