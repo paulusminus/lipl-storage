@@ -195,7 +195,7 @@ impl Timer {
         Timer(std::time::Instant::now())
     }
 
-    fn report_elapased(&self) {
+    fn report_elapsed(&self) {
         println!("Elapsed: {} milliseconds", self.0.elapsed().as_millis());
     }
 }
@@ -403,7 +403,7 @@ where
 {
     let timer = Timer::new();
     let result = process().await?;
-    timer.report_elapased();
+    timer.report_elapsed();
     Ok(result)
 }
 
