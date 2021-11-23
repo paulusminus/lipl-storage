@@ -3,6 +3,7 @@
 members = [
     "lipl-repo",
     "lipl-io",
+    "yaml",
 ]
 
 [profile.release]
