@@ -2,9 +2,10 @@ use std::path::{Path, PathBuf};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ffi::OsStr;
 use anyhow::{anyhow, Error, Result};
-use serde::{Deserialize};
+use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use tokio::fs::{read_dir, read_to_string, File};
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};
 use futures::prelude::*;
 use futures::future::ready;
@@ -16,6 +17,100 @@ const YAML_PREFIX: &str = "---";
 
 pub trait HasSummary {
     fn summary(&self) -> Summary;
+}
+
+#[async_trait]
+pub trait LiplRepo {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_lyric(&self, id: String) -> Result<Lyric>;
+    async fn post_lyric(&self, lyric: Lyric) -> Result<()>;
+    async fn delete_lyric(&self, id: String) -> Result<()>;
+    async fn get_playlists(&self) -> Result<Vec<Playlist>>;
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_playlist(&self, id: String) -> Result<Playlist>;
+    async fn post_playlist(&self, playlist: Playlist) -> Result<()>;
+    async fn delete_playlist(&self, id: String) -> Result<()>;
+}
+
+pub struct FileSystem<'a> {
+    source_dir: &'a str
+}
+
+impl<'a> FileSystem<'a> {
+    pub fn new(s: &'a str) -> Self {
+        FileSystem {
+            source_dir: s
+        }
+    }
+}
+
+#[async_trait]
+impl<'a> LiplRepo for FileSystem<'a> {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
+        get_lyric_summaries(self.source_dir).await
+    }
+
+    async fn get_lyric(&self, id: String) -> Result<Lyric> {
+        get_lyric(
+            self.join(&id, TXT_EXTENSION)
+        )
+        .await
+    }
+
+    async fn post_lyric(&self, lyric: Lyric) -> Result<()> {
+        post_lyric(self.join(&lyric.id, TXT_EXTENSION), lyric).await
+    }
+
+    async fn delete_lyric(&self, id: String) -> Result<()> {
+        delete_file(
+            self.join(&id, TXT_EXTENSION)
+        )
+        .await?;
+        let playlists = self.get_playlists().await?;
+        for mut playlist in playlists {
+            if playlist.members.contains(&id) {
+                playlist.members = playlist.members.into_iter().filter(|m| *m != id).collect();
+                self.post_playlist(playlist).await?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn get_playlists(&self) -> Result<Vec<Playlist>> {
+        get_playlists(self.source_dir).await
+    }
+
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
+        self.get_playlists()
+        .await
+        .map(
+            |playlists| playlists.iter().map(to_summary).collect::<Vec<Summary>>()
+        )
+    }
+
+    async fn get_playlist(&self, id: String) -> Result<Playlist> {
+        get_playlist(
+            self.join(&id, YAML_EXTENSION)
+        )
+        .await
+    }
+
+    async fn post_playlist(&self, playlist: Playlist) -> Result<()> {
+        let lyric_ids: Vec<String> = self.get_lyric_summaries().await?.into_iter().map(|s| s.id).collect();
+        for member in playlist.members.iter() {
+            if !lyric_ids.contains(member) {
+                return Err(anyhow!("Playlist contains invalid member"));
+            }
+        }
+        post_playlist(self.join(&playlist.id, YAML_EXTENSION), playlist).await
+    }
+
+    async fn delete_playlist(&self, id: String) -> Result<()> {
+        delete_file(
+            self.join(&id, YAML_EXTENSION)
+        )
+        .await
+    }
 }
 
 pub trait Id {
@@ -32,7 +127,17 @@ impl<P> Id for P where P: AsRef<Path> {
     }
 }
 
-#[derive(Deserialize)]
+pub trait JoinPath {
+    fn join(&self, id: &str, ext: &str) -> PathBuf;
+}
+
+impl<'a> JoinPath for FileSystem<'a> {
+    fn join(&self, id: &str, ext: &str) -> PathBuf {
+        Path::new(self.source_dir).join(format!("{}.{}", id, ext))
+    }
+} 
+
+#[derive(Deserialize, Serialize)]
 pub struct YamlMeta {
     pub title: String,
 }
@@ -48,7 +153,7 @@ impl Display for Summary {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct PlaylistPost {
     pub title: String,
     pub members: Vec<String>,
@@ -74,6 +179,13 @@ impl Display for Playlist {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}: {}, [{}]", self.id, self.title, self.members.join(", "))
     }
+}
+
+#[derive(Debug)]
+pub struct Lyric {
+    pub id: String,
+    pub title: String,
+    pub parts: Vec<Vec<String>>
 }
 
 pub struct Timer(pub std::time::Instant);
@@ -174,14 +286,144 @@ async fn get_playlists<P>(path: P) -> Result<Vec<Playlist>> where P: AsRef<Path>
     .await
 }
 
+fn to_summary<T>(t: &T) -> Summary where T: HasSummary {
+    t.summary()
+}
+
+async fn get_lyric<P>(path: P) -> Result<Lyric>
+where P: AsRef<Path>
+{
+    let file = File::open(path.as_ref()).await?;
+    let lines = BufReader::new(file).lines();
+    let mut lines_stream = LinesStream::new(lines).boxed();
+
+    let mut new_part = true;
+    let mut parts: Vec<Vec<String>> = vec![];
+    let mut yaml: Option<String> = None;
+    let mut yaml_start: bool = false;
+    let mut line_no = 0;
+
+    while let Some(line) = lines_stream.try_next().await? {
+        line_no += 1;
+        if line == *"---" {
+            if line_no == 1 {
+                yaml_start = true;
+                yaml = Some("".to_owned());
+                continue;
+            }
+            else if yaml_start {
+                yaml_start = false;
+                continue;
+            }
+        }
+
+        if yaml_start {
+            if let Some(v) = yaml.as_mut() {
+                v.extend(vec![line, "\n".into()]);
+            }
+            continue;
+        }
+        
+        if line.trim().is_empty() {
+            new_part = true;
+            continue;
+        }
+        
+        if new_part {
+            parts.push(vec![line.trim().into()]);
+            new_part = false;
+            continue;
+        }
+
+        parts.last_mut().unwrap().push(line.trim().into());
+    }
+
+    let frontmatter = 
+        yaml
+        .and_then(|text| 
+            serde_yaml::from_str::<YamlMeta>(&text).ok()
+        )
+        .ok_or(anyhow!("Cannot deserialize frontmatter"))?;
+
+    Ok(
+        Lyric {
+            id: path.id()?,
+            title: frontmatter.title,
+            parts,
+        }
+    )
+}
+
+async fn post_lyric<P>(path: P, lyric: Lyric) -> Result<()> where P: AsRef<Path> {
+    let file = File::create(path).await?;
+    let mut writer = BufWriter::new(file);
+
+    let meta = YamlMeta {
+        title: lyric.title
+    };
+    let yaml = serde_yaml::to_string(&meta)?;
+    let mut _count = writer.write_all(yaml.as_bytes()).await?;
+
+    _count = writer.write_all(YAML_PREFIX.as_bytes()).await?;
+
+    for part in lyric.parts {
+        _count = writer.write_all("\n\n".as_bytes()).await?;
+        _count = writer.write_all(part.join("\n").as_bytes()).await?;
+    }
+
+    writer.flush().await?;
+
+    Ok(())
+}
+
+async fn post_playlist<P>(path: P, playlist: Playlist) -> Result<()> where P: AsRef<Path> {
+    let file = File::create(path).await?;
+    let mut writer = BufWriter::new(file);
+
+    let playlist_post = PlaylistPost {
+        title: playlist.title,
+        members: playlist.members,
+    };
+
+    let out = serde_yaml::to_string(&playlist_post)?;
+    writer.write_all(out.as_bytes()).await?;
+    writer.flush().await?;
+
+    Ok(())
+}
+
+async fn delete_file<P>(path: P) -> Result<()> where P: AsRef<Path> {
+    tokio::fs::remove_file(path).await.map_err(Error::from)
+}
+
+async fn time_it<T, F, O>(process: F) -> Result<T> 
+where 
+    F: Fn() -> O,
+    O: Future<Output=Result<T>>
+{
+    let timer = Timer::new();
+    let result = process().await?;
+    timer.report_elapased();
+    Ok(result)
+}
+
+async fn process() -> Result<()> {
+    if !Path::new(SOURCE_DIR).is_dir() { return Err(anyhow!("cannot find directory {}", SOURCE_DIR)) }
+    let repo = FileSystem::new(SOURCE_DIR);
+
+    println!("Lyrics");
+    repo.get_lyric_summaries().await?.iter().for_each(to_std_output);
+    println!();
+
+    println!("Playlists");
+    repo.get_playlist_summaries().await?.iter().for_each(to_std_output);
+
+    repo.delete_lyric("KGxasqUC1Uojk1viLGbMZK".to_owned()).await?;
+
+    Ok(())
+}
+
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<()>{
-    let timer = Timer::new();
-    println!("Lyrics");
-    get_lyric_summaries(SOURCE_DIR).await?.iter().for_each(to_std_output);
-    println!();
-    println!("Playlists");
-    get_playlists(SOURCE_DIR).await?.iter().map(|p| p.summary()).for_each(to_std_output);
-    timer.report_elapased();
-    Ok(())
+    time_it(process).await
 }
