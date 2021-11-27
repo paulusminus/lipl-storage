@@ -2,9 +2,42 @@ use std::path::{Path, PathBuf};
 use std::ffi::{OsStr};
 use tokio_stream::wrappers::{ReadDirStream};
 use crate::{Error, Result};
-use futures::prelude::*;
 use futures::future::{ready, Ready};
-use tokio::fs::{read_dir};
+use futures::{TryStream, TryStreamExt};
+use tokio::fs::{read_dir, File};
+use tokio::io::{AsyncBufReadExt, BufReader};
+use async_trait::{async_trait};
+
+#[async_trait]
+pub trait Reader {
+    async fn read_string(&self) -> Result<String>;
+    async fn read_frontmatter(&self) -> Result<String>;
+}
+
+#[async_trait]
+impl Reader for &Path {
+    async fn read_string(&self) -> Result<String> {
+        let s = tokio::fs::read_to_string(self).await?;
+        Ok(s)
+    }
+
+    async fn read_frontmatter(&self) -> Result<String> {
+        let file = File::open(self).await?;
+        let reader = BufReader::new(file).lines();
+        let lines = tokio_stream::wrappers::LinesStream::new(reader).map_err(Error::from);
+        let part: Vec<String> = 
+            lines
+            .map_err(Error::from)
+            .try_skip_while(|l| ready(Ok(l.trim() == "")))
+            .try_take_while(|l| ready(Ok(l.trim() != "")))
+            .try_collect()
+            .await?;
+        let part: Vec<String> = part.into_iter().filter(|l| l != "---").collect();
+
+        Ok(part.join("\n"))
+    }
+}
+
 
 pub fn extension_filter(s: &str) -> impl Fn(&PathBuf) -> Ready<bool> + '_ {
     |path_buf| ready(path_buf.extension() == Some(OsStr::new(s)))
@@ -14,8 +47,13 @@ pub fn full_path(base: &str, filename: &str, extension: &str) -> PathBuf {
     Path::new(base).join(format!("{}.{}", filename, extension))
 }
 
-pub fn is_dir<P>(path: P) -> bool where P: AsRef<Path> {
-    Path::new(path.as_ref()).is_dir()
+pub fn is_dir<P>(path: P) -> Result<()> where P: AsRef<Path> {
+    if Path::new(path.as_ref()).is_dir() {
+        Ok(())
+    }
+    else {
+        Err(anyhow::anyhow!("cannot find directory"))
+    }
 }
 
 pub async fn get_files<'a, P, F>(path: P, filter: F) -> Result<impl TryStream<Ok=PathBuf, Error=Error> + 'a> 
