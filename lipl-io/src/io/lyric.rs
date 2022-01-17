@@ -1,28 +1,7 @@
 use std::io::{Read, BufRead, BufReader};
-use crate::model::{Frontmatter, LiplResult, LyricPost};
+use lipl_types::{LyricMeta, RepoResult, LyricPost};
 
-/*
-pub fn get_lyric<R>(reader: R) -> LiplResult<LyricPost>
-where R: Read 
-{
-    let buf_reader = BufReader::new(reader);
-    let (yaml, parts) = parts_from_reader(buf_reader)?;
-
-    let frontmatter = 
-        yaml
-        .and_then(|text| serde_yaml::from_str::<Frontmatter>(&text).ok())
-        .unwrap_or_default();
-
-    Ok(
-        LyricPost {
-            title: frontmatter.title,
-            parts,
-        }
-    )
-}
-*/
-
-pub fn lyricpost_from_reader<R>(reader: R) -> LiplResult<LyricPost>
+pub fn lyricpost_from_reader<R>(reader: R) -> RepoResult<LyricPost>
 where R: Read
 {
     let buf_reader = BufReader::new(reader);
@@ -70,13 +49,12 @@ where R: Read
     let frontmatter = 
         yaml
         .and_then(|text| 
-            serde_yaml::from_str::<Frontmatter>(&text).ok()
-        )
-        .unwrap_or_default();
+            serde_yaml::from_str::<LyricMeta>(&text).ok()
+        );
 
     Ok(
         LyricPost {
-            title: frontmatter.title,
+            title: frontmatter.map(|f| f.title).unwrap_or_default(),
             parts,
         }
     )

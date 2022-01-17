@@ -7,10 +7,10 @@ use lipl_io::io::lyricpost_from_reader;
 const FILE_NAME: &str = "./tests/fs/2SQ3bh2LfXfcTbbHqyRjF5.txt";
 
 #[test]
-fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
-    let file = File::open(FILE_NAME)?;
+fn test_to_parts() {
+    let file = File::open(FILE_NAME).unwrap();
     let reader = BufReader::new(file);
-    let result = lyricpost_from_reader(reader)?;
+    let result = lyricpost_from_reader(reader).unwrap();
 
     assert_eq!(
         result.parts,
@@ -28,8 +28,6 @@ fn test_to_parts() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         result.title,
-        Some("Whatever".to_owned()),
+        "Whatever".to_owned(),
     );
-
-    Ok(())
 }

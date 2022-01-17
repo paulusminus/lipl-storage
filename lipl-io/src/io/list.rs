@@ -1,8 +1,9 @@
 use std::path::{Path};
 use std::time::{Instant};
-use crate::model::{LiplResult, Db, Persist};
+use crate::model::{Db, Persist};
+use lipl_types::{RepoResult};
 
-pub fn list<P>(source: P) -> LiplResult<()> 
+pub fn list<P>(source: P) -> RepoResult<()> 
 where P: AsRef<Path>,
 {
     let start = Instant::now();
@@ -12,16 +13,14 @@ where P: AsRef<Path>,
 
     println!("Lyrics");
     for lyric in db.get_lyric_list() {
-        if let Some(title) = &lyric.title {
-            println!("  - {}", title);
-        }
+            println!("  - {}", lyric.title);
     };
 
     for playlist in db.get_playlist_list() {
         println!();
         println!("Playlist: {}", playlist.title);
         for member in playlist.members.iter() {
-            if let Some(title) = db.get_lyric(member).and_then(|l| l.title) {
+            if let Some(title) = db.get_lyric(member).map(|l| l.title) {
                 println!("  - {}", title);
             }
         }

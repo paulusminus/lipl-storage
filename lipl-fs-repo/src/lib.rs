@@ -1,28 +1,31 @@
 use std::path::{PathBuf};
 
-use anyhow::{anyhow};
-use model::{Error, Result, Lyric, Playlist, PlaylistPost, Summary, Without};
 use async_trait::{async_trait};
 
-mod disk_format;
+use fs::{IO};
+use lipl_types::{LiplRepo, Lyric, Playlist, PlaylistPost, RepoResult, Summary, Without, Uuid, RepoError};
+
+// mod disk_format;
 pub mod elapsed;
+// pub mod error;
 mod fs;
 mod io;
-pub mod model;
+// pub mod model;
 
-#[async_trait]
-pub trait LiplRepo {
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>>;
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
-    async fn get_lyric(&self, id: String) -> Result<Lyric>;
-    async fn post_lyric(&self, lyric: model::Lyric) -> Result<()>;
-    async fn delete_lyric(&self, id: String) -> Result<()>;
-    async fn get_playlists(&self) -> Result<Vec<Playlist>>;
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>>;
-    async fn get_playlist(&self, id: String) -> Result<Playlist>;
-    async fn post_playlist(&self, playlist: model::Playlist) -> Result<()>;
-    async fn delete_playlist(&self, id: String) -> Result<()>;
-}
+
+// #[async_trait]
+// pub trait LiplRepo {
+//     async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>>;
+//     async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>>;
+//     async fn get_lyric(&self, id: String) -> RepoResult<Lyric>;
+//     async fn post_lyric(&self, lyric: Lyric) -> RepoResult<()>;
+//     async fn delete_lyric(&self, id: String) -> RepoResult<()>;
+//     async fn get_playlists(&self) -> RepoResult<Vec<Playlist>>;
+//     async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>>;
+//     async fn get_playlist(&self, id: String) -> RepoResult<Playlist>;
+//     async fn post_playlist(&self, playlist: Playlist) -> RepoResult<()>;
+//     async fn delete_playlist(&self, id: String) -> RepoResult<()>;
+// }
 
 pub struct FileSystem<'a> {
     source_dir: &'a str,
@@ -32,8 +35,8 @@ pub struct FileSystem<'a> {
 }
 
 impl<'a> FileSystem<'a> {
-    pub fn new(s: &'a str, playlist_extension: &'a str, lyric_extension: &'a str) -> Result<Self> {
-        fs::is_dir(s)?;
+    pub fn new(s: &'a str, playlist_extension: &'a str, lyric_extension: &'a str) -> RepoResult<Self> {
+        s.is_dir()?;
 
         Ok(
             FileSystem {
@@ -45,28 +48,37 @@ impl<'a> FileSystem<'a> {
         )
     }
 
-    fn playlist_path(&self, id: &String) -> PathBuf {
-        fs::full_path(self.source_dir, id, self.playlist_extension)
+    fn playlist_path(&self, id: &Uuid) -> PathBuf {
+        self.source_dir.full_path(&id.to_string(), self.playlist_extension)
     }
 
-    fn lyric_path(&self, id: &String) -> PathBuf {
-        fs::full_path(self.source_dir, id, self.lyric_extension)
+    fn lyric_path(&self, id: &Uuid) -> PathBuf {
+        self.source_dir.full_path(&id.to_string(), self.lyric_extension)
     }
 }
 
 #[async_trait]
 impl<'a> LiplRepo for FileSystem<'a> {
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
+    async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>> {
         self.lock.read().await;
-        io::get_list(self.source_dir, self.lyric_extension, io::get_lyric).await
+        io::get_list(
+            self.source_dir,
+            self.lyric_extension,io::get_lyric,
+        )
+        .await
     }
 
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
+    async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>> {
         self.lock.read().await;
-        io::get_list(self.source_dir, self.lyric_extension, io::get_lyric_summary).await
+        io::get_list(
+            self.source_dir,
+            self.lyric_extension,
+            io::get_lyric_summary,
+        )
+        .await
     }
 
-    async fn get_lyric(&self, id: String) -> Result<Lyric> {
+    async fn get_lyric(&self, id: Uuid) -> RepoResult<Lyric> {
         self.lock.read().await;
         io::get_lyric(
             self.lyric_path(&id)
@@ -74,7 +86,7 @@ impl<'a> LiplRepo for FileSystem<'a> {
         .await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> Result<()> {
+    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<()> {
         self.lock.write().await;
         io::post_item(
             self.lyric_path(&lyric.id),
@@ -83,14 +95,10 @@ impl<'a> LiplRepo for FileSystem<'a> {
         .await
     }
 
-    async fn delete_lyric(&self, id: String) -> Result<()> {
+    async fn delete_lyric(&self, id: Uuid) -> RepoResult<()> {
         self.lock.write().await;
-        io::delete_file(
-            self.lyric_path(&id)
-        )
-        .await?;
-        let playlists = self.get_playlists().await?;
-        for mut playlist in playlists {
+        self.lyric_path(&id).remove().await?;
+        for mut playlist in self.get_playlists().await? {
             if playlist.members.contains(&id) {
                 playlist.members = playlist.members.without(&id);
                 self.post_playlist(playlist).await?;
@@ -99,19 +107,19 @@ impl<'a> LiplRepo for FileSystem<'a> {
         Ok(())
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>> {
+    async fn get_playlists(&self) -> RepoResult<Vec<Playlist>> {
         self.lock.read().await;
         io::get_list(self.source_dir, self.playlist_extension, io::get_playlist).await
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
+    async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>> {
         self.lock.read().await;
         self.get_playlists()
         .await
-        .map(model::summaries)
+        .map(lipl_types::summaries)
     }
 
-    async fn get_playlist(&self, id: String) -> Result<Playlist> {
+    async fn get_playlist(&self, id: Uuid) -> RepoResult<Playlist> {
         self.lock.read().await;
         io::get_playlist(
             self.playlist_path(&id),
@@ -119,12 +127,12 @@ impl<'a> LiplRepo for FileSystem<'a> {
         .await
     }
 
-    async fn post_playlist(&self, playlist: model::Playlist) -> Result<()> {
+    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<()> {
         self.lock.write().await;
-        let lyric_ids: Vec<String> = model::ids(self.get_lyric_summaries().await?);
+        let lyric_ids: Vec<Uuid> = lipl_types::ids(self.get_lyric_summaries().await?.into_iter());
         for member in playlist.members.iter() {
             if !lyric_ids.contains(member) {
-                return Err(anyhow!("Playlist {} contains invalid member", playlist.id));
+                return Err(RepoError::PlaylistInvalidMember(playlist.id.to_string(), member.to_string()));
             }
         }
         io::post_item(
@@ -133,11 +141,8 @@ impl<'a> LiplRepo for FileSystem<'a> {
         ).await
     }
 
-    async fn delete_playlist(&self, id: String) -> Result<()> {
+    async fn delete_playlist(&self, id: Uuid) -> RepoResult<()> {
         self.lock.write().await;
-        io::delete_file(
-            self.playlist_path(&id),
-        )
-        .await
+        self.playlist_path(&id).remove().await
     }
 }

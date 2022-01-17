@@ -1,72 +1,113 @@
-use std::path::{Path, PathBuf};
 use std::ffi::{OsStr};
-use tokio_stream::wrappers::{ReadDirStream};
-use crate::{Error, Result};
-use futures::future::{ready, Ready};
-use futures::{TryStream, TryStreamExt};
-use tokio::fs::{read_dir, File};
-use tokio::io::{AsyncBufReadExt, BufReader};
+use std::path::{Path, PathBuf};
+use std::pin::Pin;
+
 use async_trait::{async_trait};
+use futures::{Stream, StreamExt, TryStreamExt};
+use futures::future::{ready, Ready};
+use tokio::fs::{read_dir, File, remove_file};
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio_stream::wrappers::{LinesStream, ReadDirStream};
+
+use crate::{RepoResult};
+use lipl_types::{RepoError, Uuid};
 
 #[async_trait]
-pub trait Reader {
-    async fn read_string(&self) -> Result<String>;
-    async fn read_frontmatter(&self) -> Result<String>;
+pub trait IO {
+    async fn read_string(&self) -> RepoResult<String>;
+    async fn read_frontmatter(&self) -> RepoResult<String>;
+    async fn remove(&self) -> RepoResult<()>;
+    async fn write_string(&self, s: String) -> RepoResult<()>;
+
+    async fn get_files<'a, F>(&self, filter: F) -> RepoResult<Pin<Box<dyn Stream<Item=RepoResult<PathBuf>> + Send + 'a>>>
+    where 
+        F: Fn(&PathBuf) -> Ready<bool> + Send + 'a;
+
+    fn is_dir(&self) -> RepoResult<()>;
+    fn full_path(&self, id: &str, ext: &str) -> PathBuf;
+    fn id(&self) -> RepoResult<Uuid>;
 }
 
 #[async_trait]
-impl Reader for &Path {
-    async fn read_string(&self) -> Result<String> {
+impl<P> IO for P 
+where
+    P:  AsRef<Path> + Send + Sync,
+{
+    async fn read_string(&self) -> RepoResult<String> {
         let s = tokio::fs::read_to_string(self).await?;
         Ok(s)
     }
 
-    async fn read_frontmatter(&self) -> Result<String> {
+    async fn read_frontmatter(&self) -> RepoResult<String> {
         let file = File::open(self).await?;
         let reader = BufReader::new(file).lines();
-        let lines = tokio_stream::wrappers::LinesStream::new(reader).map_err(Error::from);
+        let lines = LinesStream::new(reader).map_err(RepoError::from);
         let part: Vec<String> = 
             lines
-            .map_err(Error::from)
-            .try_skip_while(|l| ready(Ok(l.trim() == "")))
-            .try_take_while(|l| ready(Ok(l.trim() != "")))
+            .map_err(RepoError::from)
+            .try_skip_while(|l| ready(Ok(l.trim() != "---")))
+            .try_skip_while(|l| ready(Ok(l.trim() == "---")))
+            .try_take_while(|l| ready(Ok(l.trim() != "---")))
             .try_collect()
             .await?;
-        let part: Vec<String> = part.into_iter().filter(|l| l != "---").collect();
 
         Ok(part.join("\n"))
     }
-}
 
+    async fn remove(&self) -> RepoResult<()> {
+        remove_file(self).await?;
+        Ok(())
+    }
+
+    async fn write_string(&self, s: String) -> RepoResult<()> {
+        tokio::fs::write(self, s).await?;
+        Ok(())
+    }
+
+    async fn get_files<'a, F>(&self, filter: F) -> RepoResult<Pin<Box<dyn Stream<Item=RepoResult<PathBuf>> + Send + 'a>>>
+    where 
+        F: Fn(&PathBuf) -> Ready<bool> + Send + 'a,
+    {
+        read_dir(self)
+        .await
+        .map_err(RepoError::from)
+        .map(
+            |de| 
+                ReadDirStream::new(de)
+                .map_err(RepoError::from)
+                .map_ok(|de| de.path())
+                .try_filter(filter)
+                .boxed()
+        )
+    }
+    
+    fn is_dir(&self) -> RepoResult<()> {
+        if Path::new(self.as_ref()).is_dir() {
+            Ok(())
+        }
+        else {
+            Err(RepoError::CannotFindDirectory(self.as_ref().to_str().map(String::from)))
+        }
+    }
+
+    fn full_path(&self, id: &str, ext: &str) -> PathBuf {
+        self.as_ref()
+        .join(
+            format!("{}.{}", id, ext)
+        )
+    }
+
+    fn id(&self) -> RepoResult<Uuid> {
+        self
+        .as_ref()
+        .file_stem()
+        .ok_or_else(|| RepoError::Filestem(self.as_ref().to_str().map(String::from)))
+        .map(|fs| fs.to_string_lossy().to_string())
+        .and_then(|s| s.parse::<Uuid>())
+    }
+}
 
 pub fn extension_filter(s: &str) -> impl Fn(&PathBuf) -> Ready<bool> + '_ {
     |path_buf| ready(path_buf.extension() == Some(OsStr::new(s)))
 }
 
-pub fn full_path(base: &str, filename: &str, extension: &str) -> PathBuf {
-    Path::new(base).join(format!("{}.{}", filename, extension))
-}
-
-pub fn is_dir<P>(path: P) -> Result<()> where P: AsRef<Path> {
-    if Path::new(path.as_ref()).is_dir() {
-        Ok(())
-    }
-    else {
-        Err(anyhow::anyhow!("cannot find directory"))
-    }
-}
-
-pub async fn get_files<'a, P, F>(path: P, filter: F) -> Result<impl TryStream<Ok=PathBuf, Error=Error> + 'a> 
-where P: AsRef<Path>, F: Fn(&PathBuf) -> Ready<bool> + 'a
-{
-    read_dir(path)
-    .await
-    .map_err(Error::from)
-    .map(
-        |de| 
-            ReadDirStream::new(de)
-            .map_err(Error::from)
-            .map_ok(|de| de.path())
-            .try_filter(filter)
-    )
-}

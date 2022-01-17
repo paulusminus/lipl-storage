@@ -1,8 +1,9 @@
 use std::path::{Path};
 use std::time::{Instant};
-use crate::model::{LiplResult, Db, Persist};
+use crate::model::{Db, Persist};
+use lipl_types::{RepoResult};
 
-pub fn copy<P>(source: P, target: P) -> LiplResult<()> 
+pub fn copy<P>(source: P, target: P) -> RepoResult<()> 
 where P: AsRef<Path>
 {
     let start = Instant::now();
@@ -10,7 +11,7 @@ where P: AsRef<Path>
     let mut db = Db::new(source.as_ref().into());
     db.load()?;
 
-    db.save_to(&target.as_ref().to_path_buf())?  ;
+    db.save_to(&target.as_ref().to_path_buf())?;
 
     println!("Elapsed: {:?}", start.elapsed());
     Ok(())

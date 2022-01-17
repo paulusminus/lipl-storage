@@ -1,11 +1,12 @@
-use lipl_io::model::{LiplResult, Lyric, Db, Persist};
+use lipl_io::model::{Db, Persist};
+use lipl_types::{Lyric};
 
 const DIR_NAME: &str = "./tests/fs/";
 
 #[test]
-fn test_get_lyrics() -> LiplResult<()> {
+fn test_get_lyrics() {
     let mut db = Db::new(DIR_NAME.into());
-    db.load()?;
+    db.load().unwrap();
     let mut lyrics: Vec<Lyric> = db.get_lyric_list();
     lyrics.sort_by(|a, b| a.id.cmp(&b.id));
 
@@ -27,7 +28,7 @@ fn test_get_lyrics() -> LiplResult<()> {
     );
 
     assert_eq!(
-        Some("Whatever".to_owned()),
+        "Whatever".to_owned(),
         song1.title,
     );
 
@@ -44,8 +45,6 @@ fn test_get_lyrics() -> LiplResult<()> {
 
     assert_eq!(
         song2.title,
-        None,
+        "".to_owned(),
     );
-
-    Ok(())
 }

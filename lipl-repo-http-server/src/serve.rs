@@ -1,4 +1,5 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
+use tokio::sync::{RwLock};
 
 use anyhow::Result;
 use tokio::sync::oneshot;
@@ -40,7 +41,7 @@ pub async fn serve(param: param::Serve) -> Result<()> {
         .try_bind_with_graceful_shutdown((constant::HOST, param.port), async move {
             rx.await.ok();
             info!("{}", message::STOPPING);
-            arc_db.write().unwrap().save().unwrap();
+            arc_db.write().await.save().unwrap();
             info!("{}", message::BACKUP_COMPLETE);
         })?;
 

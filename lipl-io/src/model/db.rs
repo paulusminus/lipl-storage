@@ -2,8 +2,8 @@ use std::collections::{HashMap};
 use std::fs::{metadata, remove_file};
 use std::path::{PathBuf, Path};
 use log::info;
-use crate::model::{LiplResult, LiplError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid, ZIP, HasExtension};
-use crate::io::{fs_read, fs_write, zip_read, zip_write};
+use lipl_types::{RepoResult, RepoError, Lyric, LyricPost, Playlist, PlaylistPost, Uuid};
+use crate::io::{fs_read, fs_write};
 
 type Collection<T> = HashMap<Uuid, T>;
 
@@ -37,7 +37,11 @@ impl Db {
     }
 
     pub fn add_lyric_post(&mut self, lyric_post: &LyricPost) -> Lyric {
-        let lyric: Lyric = lyric_post.clone().into();
+        let lyric: Lyric = Lyric {
+            id: Uuid::default(),
+            title: lyric_post.title.clone(),
+            parts: lyric_post.parts.clone(),
+        };
         self.add_lyric(&lyric);
         lyric
     }
@@ -48,15 +52,15 @@ impl Db {
         };
     }
 
-    pub fn delete_lyric(&mut self, id: &Uuid) -> LiplResult<()> {
+    pub fn delete_lyric(&mut self, id: &Uuid) -> RepoResult<()> {
         self._remove_lyric_from_playlists(id);
         self.lyrics.remove(id)
-        .ok_or_else(|| LiplError::NoKey("Lyric".to_owned()))
+        .ok_or_else(|| RepoError::NoKey("Lyric".to_owned()))
         .map(|_| {})
     }
 
-    pub fn update_lyric(&mut self, lyric: &Lyric) -> LiplResult<Lyric> {
-        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| LiplError::NoKey("".to_owned()))?;
+    pub fn update_lyric(&mut self, lyric: &Lyric) -> RepoResult<Lyric> {
+        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| RepoError::NoKey("".to_owned()))?;
         *e = lyric.clone();
         Ok(lyric.clone())
     }
@@ -66,7 +70,7 @@ impl Db {
     }
 
     pub fn get_playlist(&self, uuid: &Uuid) -> Option<Playlist> {
-        self.playlists.get(uuid).map(|p| p.clone())
+        self.playlists.get(uuid).cloned()
     }
 
     pub fn _valid_members(&self, members: &[Uuid]) -> Vec<Uuid> {
@@ -86,16 +90,16 @@ impl Db {
         playlist
     }
 
-    pub fn delete_playlist(&mut self, id: &Uuid) -> LiplResult<()> {
+    pub fn delete_playlist(&mut self, id: &Uuid) -> RepoResult<()> {
         self.playlists.remove(id)
-        .ok_or_else(|| LiplError::NoKey("Playlist".to_owned()))
+        .ok_or_else(|| RepoError::NoKey("Playlist".to_owned()))
         .map(|_| {})
     }
 
-    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> LiplResult<Playlist> {
+    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> RepoResult<Playlist> {
         let mut playlist = playlist_update.clone();
         playlist.members = self._valid_members(&playlist.members);
-        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| LiplError::NoKey("".to_owned()))?;
+        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| RepoError::NoKey("".to_owned()))?;
         *e = playlist.clone();
         Ok(playlist)
     }
@@ -107,19 +111,19 @@ pub enum DataType {
 }
 
 pub trait Persist {
-    fn load(&mut self) -> LiplResult<()>;
-    fn save(&self) -> LiplResult<()>;
-    fn save_to(&self, path: &Path) -> LiplResult<()>;
+    fn load(&mut self) -> RepoResult<()>;
+    fn save(&self) -> RepoResult<()>;
+    fn save_to(&self, path: &Path) -> RepoResult<()>;
     fn clear(&mut self);
 }
 
 impl Persist for Db {
-    fn load(&mut self) -> LiplResult<()> {
+    fn load(&mut self) -> RepoResult<()> {
         self.clear();
-        if self.path.has_extension(ZIP) { 
+        /* if self.path.has_extension(ZIP) { 
             zip_read(self.path.clone(), self)
         }
-        else if metadata(self.path.clone())?.is_dir() {
+        else */ if metadata(self.path.clone())?.is_dir() {
             fs_read(
                 self.path.clone(), 
                 |pathbuf, item| {
@@ -136,7 +140,7 @@ impl Persist for Db {
             )
         }
         else {
-            Err(LiplError::NoPath(self.path.to_path_buf()))
+            Err(RepoError::NoPath(self.path.to_path_buf()))
         }
     }
 
@@ -145,24 +149,24 @@ impl Persist for Db {
         self.playlists.clear();
     }
 
-    fn save(&self) -> LiplResult<()> {
+    fn save(&self) -> RepoResult<()> {
         self.save_to(&self.path)
     }
 
-    fn save_to(&self, path: &Path) -> LiplResult<()> {
+    fn save_to(&self, path: &Path) -> RepoResult<()> {
         info!("{:?}", path.extension());
-        if path.has_extension(ZIP) { 
+        /* if path.has_extension(ZIP) { 
             info!("Target is a zipfile");
             zip_write(path, self)
         }
-        else if metadata(path)?.is_dir() {
+        else */ if metadata(path)?.is_dir() {
             for file in self.files.iter() {
                 remove_file(file)?;
             }
             fs_write(path, self)
         }
         else {
-            Err(LiplError::NoPath(path.to_path_buf()))
+            Err(RepoError::NoPath(path.to_path_buf()))
         }
     }
 }

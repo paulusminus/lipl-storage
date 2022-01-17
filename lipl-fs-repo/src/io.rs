@@ -1,82 +1,65 @@
+use std::str::{FromStr};
 use std::path::{Path, PathBuf};
 use futures::{TryFuture, TryStreamExt};
 
-use crate::model::{Error, Lyric, LyricPost, Playlist, PlaylistPost, Result, Summary, LyricMeta};
-use crate::fs::{Reader};
+use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid, RepoError};
+use crate::fs::{IO};
 
-pub trait Id {
-    fn id(&self) -> Result<String>;
-}
+use crate::RepoResult;
 
-impl<P> Id for P where P: AsRef<Path> {
-    fn id(&self) -> Result<String> {
-        self
-        .as_ref()
-        .file_stem()
-        .ok_or(anyhow::anyhow!("No valid filestem"))
-        .map(|fs| fs.to_string_lossy().to_string())
-    }
-}
-
-pub async fn get_lyric_summary<P>(path: P) -> Result<Summary> 
-where P: AsRef<Path>
+pub async fn get_lyric_summary<P>(path: P) -> RepoResult<Summary> 
+where P: AsRef<Path> + Send + Sync
 {
-    let s = path.as_ref().read_frontmatter().await?;
-    get_item::<LyricMeta, Summary>(s, path.id()?)
+    get_item::<LyricMeta, Summary>(
+        path.read_frontmatter().await?,
+        path.id()?,
+    )
 }
 
-pub fn get_item<F, G>(s: String, id: String) -> Result<G>
+pub fn get_item<F, G>(s: String, id: Uuid) -> RepoResult<G>
 where
-    F: std::str::FromStr<Err=Error>,
-    G: From<(F, String)>,
+    F: FromStr<Err=RepoError>,
+    G: From<(F, Uuid)>,
 {
-    let f: F = s.parse()?;
-    let g = G::from((f, id));
-
-    Ok(g)
+    s.parse::<F>().map(|f| G::from((f, id)))
 }
 
-pub async fn get_playlist<P>(path: P) -> Result<Playlist>
+pub async fn get_playlist<P>(path: P) -> RepoResult<Playlist>
 where
-    P: AsRef<Path>,
+    P: AsRef<Path> + Send + Sync,
 {
-    let s = path.as_ref().read_string().await?;
-    get_item::<PlaylistPost, Playlist>(s, path.id()?)
+    get_item::<PlaylistPost, Playlist>(
+        path.read_string().await?,
+        path.id()?,
+    )
 }
 
-pub async fn get_list<P, T, F, Fut>(path: P, ext: &str, f: F) -> Result<Vec<T>> 
+pub async fn get_list<P, T, F, Fut>(path: P, ext: &str, f: F) -> RepoResult<Vec<T>> 
 where 
-    P: AsRef<Path>,
+    P: AsRef<Path> + Send + Sync,
     F: FnMut(PathBuf) -> Fut,
-    Fut: TryFuture<Ok=T, Error=Error>,
+    Fut: TryFuture<Ok=T, Error=RepoError>,
 {
-    crate::fs::get_files(path, crate::fs::extension_filter(ext))
+    path.get_files(crate::fs::extension_filter(ext))
     .await?
     .and_then(f)
     .try_collect::<Vec<T>>()
     .await
 }
 
-pub async fn post_item<D, P>(path: P, d: D) -> Result<()>
+pub async fn post_item<D, P>(path: P, d: D) -> RepoResult<()>
 where
     D: std::fmt::Display,
-    P: AsRef<Path>,
+    P: AsRef<Path> + Send + Sync,
 {
-    tokio::fs::write(path, d.to_string()).await?;
-    Ok(())
+    path.write_string(d.to_string()).await
 }
 
-pub async fn delete_file<P>(path: P) -> Result<()>
-where
-    P: AsRef<Path>
+pub async fn get_lyric<P>(path: P) -> RepoResult<Lyric>
+where P: AsRef<Path> + Send + Sync,
 {
-    tokio::fs::remove_file(path).await?;
-    Ok(())
-}
-
-pub async fn get_lyric<P>(path: P) -> Result<Lyric>
-where P: AsRef<Path>
-{
-    let s = path.as_ref().read_string().await?;
-    get_item::<LyricPost, Lyric>(s, path.id()?)
+    get_item::<LyricPost, Lyric>(
+        path.read_string().await?,
+        path.id()?
+    )
 }

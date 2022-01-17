@@ -4,7 +4,7 @@ extern crate log;
 use anyhow::Result;
 use clap::Parser;
 
-use lipl_repo::{constant, param, serve, db, message};
+use lipl_repo_http_server::{constant, param, serve, db, message};
 
 #[tokio::main(flavor = "current_thread") ]
 async fn main() -> Result<()> {
