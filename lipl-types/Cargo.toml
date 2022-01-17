@@ -1,0 +1,15 @@
+[package]
+name = "lipl-types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1"
+bincode = "1"
+bs58 = "0.4"
+etag = "3"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.8"
+serde_with = "1.11"
+thiserror = "1"
+uuid = { version = "0.8", features = ["v4"] }
