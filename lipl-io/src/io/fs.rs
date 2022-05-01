@@ -44,7 +44,7 @@ F: FnMut(&PathBuf, &mut DataType),
 }
 
 fn write_fs_item<T>(item: T, ext: &str, parent_dir: &Path) -> RepoResult<()> where T: HasId + ToDiskFormat {
-    let filename: PathBuf = format!("{}.{}", item.id().to_string(), ext).into();
+    let filename: PathBuf = format!("{}.{}", item.id(), ext).into();
     let full_path: PathBuf = parent_dir.join(filename);
     info!("Writing: {}", &full_path.to_string_lossy());
     let content = item.to_disk_format()?;

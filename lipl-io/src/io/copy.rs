@@ -11,7 +11,7 @@ where P: AsRef<Path>
     let mut db = Db::new(source.as_ref().into());
     db.load()?;
 
-    db.save_to(&target.as_ref().to_path_buf())?;
+    db.save_to(target.as_ref())?;
 
     println!("Elapsed: {:?}", start.elapsed());
     Ok(())
