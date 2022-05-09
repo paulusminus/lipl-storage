@@ -70,14 +70,13 @@ impl Display for Lyric {
 impl FromStr for PlaylistPost {
     type Err = RepoError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let playlist_post: PlaylistPost = serde_yaml::from_str(s)?;
-        Ok(playlist_post)
+        serde_yaml::from_str::<PlaylistPost>(s).map_err(RepoError::from)
     }
 }
 
 impl Display for PlaylistPost {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let yaml = serde_yaml::to_string(self).unwrap();
+        let yaml = serde_yaml::to_string(self).unwrap_or_default();
         write!(f, "{}", yaml)
     }
 }
