@@ -5,27 +5,9 @@ use async_trait::{async_trait};
 use fs::{IO};
 use lipl_types::{LiplRepo, Lyric, Playlist, PlaylistPost, RepoResult, Summary, Without, Uuid, RepoError};
 
-// mod disk_format;
 pub mod elapsed;
-// pub mod error;
 mod fs;
 mod io;
-// pub mod model;
-
-
-// #[async_trait]
-// pub trait LiplRepo {
-//     async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>>;
-//     async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>>;
-//     async fn get_lyric(&self, id: String) -> RepoResult<Lyric>;
-//     async fn post_lyric(&self, lyric: Lyric) -> RepoResult<()>;
-//     async fn delete_lyric(&self, id: String) -> RepoResult<()>;
-//     async fn get_playlists(&self) -> RepoResult<Vec<Playlist>>;
-//     async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>>;
-//     async fn get_playlist(&self, id: String) -> RepoResult<Playlist>;
-//     async fn post_playlist(&self, playlist: Playlist) -> RepoResult<()>;
-//     async fn delete_playlist(&self, id: String) -> RepoResult<()>;
-// }
 
 pub struct FileSystem<'a> {
     source_dir: &'a str,
@@ -63,7 +45,8 @@ impl<'a> LiplRepo for FileSystem<'a> {
         self.lock.read().await;
         io::get_list(
             self.source_dir,
-            self.lyric_extension,io::get_lyric,
+            self.lyric_extension,
+            io::get_lyric,
         )
         .await
     }
