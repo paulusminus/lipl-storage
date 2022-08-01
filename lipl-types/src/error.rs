@@ -1,4 +1,7 @@
+use futures::channel::{mpsc::TrySendError, oneshot::Canceled};
 use thiserror::{Error};
+
+use crate::request::Request;
 
 #[derive(Error, Debug)]
 pub enum RepoError {
@@ -40,4 +43,13 @@ pub enum RepoError {
 
     #[error("No Path error: {0}")]
     NoKey(String),
+
+    #[error("Send failed for {0}")]
+    SendFailed(&'static str),
+
+    #[error("Sending request failed")]
+    TrySend(#[from] TrySendError<Request>),
+
+    #[error("Canceled")]
+    Canceled(#[from] Canceled),
 }

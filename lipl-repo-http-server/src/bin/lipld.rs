@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
                     db::copy(copy_args)
                 },
                 param::DbCommand::List(list_args) => {
-                    db::list(list_args)
+                    db::repo_list(list_args).await
                 },
             }
         }

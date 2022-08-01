@@ -1,9 +1,9 @@
-use std::str::{FromStr};
+use std::str::FromStr;
 use std::path::{Path, PathBuf};
 use futures::{TryFuture, TryStreamExt};
 
 use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid, RepoError};
-use crate::fs::{IO};
+use crate::fs::IO;
 
 use crate::RepoResult;
 

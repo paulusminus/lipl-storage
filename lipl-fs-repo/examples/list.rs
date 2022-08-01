@@ -1,6 +1,6 @@
 use std::fmt::{Display};
 use lipl_fs_repo::{FileSystem};
-use lipl_types::{LiplRepo, PlaylistPost, RepoResult};
+use lipl_types::{RepoResult, request::{send, Request}};
 use lipl_fs_repo::elapsed::{Elapsed};
 
 pub fn print<D>(d: D) 
@@ -11,28 +11,24 @@ where
 }
 
 pub async fn process() -> RepoResult<()> {
-    let repo = FileSystem::new("./data/", "yaml", "txt")?;
+    let (mut tx, _) = FileSystem::new(
+        "./data/".to_owned(),
+        "yaml".to_owned(),
+        "txt".to_owned(),
+    )?;
 
     println!("Lyrics");
-    repo.get_lyric_summaries().await?.into_iter().for_each(print);
+    send(&mut tx, Request::LyricSummaries).await?
+    .into_iter()
+    .for_each(print);
 
-    // for lyric in repo.get_lyrics().await? {
-    //     repo.post_lyric(lyric).await?;
-    // }
 
     println!();
 
-    // for summary in repo.get_lyric_summaries().await? {
-    //     let lyric = repo.get_lyric(summary.id).await?;
-    //     println!("{}", lyric);
-    // }
-
     println!("Playlists");
-    repo.get_playlists().await?.into_iter().map(PlaylistPost::from).for_each(print);
-    // println!("Playlists");
-    // repo.get_playlist_summaries().await?.iter().for_each(print);
-
-    // repo.delete_lyric("KGxasqUC1Uojk1viLGbMZK".to_owned()).await?;
+    send(&mut tx, Request::PlaylistSummaries).await?
+    .into_iter()
+    .for_each(print);
 
     Ok(())
 }

@@ -4,10 +4,13 @@ use serde::{Deserialize, Serialize};
 pub use uuid_wrapper::Uuid;
 pub use path_ext::{PathExt};
 pub use error::RepoError;
+// pub use futures::channel::oneshot;
+// pub use futures::channel::mpsc;
 
 mod disk_format;
 mod error;
 mod path_ext;
+pub mod request;
 mod uuid_wrapper;
 
 pub type RepoResult<T> = Result<T, error::RepoError>;
