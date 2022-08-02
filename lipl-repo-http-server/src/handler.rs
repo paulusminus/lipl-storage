@@ -11,12 +11,14 @@ macro_rules! create_handler {
             use warp::http::status::StatusCode;
             use crate::model::{Query};
 
-            pub async fn list_summary(db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
+            type SharedDb = Arc<RwLock<Db>>;
+
+            pub async fn list_summary(db: SharedDb) -> Result<impl Reply, Rejection> {
                 let result = db.read().await.$list().to_summaries();
                 Ok(warp::reply::json(&result))
             }
 
-            pub async fn list(db: Arc<RwLock<Db>>, query: Query) -> Result<impl Reply, Rejection> {
+            pub async fn list(db: SharedDb, query: Query) -> Result<impl Reply, Rejection> {
                 if query.full {
                     let result = db.read().await.$list();
                     Ok(warp::reply::json(&result))
@@ -25,7 +27,7 @@ macro_rules! create_handler {
                 }
             }
 
-            pub async fn item(id: Uuid, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
+            pub async fn item(id: Uuid, db: SharedDb) -> Result<impl Reply, Rejection> {
                 let result = db.read().await.$item(&id);
                 result.map_or_else(
                     | | Err(warp::reject::not_found()),
@@ -34,14 +36,14 @@ macro_rules! create_handler {
             }
 
             pub async fn post(
-                db: Arc<RwLock<Db>>,
+                db: SharedDb,
                 json: $post_type,
             ) -> Result<impl Reply, Rejection> {
                 let result = db.write().await.$add(&json);
                 Ok(with_status(warp::reply::json(&result), StatusCode::CREATED))
             }
 
-            pub async fn delete(id: Uuid, db: Arc<RwLock<Db>>) -> Result<impl Reply, Rejection> {
+            pub async fn delete(id: Uuid, db: SharedDb) -> Result<impl Reply, Rejection> {
                 let result = db.write().await.$delete(&id).ok();
                 result.map_or_else(
                     | | Err(warp::reject::not_found()),
@@ -51,7 +53,7 @@ macro_rules! create_handler {
 
             pub async fn put(
                 id: Uuid,
-                db: Arc<RwLock<Db>>,
+                db: SharedDb,
                 json: $post_type,
             ) -> Result<impl Reply, Rejection> {
                 let result = db.write().await.$update(&(Some(id), json).into()).ok();

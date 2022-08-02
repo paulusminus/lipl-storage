@@ -169,62 +169,42 @@ impl FileRepo {
 #[async_trait]
 impl LiplRepo for FileRepo {
     async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>> {
-        let mut tx = self.tx.clone();
-        select(&mut tx, Request::LyricList).await
+        select(&mut self.tx.clone(), Request::LyricList).await
     }
 
     async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>> {
-        let mut tx = self.tx.clone();
-        select(&mut tx, Request::LyricSummaries).await
+        select(&mut self.tx.clone(), Request::LyricSummaries).await
     }
 
     async fn get_lyric(&self, id: Uuid) -> RepoResult<Lyric> {
-        let mut tx = self.tx.clone();
-        select_by_id(&mut tx, id, Request::LyricItem).await
+        select_by_id(&mut self.tx.clone(), id, Request::LyricItem).await
     }
 
     async fn post_lyric(&self, lyric: Lyric) -> RepoResult<()> {
-        let mut tx = self.tx.clone();
-        post(
-            &mut tx,
-            lyric,
-            Request::LyricPost,
-        )
-        .await
+        post(&mut self.tx.clone(), lyric, Request::LyricPost).await
     }
 
     async fn delete_lyric(&self, id: Uuid) -> RepoResult<()> {
-        let mut tx = self.tx.clone();
-        delete_by_id(&mut tx, id, Request::LyricDelete).await
+        delete_by_id(&mut self.tx.clone(), id, Request::LyricDelete).await
     }
 
     async fn get_playlists(&self) -> RepoResult<Vec<Playlist>> {
-        let mut tx = self.tx.clone();
-        select(&mut tx, Request::PlaylistList).await
+        select(&mut self.tx.clone(), Request::PlaylistList).await
     }
 
     async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>> {
-        let mut tx = self.tx.clone();
-        select(&mut tx, Request::PlaylistSummaries).await
+        select(&mut self.tx.clone(), Request::PlaylistSummaries).await
     }
 
     async fn get_playlist(&self, id: Uuid) -> RepoResult<Playlist> {
-        let mut tx = self.tx.clone();
-        select_by_id(&mut tx, id, Request::PlaylistItem).await
+        select_by_id(&mut self.tx.clone(), id, Request::PlaylistItem).await
     }
 
     async fn post_playlist(&self, playlist: Playlist) -> RepoResult<()> {
-        let mut tx = self.tx.clone();
-        post(
-            &mut tx,
-            playlist,
-            Request::PlaylistPost,
-        )
-        .await
+        post(&mut self.tx.clone(), playlist, Request::PlaylistPost).await
     }
 
     async fn delete_playlist(&self, id: Uuid) -> RepoResult<()> {
-        let mut tx = self.tx.clone();
-        delete_by_id(&mut tx, id, Request::PlaylistDelete).await
+        delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete).await
     }
 }
