@@ -82,6 +82,12 @@ impl From<(Option<Uuid>, LyricPost)> for Lyric {
     }
 }
 
+impl From<Lyric> for LyricPost {
+    fn from(lyric: Lyric) -> Self {
+        Self { title: lyric.title, parts: lyric.parts }
+    }
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Playlist {
     pub id: Uuid,

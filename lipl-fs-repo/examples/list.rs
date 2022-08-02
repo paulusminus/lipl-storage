@@ -1,6 +1,6 @@
 use std::fmt::{Display};
-use lipl_fs_repo::{FileSystem};
-use lipl_types::{RepoResult, request::{send, Request}};
+use lipl_fs_repo::{FileRepo};
+use lipl_types::{RepoResult, LiplRepo};
 use lipl_fs_repo::elapsed::{Elapsed};
 
 pub fn print<D>(d: D) 
@@ -11,22 +11,25 @@ where
 }
 
 pub async fn process() -> RepoResult<()> {
-    let (mut tx, _) = FileSystem::new(
+    let repo = FileRepo::new(
         "./data/".to_owned(),
         "yaml".to_owned(),
         "txt".to_owned(),
     )?;
 
     println!("Lyrics");
-    send(&mut tx, Request::LyricSummaries).await?
+    repo
+    .get_lyric_summaries()
+    .await?
     .into_iter()
     .for_each(print);
-
 
     println!();
 
     println!("Playlists");
-    send(&mut tx, Request::PlaylistSummaries).await?
+    repo
+    .get_playlist_summaries()
+    .await?
     .into_iter()
     .for_each(print);
 
