@@ -31,8 +31,8 @@ pub async fn serve(param: param::Serve) -> Result<()> {
     // let arc_db = Arc::new(RwLock::new(db));
     let arc_db = FileRepo::new(
         param.source.to_string_lossy().to_string(),
-        "txt".to_owned(),
         "yaml".to_owned(),
+        "txt".to_owned(),
     )?;
 
     let routes = 
