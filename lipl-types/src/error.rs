@@ -45,7 +45,7 @@ pub enum RepoError {
     NoKey(String),
 
     #[error("Send failed for {0}")]
-    SendFailed(&'static str),
+    SendFailed(String),
 
     #[error("Sending request failed")]
     TrySend(#[from] TrySendError<Request>),

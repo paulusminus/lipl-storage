@@ -8,12 +8,12 @@ pub enum Request {
     LyricList(ResultSender<Vec<Lyric>>),
     LyricItem(Uuid, ResultSender<Lyric>),
     LyricDelete(Uuid, ResultSender<()>),
-    LyricPost(Lyric, ResultSender<()>),
+    LyricPost(Lyric, ResultSender<Lyric>),
     PlaylistSummaries(ResultSender<Vec<Summary>>),
     PlaylistList(ResultSender<Vec<Playlist>>),
     PlaylistItem(Uuid, ResultSender<Playlist>),
     PlaylistDelete(Uuid, ResultSender<()>),
-    PlaylistPost(Playlist, ResultSender<()>),
+    PlaylistPost(Playlist, ResultSender<Playlist>),
 }
 
 pub async fn select<T>(tx: &mut mpsc::Sender<Request>, f: impl Fn(ResultSender<T>) -> Request) -> RepoResult<T> {
@@ -34,8 +34,8 @@ pub async fn delete_by_id(tx: &mut mpsc::Sender<Request>, uuid: Uuid, f: impl Fn
     oneshot_rx.await?
 }
 
-pub async fn post<T>(tx: &mut mpsc::Sender<Request>, t: T, f: impl Fn(T, ResultSender<()>) -> Request) -> RepoResult<()> {
-    let (oneshot_tx, oneshot_rx) = oneshot::channel::<RepoResult<()>>();
+pub async fn post<T>(tx: &mut mpsc::Sender<Request>, t: T, f: impl Fn(T, ResultSender<T>) -> Request) -> RepoResult<T> {
+    let (oneshot_tx, oneshot_rx) = oneshot::channel::<RepoResult<T>>();
     tx.try_send(f(t, oneshot_tx))?;
     oneshot_rx.await?
 }

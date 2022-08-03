@@ -43,8 +43,8 @@ impl LiplRepo for RepoWrapper {
         self.inner.write().await.delete_lyric(&id)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<()> {
-        self.inner.write().await.update_lyric(&lyric).map(|_| () )
+    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<Lyric> {
+        self.inner.write().await.update_lyric(&lyric)
     }
 
     async fn get_playlists(&self) -> RepoResult<Vec<Playlist>> {
@@ -67,7 +67,7 @@ impl LiplRepo for RepoWrapper {
         self.inner.write().await.delete_playlist(&id)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<()> {
-        self.inner.write().await.update_playlist(&playlist).map(|_| ())
+    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<Playlist> {
+        self.inner.write().await.update_playlist(&playlist)
     }
 }

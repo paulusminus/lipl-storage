@@ -18,12 +18,12 @@ pub trait LiplRepo {
     async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>>;
     async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>>;
     async fn get_lyric(&self, id: Uuid) -> RepoResult<Lyric>;
-    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<()>;
+    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<Lyric>;
     async fn delete_lyric(&self, id: Uuid) -> RepoResult<()>;
     async fn get_playlists(&self) -> RepoResult<Vec<Playlist>>;
     async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>>;
     async fn get_playlist(&self, id: Uuid) -> RepoResult<Playlist>;
-    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<()>;
+    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<Playlist>;
     async fn delete_playlist(&self, id: Uuid) -> RepoResult<()>;
 }
 

@@ -1,66 +1,73 @@
 
+
 macro_rules! create_handler {
-    ($name:ident, $list:ident, $item:ident, $add:ident, $delete:ident, $update:ident, $post_type:path) => {
+    ($name:ident, $list:ident, $summaries:ident, $item:ident, $delete:ident, $update:ident, $post_type:path, $posted_type:path) => {
         pub mod $name {
-            use std::sync::{Arc};
-            use tokio::sync::{RwLock};
-            use lipl_io::model::{Db, HasSummaries};
-            use lipl_types::{Uuid};
+            use lipl_types::{LiplRepo, Uuid};
             use warp::{Reply, Rejection};
             use warp::reply::with_status;
             use warp::http::status::StatusCode;
             use crate::model::{Query};
 
-            type SharedDb = Arc<RwLock<Db>>;
-
-            pub async fn list_summary(db: SharedDb) -> Result<impl Reply, Rejection> {
-                let result = db.read().await.$list().to_summaries();
-                Ok(warp::reply::json(&result))
+            pub async fn list_summary<D>(db: D) -> Result<impl Reply, Rejection> 
+            where D: LiplRepo + Clone
+            {
+                db.$summaries().await
+                .map(|result| warp::reply::json(&result))
+                .map_err(|_| warp::reject::not_found())
             }
 
-            pub async fn list(db: SharedDb, query: Query) -> Result<impl Reply, Rejection> {
+            pub async fn list<D>(db: D, query: Query) -> Result<impl Reply, Rejection>
+            where D: LiplRepo + Clone
+            {
                 if query.full {
-                    let result = db.read().await.$list();
-                    Ok(warp::reply::json(&result))
+                    db.$list().await
+                    .map(|result| warp::reply::json(&result))
+                    .map_err(|_| warp::reject::not_found())
                 } else {
                     Err(warp::reject::not_found())
                 }
             }
 
-            pub async fn item(id: Uuid, db: SharedDb) -> Result<impl Reply, Rejection> {
-                let result = db.read().await.$item(&id);
-                result.map_or_else(
-                    | | Err(warp::reject::not_found()),
-                    |r| Ok(warp::reply::json(&r)),
-                )
+            pub async fn item<D>(id: Uuid, db: D) -> Result<impl Reply, Rejection>
+            where D: LiplRepo + Clone
+            {
+                db.$item(id).await
+                .map(|r| warp::reply::json(&r))
+                .map_err(|_| warp::reject::not_found())
             }
 
-            pub async fn post(
-                db: SharedDb,
+            pub async fn post<D>(
+                db: D,
                 json: $post_type,
-            ) -> Result<impl Reply, Rejection> {
-                let result = db.write().await.$add(&json);
-                Ok(with_status(warp::reply::json(&result), StatusCode::CREATED))
+            ) -> Result<impl Reply, Rejection>
+            where D: LiplRepo + Clone
+            {
+                let o: $posted_type = (None, json).into();
+                db.$update(o).await
+                .map(|result| with_status(warp::reply::json(&result), StatusCode::CREATED))
+                .map_err(|_| warp::reject::custom(crate::error::PostError {}))
             }
 
-            pub async fn delete(id: Uuid, db: SharedDb) -> Result<impl Reply, Rejection> {
-                let result = db.write().await.$delete(&id).ok();
-                result.map_or_else(
-                    | | Err(warp::reject::not_found()),
-                    |_| Ok(with_status(warp::reply::reply(), StatusCode::NO_CONTENT)),
-                )
+            pub async fn delete<D>(id: Uuid, db: D) -> Result<impl Reply, Rejection>
+            where D: LiplRepo + Clone
+            {
+                db.$delete(id).await
+                .map(|_| with_status(warp::reply::reply(), StatusCode::NO_CONTENT))
+                .map_err(|_| warp::reject::not_found())
             }
 
-            pub async fn put(
+            pub async fn put<D>(
                 id: Uuid,
-                db: SharedDb,
+                db: D,
                 json: $post_type,
-            ) -> Result<impl Reply, Rejection> {
-                let result = db.write().await.$update(&(Some(id), json).into()).ok();
-                result.map_or_else(
-                    | | Err(warp::reject::not_found()),
-                    |r| Ok(warp::reply::json(&r)),
-                )
+            ) -> Result<impl Reply, Rejection>
+            where D: LiplRepo + Clone
+            {
+                let o: $posted_type = (Some(id), json).into();
+                db.$update(o).await
+                .map(|result| warp::reply::json(&result))
+                .map_err(|_| warp::reject::not_found())
             }
         }
     };
@@ -68,20 +75,22 @@ macro_rules! create_handler {
 
 create_handler! (
     lyric,
-    get_lyric_list,
+    get_lyrics,
+    get_lyric_summaries,
     get_lyric,
-    add_lyric_post,
     delete_lyric,
-    update_lyric,
-    lipl_types::LyricPost
+    post_lyric,
+    lipl_types::LyricPost,
+    lipl_types::Lyric
 );
 
 create_handler! (
     playlist,
-    get_playlist_list,
+    get_playlists,
+    get_playlist_summaries,
     get_playlist,
-    add_playlist_post,
     delete_playlist,
-    update_playlist,
-    lipl_types::PlaylistPost
+    post_playlist,
+    lipl_types::PlaylistPost,
+    lipl_types::Playlist
 );
