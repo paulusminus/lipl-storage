@@ -8,7 +8,6 @@ pub use error::RepoError;
 mod disk_format;
 mod error;
 mod path_ext;
-pub mod request;
 mod uuid_wrapper;
 
 pub type RepoResult<T> = Result<T, error::RepoError>;

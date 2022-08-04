@@ -1,6 +1,4 @@
-// use std::sync::{Arc};
 use lipl_fs_repo::FileRepo;
-// use tokio::sync::{RwLock};
 
 use anyhow::Result;
 use tokio::sync::oneshot;
@@ -10,11 +8,7 @@ use warp::Filter;
 use crate::constant;
 use crate::message;
 use crate::param;
-// use crate::lyric_filter::get_routes as get_lyric_routes;
-// use crate::playlist_filter::get_routes as get_playlist_routes;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
-
-// use lipl_io::model::{Db, Persist};
 
 pub async fn serve(param: param::Serve) -> Result<()> {
     let (tx, rx) = oneshot::channel::<()>();
@@ -25,20 +19,16 @@ pub async fn serve(param: param::Serve) -> Result<()> {
         .map(|_| tx.send(()))
     });
 
-    // let mut db = Db::new(param.source);
-    // db.load()?;
-
-    // let arc_db = Arc::new(RwLock::new(db));
-    let arc_db = FileRepo::new(
+    let repo = FileRepo::new(
         param.source.to_string_lossy().to_string(),
         "yaml".to_owned(),
         "txt".to_owned(),
     )?;
 
     let routes = 
-        get_lyric_routes(arc_db.clone(), constant::LYRIC)
+        get_lyric_routes(repo.clone(), constant::LYRIC)
         .or(
-            get_playlist_routes(arc_db.clone(), constant::PLAYLIST)
+            get_playlist_routes(repo.clone(), constant::PLAYLIST)
         )
         .with(warp::log(constant::LOG_NAME));
 
@@ -47,7 +37,9 @@ pub async fn serve(param: param::Serve) -> Result<()> {
         .try_bind_with_graceful_shutdown((constant::HOST, param.port), async move {
             rx.await.ok();
             info!("{}", message::STOPPING);
-            // arc_db.write().await.save().unwrap();
+            if let Err(error) = repo.stop().await {
+                error!("{}", error);
+            };
             info!("{}", message::BACKUP_COMPLETE);
         })?;
 

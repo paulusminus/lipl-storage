@@ -1,4 +1,3 @@
-// use tokio::sync::{RwLock};
 use warp::{body, path, Filter};
 use warp::filters::query;
 use lipl_types::LiplRepo;
@@ -20,18 +19,18 @@ macro_rules! and {
 
 macro_rules! create_fn {
     ($name:ident, $handler:ident) => {
-        pub fn $name<D>(db: D, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
-        where D: LiplRepo + Clone + Send + Sync
+        pub fn $name<R>(repo: R, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
+        where R: LiplRepo + Clone + Send + Sync
         {
-            let db_filter  = warp::any().map(move || db.clone());
+            let repo_filter  = warp::any().map(move || repo.clone());
             let prefix = join_paths!(API, VERSION, name);
         
-            let list         = and! (warp::get()   , prefix, path::end()  , db_filter.clone(), query::query() ) .and_then($handler::list);
-            let summaries    = and! (warp::get()   , prefix, path::end()  , db_filter.clone()                 ) .and_then($handler::list_summary);
-            let item         = and! (warp::get()   , prefix, path::param(), db_filter.clone()                 ) .and_then($handler::item);
-            let post         = and! (warp::post()  , prefix, path::end()  , db_filter.clone(), body::json()   ) .and_then($handler::post);
-            let put          = and! (warp::put()   , prefix, path::param(), db_filter.clone(), body::json()   ) .and_then($handler::put);
-            let delete       = and! (warp::delete(), prefix, path::param(), db_filter.clone()                 ) .and_then($handler::delete);
+            let list         = and! (warp::get()   , prefix, path::end()  , repo_filter.clone(), query::query() ) .and_then($handler::list);
+            let summaries    = and! (warp::get()   , prefix, path::end()  , repo_filter.clone()                 ) .and_then($handler::list_summary);
+            let item         = and! (warp::get()   , prefix, path::param(), repo_filter.clone()                 ) .and_then($handler::item);
+            let post         = and! (warp::post()  , prefix, path::end()  , repo_filter.clone(), body::json()   ) .and_then($handler::post);
+            let put          = and! (warp::put()   , prefix, path::param(), repo_filter.clone(), body::json()   ) .and_then($handler::put);
+            let delete       = and! (warp::delete(), prefix, path::param(), repo_filter.clone()                 ) .and_then($handler::delete);
         
             or!(list, summaries, item, post, put, delete)
         }

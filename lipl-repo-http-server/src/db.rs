@@ -1,6 +1,6 @@
 use crate::param::{ListCommand, CopyCommand};
-// use lipl_io::io::{copy as db_copy, list as db_list};
 use anyhow::Result;
+use lipl_fs_repo::FileRepo;
 use lipl_types::{LiplRepo};
 use log::{info};
 
@@ -37,21 +37,34 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
     Ok(())
 }
 
-pub fn list(args: ListCommand) -> Result<()> {
-    // db_list(args.source)?;
-    Ok(())
-}
-
-pub fn copy(args: CopyCommand) -> Result<()> {
+pub async fn copy(args: CopyCommand) -> Result<()> {
     info!(
         "Start copying {} to {}",
         &args.source.to_string_lossy(),
         &args.target.to_string_lossy(),
      );
 
-    //  db_copy(&args.source, &args.target)?;
+    let source = FileRepo::new(
+        args.source.to_string_lossy().to_string(), 
+        "yaml".to_string(),
+        "txt".to_owned(),
+    )?;
 
-     info!(
+    let target = FileRepo::new(
+        args.target.to_string_lossy().to_string(),
+        "yaml".to_owned(),
+        "txt".to_owned(),
+    )?;
+
+    for lyric in source.get_lyrics().await? {
+        target.post_lyric(lyric).await?;
+    }
+
+    for playlist in source.get_playlists().await? {
+        target.post_playlist(playlist).await?;
+    }
+
+    info!(
         "Finished copying {} to {}",
         args.source.to_string_lossy(),
         args.target.to_string_lossy(),

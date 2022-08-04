@@ -10,8 +10,3 @@ pub mod message;
 mod model;
 pub mod param;
 pub mod serve;
-
-#[cfg(test)]
-mod tests {
-
-}

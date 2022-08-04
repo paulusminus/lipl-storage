@@ -36,7 +36,7 @@ impl LiplRepo for RepoWrapper {
     }
 
     async fn get_lyric(&self, id: Uuid) -> RepoResult<Lyric> {
-        self.inner.read().await.get_lyric(&id).ok_or(RepoError::NoKey(id.to_string()))
+        self.inner.read().await.get_lyric(&id).ok_or_else(|| RepoError::NoKey(id.to_string()))
     }
 
     async fn delete_lyric(&self, id: Uuid) -> RepoResult<()> {
@@ -60,7 +60,7 @@ impl LiplRepo for RepoWrapper {
     }
 
     async fn get_playlist(&self, id: Uuid) -> RepoResult<Playlist> {
-        self.inner.read().await.get_playlist(&id).ok_or(RepoError::NoKey(id.to_string()))
+        self.inner.read().await.get_playlist(&id).ok_or_else(|| RepoError::NoKey(id.to_string()))
     }
 
     async fn delete_playlist(&self, id: Uuid) -> RepoResult<()> {

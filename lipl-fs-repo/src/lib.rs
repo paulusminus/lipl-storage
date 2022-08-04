@@ -3,17 +3,19 @@ use std::sync::Arc;
 use async_trait::async_trait;
 
 use fs::IO;
-use futures::channel::mpsc;
+use futures::{channel::mpsc};
 use futures::StreamExt;
 use lipl_types::{
-    request::{delete_by_id, post, select, select_by_id, Request},
     LiplRepo, Lyric, Playlist, RepoError, RepoResult, Summary, Uuid, Without,
 };
+use request::{delete_by_id, post, select, select_by_id, Request};
+
 use tokio::task::JoinHandle;
 
 pub mod elapsed;
 mod fs;
 mod io;
+mod request;
 
 #[derive(Clone)]
 pub struct FileRepo {
@@ -23,11 +25,11 @@ pub struct FileRepo {
 
 impl FileRepo {
     pub fn new(
-        s: String,
+        source_dir: String,
         playlist_extension: String,
         lyric_extension: String,
     ) -> RepoResult<FileRepo> {
-        s.is_dir()?;
+        source_dir.is_dir()?;
 
         let (tx, mut rx) = mpsc::channel::<Request>(10);
 
@@ -36,46 +38,58 @@ impl FileRepo {
             join_handle: Arc::new(tokio::spawn(async move {
                 while let Some(request) = rx.next().await {
                     match request {
+                        Request::Stop(sender) => {
+                            sender.send(Ok(()))
+                            .map_err(|_| RepoError::SendFailed("Stop".to_string()))?;
+                            break;
+                        },
                         Request::LyricSummaries(sender) => {
-                            sender
-                                .send(
-                                    io::get_list(
-                                        s.clone(),
-                                        &lyric_extension,
-                                        io::get_lyric_summary,
-                                    )
-                                    .await,
+                            let f = async {
+                                io::get_list(
+                                    source_dir.clone(),
+                                    &lyric_extension,
+                                    io::get_lyric_summary,
                                 )
-                                .map_err(|_| RepoError::SendFailed("LyricSummaries".to_owned()))?;
+                                .await
+                            };
+                            sender
+                                .send(f.await)
+                                .map_err(|_| RepoError::SendFailed("LyricSummaries".to_string()))?;
                         }
                         Request::LyricList(sender) => {
-                            sender
-                                .send(
-                                    io::get_list(s.clone(), &lyric_extension, io::get_lyric).await,
+                            let f = async {
+                                io::get_list(
+                                    source_dir.clone(), 
+                                    &lyric_extension, 
+                                    io::get_lyric,
                                 )
-                                .map_err(|_| RepoError::SendFailed("LyricList".to_owned()))?;
+                                .await
+                            };
+                            sender
+                                .send(f.await)
+                                .map_err(|_| RepoError::SendFailed("LyricList".to_string()))?;
                         }
                         Request::LyricItem(uuid, sender) => {
                             sender
                                 .send(
-                                    io::get_lyric(s.full_path(&uuid.to_string(), &lyric_extension))
+                                    io::get_lyric(source_dir.full_path(&uuid.to_string(), &lyric_extension))
                                         .await,
                                 )
-                                .map_err(|_| RepoError::SendFailed("LyricItem".to_owned()))?;
+                                .map_err(|_| RepoError::SendFailed(format!("LyricItem {uuid}")))?;
                         }
                         Request::LyricDelete(uuid, sender) => {
                             let f = async {
-                                s.full_path(&uuid.to_string(), &lyric_extension)
+                                source_dir.full_path(&uuid.to_string(), &lyric_extension)
                                     .remove()
                                     .await?;
                                 let playlists =
-                                    io::get_list(s.clone(), &playlist_extension, io::get_playlist)
+                                    io::get_list(source_dir.clone(), &playlist_extension, io::get_playlist)
                                         .await?;
                                 for mut playlist in playlists {
                                     if playlist.members.contains(&uuid) {
                                         playlist.members = playlist.members.without(&uuid);
                                         io::post_item(
-                                            s.full_path(&uuid.to_string(), &playlist_extension),
+                                            source_dir.full_path(&uuid.to_string(), &playlist_extension),
                                             playlist,
                                         )
                                         .await?;
@@ -85,60 +99,81 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed("LyricDelete".to_owned()))?;
+                                .map_err(|_| RepoError::SendFailed(format!("LyricDelete {uuid}")))?;
                         }
                         Request::LyricPost(lyric, sender) => {
                             let f = async {
-                                io::post_item(s.full_path(&lyric.id.to_string(), &lyric_extension), lyric.clone()).await?;
-                                let lyric = io::get_lyric(s.full_path(&lyric.id.to_string(), &lyric_extension)).await?;
+                                let path = source_dir.full_path(&lyric.id.to_string(), &lyric_extension);
+                                io::post_item(
+                                    &path,
+                                    lyric,
+                                )
+                                .await?;
+                                let lyric = io::get_lyric(&path).await?;
                                 Ok::<Lyric, RepoError>(lyric)
                             };
                             sender
                                 .send(
                                     f.await,
                                 )
-                                .map_err(|_| RepoError::SendFailed("LyricPost".to_owned()))?;
+                                .map_err(|e| RepoError::SendFailed(format!("LyricPost {}", e.unwrap().title)))?;
                         }
                         Request::PlaylistSummaries(sender) => {
-                            sender
-                                .send(
-                                    io::get_list(s.clone(), &playlist_extension, io::get_playlist)
-                                        .await
-                                        .map(lipl_types::summaries),
+                            let f = async {
+                                io::get_list(
+                                    source_dir.clone(),
+                                    &playlist_extension,
+                                    io::get_playlist,
                                 )
-                                .map_err(|_| RepoError::SendFailed("PlaylistSummaries".to_owned()))?;
+                                .await
+                                .map(lipl_types::summaries)
+                            };
+                            sender
+                                .send(f.await)
+                                .map_err(|_| RepoError::SendFailed("PlaylistSummaries".to_string()))?;
                         }
                         Request::PlaylistList(sender) => {
-                            sender
-                                .send(
-                                    io::get_list(s.clone(), &playlist_extension, io::get_playlist)
-                                        .await,
+                            let f = async {
+                                io::get_list(
+                                    source_dir.clone(),
+                                    &playlist_extension,
+                                    io::get_playlist
                                 )
-                                .map_err(|_| RepoError::SendFailed("PlaylistList".to_owned()))?;
+                                .await
+                            };
+                            sender
+                                .send(f.await)
+                                .map_err(|_| RepoError::SendFailed("PlaylistList".to_string()))?;
                         }
                         Request::PlaylistItem(uuid, sender) => {
-                            sender
-                                .send(
-                                    io::get_playlist(
-                                        s.full_path(&uuid.to_string(), &playlist_extension),
-                                    )
-                                    .await,
+                            let f = async {
+                                io::get_playlist(
+                                    source_dir.full_path(
+                                        &uuid.to_string(),
+                                        &playlist_extension
+                                    ),
                                 )
+                                .await
+                            };
+                            sender
+                                .send(f.await)
                                 .map_err(|_| RepoError::SendFailed(format!("PlaylistItem {uuid}")))?;
                         }
                         Request::PlaylistDelete(uuid, sender) => {
+                            let f = async {
+                                source_dir.full_path(&uuid.to_string(), &playlist_extension)
+                                .remove()
+                                .await
+                            };
                             sender
-                                .send(
-                                    s.full_path(&uuid.to_string(), &playlist_extension)
-                                        .remove()
-                                        .await,
-                                )
-                                .map_err(|_| RepoError::SendFailed("PlaylistDelete".to_owned()))?;
+                                .send(f.await)
+                                .map_err(|_| RepoError::SendFailed(format!("PlaylistDelete {uuid}")))?;
                         }
                         Request::PlaylistPost(playlist, sender) => {
                             let f = async {
+                                let id = playlist.id.to_string();
                                 let summaries = io::get_list(
-                                    s.clone(),
+                                    source_dir.clone(),
                                     &lyric_extension,
                                     io::get_lyric_summary,
                                 )
@@ -152,12 +187,13 @@ impl FileRepo {
                                         ));
                                     }
                                 }
-                                let playlist = io::get_playlist(s.full_path(&playlist.id.to_string(), &playlist_extension)).await?;
+                                io::post_item(source_dir.full_path(&id, &playlist_extension), playlist).await?;
+                                let playlist = io::get_playlist(source_dir.full_path(&id, &playlist_extension)).await?;
                                 Ok::<Playlist, RepoError>(playlist)
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed("PlaylistPost".to_owned()))?;
+                                .map_err(|e| RepoError::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))?;
                         }
                     }
                 }
@@ -165,6 +201,12 @@ impl FileRepo {
                 Ok::<(), RepoError>(())
             })),
         })
+    }
+
+    pub async fn stop(&self) -> RepoResult<()> {
+        select(&mut self.tx.clone(), Request::Stop).await?;
+        self.join_handle.abort();
+        Ok(())
     }
 }
 
