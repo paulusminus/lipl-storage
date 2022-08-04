@@ -9,7 +9,6 @@ anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "3.0", features = ["derive"] }
 env_logger = "0.9"
-# lipl-io = { path = "../lipl-io" }
 lipl-types = { path = "../lipl-types" }
 lipl-fs-repo = { path = "../lipl-fs-repo" }
 log = "0.4"

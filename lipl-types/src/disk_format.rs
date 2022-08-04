@@ -1,6 +1,7 @@
 use std::str::{FromStr};
 use std::fmt::{Display, Formatter};
 use std::str::Lines;
+
 use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Without, Playlist};
 use crate::error::{RepoError};
 
@@ -93,17 +94,18 @@ fn non_empty_line(s: &&str) -> bool {
 impl FromStr for LyricMeta {
     type Err = RepoError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let lines = s.lines();
-        let next = 
-            lines
+        // let lines = s.lines();
+        let yaml = 
+            s
+            .lines()
             .skip_while(empty_line)
             .take_while(non_empty_line)
             .map(String::from)
-            .collect::<Vec<_>>();
+            .filter(|s| s != YAML_PREFIX)
+            .collect::<Vec<_>>()
+            .join("\n");
 
-        let yaml: Vec<String> = next.without(&YAML_PREFIX.to_owned());
-        let lyric_meta: LyricMeta = serde_yaml::from_str(&yaml.join("\n"))?;
-        Ok(lyric_meta)
+        serde_yaml::from_str(&yaml).map_err(Self::Err::from)
     }
 }
 
