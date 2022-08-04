@@ -92,11 +92,11 @@ pub struct Playlist {
     pub members: Vec<Uuid>,
 }
 
-impl Display for Playlist {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}: {}, [{}]", self.id, self.title, self.members.iter().map(|uuid| uuid.to_string()).collect::<Vec<_>>().join(", "))
-    }
-}
+// impl Display for Playlist {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+//         write!(f, "{}: {}, [{}]", self.id, self.title, self.members.iter().map(|uuid| uuid.to_string()).collect::<Vec<_>>().join(", "))
+//     }
+// }
 
 impl HasSummary for Playlist {
     fn summary(&self) -> Summary {

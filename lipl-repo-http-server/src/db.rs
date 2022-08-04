@@ -57,10 +57,12 @@ pub async fn copy(args: CopyCommand) -> Result<()> {
     )?;
 
     for lyric in source.get_lyrics().await? {
+        log::info!("Copying lyric {} with id {}", lyric.title, lyric.id);
         target.post_lyric(lyric).await?;
     }
 
     for playlist in source.get_playlists().await? {
+        log::info!("Copying playlist {} with id {}", playlist.title, playlist.id);
         target.post_playlist(playlist).await?;
     }
 
