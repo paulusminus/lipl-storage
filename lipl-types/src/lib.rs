@@ -1,14 +1,14 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
-pub use uuid_wrapper::Uuid;
+pub use crate::uuid::Uuid;
 pub use path_ext::{PathExt};
 pub use error::RepoError;
 
 mod disk_format;
 mod error;
 mod path_ext;
-mod uuid_wrapper;
+mod uuid;
 
 pub type RepoResult<T> = Result<T, error::RepoError>;
 
@@ -91,12 +91,6 @@ pub struct Playlist {
     pub title: String,
     pub members: Vec<Uuid>,
 }
-
-// impl Display for Playlist {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-//         write!(f, "{}: {}, [{}]", self.id, self.title, self.members.iter().map(|uuid| uuid.to_string()).collect::<Vec<_>>().join(", "))
-//     }
-// }
 
 impl HasSummary for Playlist {
     fn summary(&self) -> Summary {

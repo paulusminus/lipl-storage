@@ -45,9 +45,6 @@ pub enum RepoError {
     #[error("Send failed for {0}")]
     SendFailed(String),
 
-    // #[error("Sending request failed")]
-    // TrySend(#[from] TrySendError<std::fmt::Debug>),
-
     #[error("Canceled")]
     Canceled(#[from] Canceled),
 }

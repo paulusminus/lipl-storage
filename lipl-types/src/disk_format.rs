@@ -18,6 +18,7 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, se
         .take_while(
             |l| !l.trim().is_empty()
         )
+        .map(|s| s.trim())
         .map(String::from)
         .collect::<Vec<_>>();
 
@@ -63,7 +64,7 @@ impl Display for Lyric {
             hash: self.etag(),
         };
         let yaml = serde_yaml::to_string(&lyric_meta).unwrap();
-        let parts_string: String = self.parts.iter().map(|p| p.join("\n")).collect::<Vec<_>>().join("\n\n");
+        let parts_string: String = self.parts.iter().map(|p| p.join("  \n")).collect::<Vec<_>>().join("\n\n");
         write!(f, "{}---\n\n{}", yaml, parts_string)
     }
 }

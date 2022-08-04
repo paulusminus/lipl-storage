@@ -28,7 +28,8 @@ impl FromStr for Uuid {
 
 impl Default for Uuid {
     fn default() -> Self {
-        let uuid = uuid::Uuid::new_v4();
-        Uuid(uuid)
+        Uuid(
+            uuid::Uuid::new_v4()
+        )
     }
 }
