@@ -110,95 +110,103 @@ impl FromStr for LyricMeta {
 #[cfg(test)]
 mod tests {
 
+    use std::vec;
+
     use super::{Lyric, LyricMeta, LyricPost, PlaylistPost};
     use crate::{Uuid};
 
-    const HERTOG_JAN_LYRIC: &str = r#"---
-    title: Toen Hertog Jan kwam varen
-    hash: "\"2546-135734770857133596616985852360825759697\""
-    ---
-    
-    Toen den hertog Jan kwam varen
-    Te peerd parmant, al triumfant
-    Na zevenhonderd jaren
-    Hoe zong men 't allen kant
-    Harba lorifa, zong den Hertog, harba lorifa,
-    Na zevenhonderd jaren
-    In dit edel Brabants land
-    
-    Hij kwam van over 't water
-    Den Scheldevloed, aan wal te voet
-    't Antwerpen op de straten
-    Zilv'ren veren op zijn hoed
-    Harba lorifa, zong den Hertog, harba lorifa
-    't Antwerpen op de straten
-    Lere leerzen aan zijn voet
-    
-    Och Turnhout, stedeke schone
-    Zijn uw ruitjes groen, maar uw hertjes koen
-    Laat den Hertog binnen komen
-    In dit zomers vrolijk seizoen
-    Harba lorifa, zong den Hertog, harba lorifa
-    Laat den Hertog binnen komen
-    Hij heeft een peerd van doen
-    
-    Hij heeft een peerd gekregen
-    Een schoon wit peerd, een schimmelpeerd
-    Daar is hij opgestegen
-    Dien ridder onverveerd
-    Harba lorifa, zong den Hertog, harba lorifa
-    Daar is hij opgestegen
-    En hij reed naar Valkensweerd
-    
-    In Valkensweerd daar zaten
-    Al in de kast, de zilverkast
-    De guldenkoning zijn platen
-    Die wierd' aaneen gelast
-    Harba lorifa, zong den Hertog, harba lorifa
-    De guldenkoning zijn platen
-    Toen had hij een harnas
-    
-    Rooise boeren, komt naar buiten
-    Met de grote trom, met de kleine trom
-    Trompetten en cornetten en de fluiten
-    Want den Hertog komt weerom
-    Harba lorifa, zong den Hertog, harba lorifa
-    Trompetten en cornetten en de fluiten
-    In dit Brabants Hertogdom
-    
-    Wij reden allemaal samen
-    Op Oirschot aan, door een Kanidasselaan
-    En Jan riep: "In Geus name!
-    Hier heb ik meer gestaan."
-    Harba lorifa, zong den Hertog, harba lorifa
-    En Jan riep: "In Geus name!
-    Reikt mij mijn standaard aan!"
-    
-    De standaard was de gouwe
-    Die waaide dan, die draaide dan
-    Die droeg de leeuw met klauwen
-    Wij zongen alleman
-    Harba lorifa, zong den Hertog, harba lorifa
-    Die droeg de leeuw met klauwen
-    Ja, de Leeuw van Hertog Jan
-    
-    Hij is in Den Bosch gekomen
-    Al in de nacht, niemand die 't zag
-    En op Sint Jan geklommen
-    Daar ging hij staan op wacht
-    Harba lorifa, zong den Hertog, harba lorifa
-    En op Sint Jan geklommen
-    Daar staat hij dag en nacht"#;
+    fn hertog_jan_lyric() -> Lyric { 
+        Lyric {
+            id: "T2NPjHifDf1E1UfZZA6TDB".parse::<Uuid>().unwrap(),
+            title: "Hertog Jan".to_owned(),
+            parts: vec![
+                vec![
+                    "Toen den hertog Jan kwam varen".to_owned(),
+                    "Te peerd parmant, al triumfant".to_owned(),
+                    "Na zevenhonderd jaren".to_owned(),
+                    "Hoe zong men 't allen kant".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa,".to_owned(),
+                    "Na zevenhonderd jaren".to_owned(),
+                    "In dit edel Brabants land".to_owned(),
+                ],
+                vec![
+                    "Hij kwam van over 't water".to_owned(),
+                    "Den Scheldevloed, aan wal te voet".to_owned(),
+                    "'t Antwerpen op de straten".to_owned(),
+                    "Zilv'ren veren op zijn hoed".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "'t Antwerpen op de straten".to_owned(),
+                    "Lere leerzen aan zijn voet".to_owned(),   
+                ],
+                vec![
+                    "Och Turnhout, stedeke schone".to_owned(),
+                    "Zijn uw ruitjes groen, maar uw hertjes koen".to_owned(),
+                    "Laat den Hertog binnen komen".to_owned(),
+                    "In dit zomers vrolijk seizoen".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "Laat den Hertog binnen komen".to_owned(),
+                    "Hij heeft een peerd van doen".to_owned(),
+                ],
+                vec![
+                    "Hij heeft een peerd gekregen".to_owned(),
+                    "Een schoon wit peerd, een schimmelpeerd".to_owned(),
+                    "Daar is hij opgestegen".to_owned(),
+                    "Dien ridder onverveerd".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "Daar is hij opgestegen".to_owned(),
+                    "En hij reed naar Valkensweerd".to_owned(),
+                ],
+                vec![
+                    "In Valkensweerd daar zaten".to_owned(),
+                    "Al in de kast, de zilverkast".to_owned(),
+                    "De guldenkoning zijn platen".to_owned(),
+                    "Die wierd' aaneen gelast".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "De guldenkoning zijn platen".to_owned(),
+                    "Toen had hij een harnas".to_owned(),
+                ],
+                vec![
+                    "Rooise boeren, komt naar buiten".to_owned(),
+                    "Met de grote trom, met de kleine trom".to_owned(),
+                    "Trompetten en cornetten en de fluiten".to_owned(),
+                    "Want den Hertog komt weerom".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "Trompetten en cornetten en de fluiten".to_owned(),
+                    "In dit Brabants Hertogdom".to_owned(),
+                ],
+                vec![
+                    "Wij reden allemaal samen".to_owned(),
+                    "Op Oirschot aan, door een Kanidasselaan".to_owned(),
+                    "En Jan riep: \"In Geus name!\"".to_owned(),
+                    "Hier heb ik meer gestaan.".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "En Jan riep: \"In Geus name!\"".to_owned(),
+                    "Reikt mij mijn standaard aan!".to_owned(),
+                ],
+                vec![
+                    "De standaard was de gouwe".to_owned(),
+                    "Die waaide dan, die draaide dan".to_owned(),
+                    "Die droeg de leeuw met klauwen".to_owned(),
+                    "Wij zongen alleman".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "Die droeg de leeuw met klauwen".to_owned(),
+                    "Ja, de Leeuw van Hertog Jan".to_owned(),
+                ],
+                vec![
+                    "Hij is in Den Bosch gekomen".to_owned(),
+                    "Al in de nacht, niemand die 't zag".to_owned(),
+                    "En op Sint Jan geklommen".to_owned(),
+                    "Daar ging hij staan op wacht".to_owned(),
+                    "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
+                    "En op Sint Jan geklommen".to_owned(),
+                    "Daar staat hij dag en nacht".to_owned(),
+                ]
+            ]
+        }
+    }
+
     const HERTOG_JAN_TITLE: &str = "Hertog Jan";
     const HERTOG_JAN_ID: &str = "T2NPjHifDf1E1UfZZA6TDB";
-    const KERST_PLAYLIST: &str = r#"---
-    title: Kerst
-    members:
-      - FyAvpSWaLQmcDaYZxwXe44
-      - GF5kHMvngVyALVcj7imopi
-      - KGxasqUC1Uojk1viLGbMZK
-      - SdbM6j9uCtNiGRUW1hiTz5
-    "#;
     const PLAYLIST_TEXT: &str = "---\ntitle: Kerst\nmembers:\n  - FyAvpSWaLQmcDaYZxwXe44\n  - GF5kHMvngVyALVcj7imopi\n  - SdbM6j9uCtNiGRUW1hiTz5\n";
     const PLAYLIST_TITLE: &str = "Kerst";
     const PLAYLIST_MEMBER1: &str = "FyAvpSWaLQmcDaYZxwXe44";
@@ -217,7 +225,7 @@ mod tests {
 
     #[test]
     fn lyric_post_parse() {
-        let lyric_post: LyricPost = HERTOG_JAN_LYRIC.parse().unwrap();
+        let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
 
         assert_eq!(lyric_post.title, HERTOG_JAN_TITLE.to_owned());
         assert_eq!(lyric_post.parts.len(), 9);
@@ -225,15 +233,15 @@ mod tests {
 
     #[test]
     fn lyric_post_parse_equals_display() {
-        let lyric_post: LyricPost = HERTOG_JAN_LYRIC.parse().unwrap();
+        let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
         let lyric = Lyric::from((lyric_post, HERTOG_JAN_ID.to_owned().parse::<Uuid>().unwrap()));
-        assert_eq!(lyric.to_string().as_str(), HERTOG_JAN_LYRIC);
+        assert_eq!(lyric.to_string().as_str(), hertog_jan_lyric().to_string().as_str());
     }
 
     #[test]
     fn lyric_meta_parse() {
-        let lyric_meta: LyricMeta = HERTOG_JAN_LYRIC.parse().unwrap();
+        let lyric_meta: LyricMeta = hertog_jan_lyric().to_string().parse().unwrap();
         assert_eq!(lyric_meta.title, HERTOG_JAN_TITLE.to_owned());
-        assert_eq!(lyric_meta.hash, Some("\"2530-337251511557883259562065364316662953368\"".to_owned()));
+        assert_eq!(lyric_meta.hash, Some("\"2530-189459479300553739784561073837696755448\"".to_owned()));
     }
 }

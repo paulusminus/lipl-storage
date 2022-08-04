@@ -36,6 +36,8 @@ impl FileRepo {
         Ok(FileRepo {
             tx,
             join_handle: Arc::new(tokio::spawn(async move {
+                let lyric_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), &lyric_extension);
+                let playlist_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), &playlist_extension);
                 while let Some(request) = rx.next().await {
                     match request {
                         Request::Stop(sender) => {
@@ -79,7 +81,7 @@ impl FileRepo {
                         }
                         Request::LyricDelete(uuid, sender) => {
                             let f = async {
-                                source_dir.full_path(&uuid.to_string(), &lyric_extension)
+                                lyric_path(&uuid)
                                     .remove()
                                     .await?;
                                 let playlists =
@@ -103,7 +105,7 @@ impl FileRepo {
                         }
                         Request::LyricPost(lyric, sender) => {
                             let f = async {
-                                let path = source_dir.full_path(&lyric.id.to_string(), &lyric_extension);
+                                let path = lyric_path(&lyric.id);
                                 io::post_item(
                                     &path,
                                     lyric,
@@ -161,7 +163,7 @@ impl FileRepo {
                         }
                         Request::PlaylistDelete(uuid, sender) => {
                             let f = async {
-                                source_dir.full_path(&uuid.to_string(), &playlist_extension)
+                                playlist_path(&uuid)
                                 .remove()
                                 .await
                             };
@@ -187,7 +189,11 @@ impl FileRepo {
                                         ));
                                     }
                                 }
-                                io::post_item(source_dir.full_path(&id, &playlist_extension), playlist).await?;
+                                io::post_item(
+                                    playlist_path(&playlist.id),
+                                    playlist
+                                )
+                                .await?;
                                 let playlist = io::get_playlist(source_dir.full_path(&id, &playlist_extension)).await?;
                                 Ok::<Playlist, RepoError>(playlist)
                             };
