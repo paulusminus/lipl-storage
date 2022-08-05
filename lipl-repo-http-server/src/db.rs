@@ -9,8 +9,6 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
     let path = args.source.to_owned().to_string_lossy().to_string();
     let repo = lipl_fs_repo::FileRepo::new(
         path, 
-        "yaml".to_owned(),
-        "txt".to_owned(),
     )?;
 
     println!("Lyrics:");
@@ -46,14 +44,10 @@ pub async fn copy(args: CopyCommand) -> Result<()> {
 
     let source = FileRepo::new(
         args.source.to_string_lossy().to_string(), 
-        "yaml".to_string(),
-        "txt".to_owned(),
     )?;
 
     let target = FileRepo::new(
         args.target.to_string_lossy().to_string(),
-        "yaml".to_owned(),
-        "txt".to_owned(),
     )?;
 
     for lyric in source.get_lyrics().await? {

@@ -21,8 +21,6 @@ pub async fn serve(param: param::Serve) -> Result<()> {
 
     let repo = FileRepo::new(
         param.source.to_string_lossy().to_string(),
-        "yaml".to_owned(),
-        "md".to_owned(),
     )?;
 
     let routes = 

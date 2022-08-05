@@ -13,8 +13,6 @@ where
 pub async fn process() -> RepoResult<()> {
     let repo = FileRepo::new(
         "./data/".to_owned(),
-        "yaml".to_owned(),
-        "txt".to_owned(),
     )?;
 
     println!("Lyrics");

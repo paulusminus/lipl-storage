@@ -9,9 +9,11 @@ use lipl_types::{
     LiplRepo, Lyric, Playlist, RepoError, RepoResult, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
+use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 
 use tokio::task::JoinHandle;
 
+mod constant;
 pub mod elapsed;
 mod fs;
 mod io;
@@ -26,8 +28,6 @@ pub struct FileRepo {
 impl FileRepo {
     pub fn new(
         source_dir: String,
-        playlist_extension: String,
-        lyric_extension: String,
     ) -> RepoResult<FileRepo> {
         source_dir.is_dir()?;
 
@@ -36,8 +36,8 @@ impl FileRepo {
         Ok(FileRepo {
             tx,
             join_handle: Arc::new(tokio::spawn(async move {
-                let lyric_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), &lyric_extension);
-                let playlist_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), &playlist_extension);
+                let lyric_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), LYRIC_EXTENSION);
+                let playlist_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), YAML_EXTENSION);
                 while let Some(request) = rx.next().await {
                     match request {
                         Request::Stop(sender) => {
@@ -48,8 +48,8 @@ impl FileRepo {
                         Request::LyricSummaries(sender) => {
                             let f = async {
                                 io::get_list(
-                                    source_dir.clone(),
-                                    &lyric_extension,
+                                    &source_dir,
+                                    LYRIC_EXTENSION,
                                     io::get_lyric_summary,
                                 )
                                 .await
@@ -61,8 +61,8 @@ impl FileRepo {
                         Request::LyricList(sender) => {
                             let f = async {
                                 io::get_list(
-                                    source_dir.clone(), 
-                                    &lyric_extension, 
+                                    &source_dir, 
+                                    LYRIC_EXTENSION, 
                                     io::get_lyric,
                                 )
                                 .await
@@ -72,11 +72,12 @@ impl FileRepo {
                                 .map_err(|_| RepoError::SendFailed("LyricList".to_string()))?;
                         }
                         Request::LyricItem(uuid, sender) => {
+                            let f = async {
+                                io::get_lyric(lyric_path(&uuid))
+                                .await
+                            };
                             sender
-                                .send(
-                                    io::get_lyric(source_dir.full_path(&uuid.to_string(), &lyric_extension))
-                                        .await,
-                                )
+                                .send(f.await)
                                 .map_err(|_| RepoError::SendFailed(format!("LyricItem {uuid}")))?;
                         }
                         Request::LyricDelete(uuid, sender) => {
@@ -85,13 +86,17 @@ impl FileRepo {
                                     .remove()
                                     .await?;
                                 let playlists =
-                                    io::get_list(source_dir.clone(), &playlist_extension, io::get_playlist)
-                                        .await?;
+                                    io::get_list(
+                                        &source_dir,
+                                        YAML_EXTENSION,
+                                        io::get_playlist
+                                    )
+                                    .await?;
                                 for mut playlist in playlists {
                                     if playlist.members.contains(&uuid) {
                                         playlist.members = playlist.members.without(&uuid);
                                         io::post_item(
-                                            source_dir.full_path(&uuid.to_string(), &playlist_extension),
+                                            source_dir.full_path(&uuid.to_string(), YAML_EXTENSION),
                                             playlist,
                                         )
                                         .await?;
@@ -123,8 +128,8 @@ impl FileRepo {
                         Request::PlaylistSummaries(sender) => {
                             let f = async {
                                 io::get_list(
-                                    source_dir.clone(),
-                                    &playlist_extension,
+                                    &source_dir,
+                                    YAML_EXTENSION,
                                     io::get_playlist,
                                 )
                                 .await
@@ -137,8 +142,8 @@ impl FileRepo {
                         Request::PlaylistList(sender) => {
                             let f = async {
                                 io::get_list(
-                                    source_dir.clone(),
-                                    &playlist_extension,
+                                    &source_dir,
+                                    YAML_EXTENSION,
                                     io::get_playlist
                                 )
                                 .await
@@ -149,12 +154,7 @@ impl FileRepo {
                         }
                         Request::PlaylistItem(uuid, sender) => {
                             let f = async {
-                                io::get_playlist(
-                                    source_dir.full_path(
-                                        &uuid.to_string(),
-                                        &playlist_extension
-                                    ),
-                                )
+                                io::get_playlist(playlist_path(&uuid))
                                 .await
                             };
                             sender
@@ -173,10 +173,10 @@ impl FileRepo {
                         }
                         Request::PlaylistPost(playlist, sender) => {
                             let f = async {
-                                let id = playlist.id.to_string();
+                                let id = playlist.id.clone();
                                 let summaries = io::get_list(
-                                    source_dir.clone(),
-                                    &lyric_extension,
+                                    &source_dir,
+                                    LYRIC_EXTENSION,
                                     io::get_lyric_summary,
                                 )
                                 .await?;
@@ -184,17 +184,17 @@ impl FileRepo {
                                 for member in playlist.members.iter() {
                                     if !lyric_ids.contains(member) {
                                         return Err(RepoError::PlaylistInvalidMember(
-                                            playlist.id.to_string(),
+                                            id.to_string(),
                                             member.to_string(),
                                         ));
                                     }
                                 }
                                 io::post_item(
-                                    playlist_path(&playlist.id),
+                                    playlist_path(&id),
                                     playlist
                                 )
                                 .await?;
-                                let playlist = io::get_playlist(source_dir.full_path(&id, &playlist_extension)).await?;
+                                let playlist = io::get_playlist(playlist_path(&id)).await?;
                                 Ok::<Playlist, RepoError>(playlist)
                             };
                             sender
