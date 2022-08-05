@@ -33,3 +33,9 @@ impl Default for Uuid {
         )
     }
 }
+
+impl From<uuid::Uuid> for Uuid {
+    fn from(uuid: uuid::Uuid) -> Self {
+        Uuid(uuid)
+    }
+}
