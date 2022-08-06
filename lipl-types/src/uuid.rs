@@ -8,6 +8,12 @@ use crate::error::{RepoError};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
 pub struct Uuid(uuid::Uuid);
 
+impl Uuid {
+    pub fn inner(&self) -> uuid::Uuid {
+        self.0
+    }
+}
+
 impl Display for Uuid {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let bytes = self.0.as_bytes();
