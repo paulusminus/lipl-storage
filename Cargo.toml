@@ -2,7 +2,7 @@
 
 members = [
     "lipl-repo-http-server",
-    "lipl-io",
+#    "lipl-io",
     "lipl-fs-repo",
     "lipl-types",
 ]

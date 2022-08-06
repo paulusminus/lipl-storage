@@ -4,9 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lipl-types = { path = "../lipl-types/" }
+anyhow = "1.0.59"
 async-trait = "0.1"
 futures = "0.3"
+lipl-types = { path = "../lipl-types/" }
+thiserror = "1.0.32"
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread", "sync"] }
 tokio-stream = { version = "0.1", features = ["fs", "io-util"] }
 

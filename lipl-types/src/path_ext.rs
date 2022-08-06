@@ -1,6 +1,6 @@
 use std::ffi::OsStr;
 use std::path::{Path};
-use crate::{error::RepoError, RepoResult, Uuid};
+use crate::{error::{RepoError, RepoResult}, Uuid};
 
 pub trait PathExt {
     fn has_extension(&self, ext: &str) -> bool;

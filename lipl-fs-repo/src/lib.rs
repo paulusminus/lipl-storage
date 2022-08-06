@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
+use error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
 use futures::StreamExt;
 use lipl_types::{
-    LiplRepo, Lyric, Playlist, RepoError, RepoResult, Summary, Uuid, Without,
+    LiplRepo, Lyric, Playlist, error::{RepoError, RepoResult}, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
@@ -15,6 +16,7 @@ use tokio::task::JoinHandle;
 
 mod constant;
 pub mod elapsed;
+mod error;
 mod fs;
 mod io;
 mod request;
@@ -29,7 +31,7 @@ impl FileRepo {
     pub fn new(
         source_dir: String,
     ) -> RepoResult<FileRepo> {
-        source_dir.is_dir()?;
+        source_dir.is_dir().map_err(|_| RepoError::NoPath(source_dir.clone().into()))?;
 
         let (tx, mut rx) = mpsc::channel::<Request>(10);
 
@@ -102,7 +104,7 @@ impl FileRepo {
                                         .await?;
                                     }
                                 }
-                                Ok::<(), RepoError>(())
+                                Ok::<(), FileRepoError>(())
                             };
                             sender
                                 .send(f.await)
@@ -117,7 +119,7 @@ impl FileRepo {
                                 )
                                 .await?;
                                 let lyric = io::get_lyric(&path).await?;
-                                Ok::<Lyric, RepoError>(lyric)
+                                Ok::<Lyric, FileRepoError>(lyric)
                             };
                             sender
                                 .send(
@@ -183,7 +185,7 @@ impl FileRepo {
                                 let lyric_ids = lipl_types::ids(summaries.into_iter());
                                 for member in playlist.members.iter() {
                                     if !lyric_ids.contains(member) {
-                                        return Err(RepoError::PlaylistInvalidMember(
+                                        return Err(FileRepoError::PlaylistInvalidMember(
                                             id.to_string(),
                                             member.to_string(),
                                         ));
@@ -195,7 +197,7 @@ impl FileRepo {
                                 )
                                 .await?;
                                 let playlist = io::get_playlist(playlist_path(&id)).await?;
-                                Ok::<Playlist, RepoError>(playlist)
+                                Ok::<Playlist, FileRepoError>(playlist)
                             };
                             sender
                                 .send(f.await)
@@ -209,7 +211,7 @@ impl FileRepo {
         })
     }
 
-    pub async fn stop(&self) -> RepoResult<()> {
+    pub async fn stop(&self) -> anyhow::Result<()> {
         select(&mut self.tx.clone(), Request::Stop).await?;
         self.join_handle.abort();
         Ok(())
@@ -218,43 +220,53 @@ impl FileRepo {
 
 #[async_trait]
 impl LiplRepo for FileRepo {
-    async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>> {
-        select(&mut self.tx.clone(), Request::LyricList).await
+    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+        let lyrics = select(&mut self.tx.clone(), Request::LyricList).await?;
+        Ok(lyrics)
     }
 
-    async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>> {
-        select(&mut self.tx.clone(), Request::LyricSummaries).await
+    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+        let summaries = select(&mut self.tx.clone(), Request::LyricSummaries).await?;
+        Ok(summaries)
     }
 
-    async fn get_lyric(&self, id: Uuid) -> RepoResult<Lyric> {
-        select_by_id(&mut self.tx.clone(), id, Request::LyricItem).await
+    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
+        let lyric = select_by_id(&mut self.tx.clone(), id, Request::LyricItem).await?;
+        Ok(lyric)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<Lyric> {
-        post(&mut self.tx.clone(), lyric, Request::LyricPost).await
+    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
+        let lyric = post(&mut self.tx.clone(), lyric, Request::LyricPost).await?;
+        Ok(lyric)
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> RepoResult<()> {
-        delete_by_id(&mut self.tx.clone(), id, Request::LyricDelete).await
+    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
+        delete_by_id(&mut self.tx.clone(), id, Request::LyricDelete).await?;
+        Ok(())
     }
 
-    async fn get_playlists(&self) -> RepoResult<Vec<Playlist>> {
-        select(&mut self.tx.clone(), Request::PlaylistList).await
+    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+        let playlists = select(&mut self.tx.clone(), Request::PlaylistList).await?;
+        Ok(playlists)
     }
 
-    async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>> {
-        select(&mut self.tx.clone(), Request::PlaylistSummaries).await
+    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+        let summaries = select(&mut self.tx.clone(), Request::PlaylistSummaries).await?;
+        Ok(summaries)
     }
 
-    async fn get_playlist(&self, id: Uuid) -> RepoResult<Playlist> {
-        select_by_id(&mut self.tx.clone(), id, Request::PlaylistItem).await
+    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+        let playlist = select_by_id(&mut self.tx.clone(), id, Request::PlaylistItem).await?;
+        Ok(playlist)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<Playlist> {
-        post(&mut self.tx.clone(), playlist, Request::PlaylistPost).await
+    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
+        let playlist = post(&mut self.tx.clone(), playlist, Request::PlaylistPost).await?;
+        Ok(playlist)
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> RepoResult<()> {
-        delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete).await
+    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
+        delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete).await?;
+        Ok(())
     }
 }

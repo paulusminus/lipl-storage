@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use anyhow::Result;
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
@@ -6,24 +7,24 @@ pub use path_ext::{PathExt};
 pub use error::RepoError;
 
 mod disk_format;
-mod error;
+pub mod error;
 mod path_ext;
 mod uuid;
 
-pub type RepoResult<T> = Result<T, error::RepoError>;
+// pub type RepoResult<T> = Result<T, error::RepoError>;
 
 #[async_trait]
 pub trait LiplRepo {
-    async fn get_lyrics(&self) -> RepoResult<Vec<Lyric>>;
-    async fn get_lyric_summaries(&self) -> RepoResult<Vec<Summary>>;
-    async fn get_lyric(&self, id: Uuid) -> RepoResult<Lyric>;
-    async fn post_lyric(&self, lyric: Lyric) -> RepoResult<Lyric>;
-    async fn delete_lyric(&self, id: Uuid) -> RepoResult<()>;
-    async fn get_playlists(&self) -> RepoResult<Vec<Playlist>>;
-    async fn get_playlist_summaries(&self) -> RepoResult<Vec<Summary>>;
-    async fn get_playlist(&self, id: Uuid) -> RepoResult<Playlist>;
-    async fn post_playlist(&self, playlist: Playlist) -> RepoResult<Playlist>;
-    async fn delete_playlist(&self, id: Uuid) -> RepoResult<()>;
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>>;
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric>;
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric>;
+    async fn delete_lyric(&self, id: Uuid) -> Result<()>;
+    async fn get_playlists(&self) -> Result<Vec<Playlist>>;
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist>;
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist>;
+    async fn delete_playlist(&self, id: Uuid) -> Result<()>;
 }
 
 pub trait HasSummary {

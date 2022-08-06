@@ -1,6 +1,6 @@
 use std::fmt::{Display};
 use lipl_fs_repo::{FileRepo};
-use lipl_types::{RepoResult, LiplRepo};
+use lipl_types::{LiplRepo};
 use lipl_fs_repo::elapsed::{Elapsed};
 
 pub fn print<D>(d: D) 
@@ -10,7 +10,7 @@ where
     println!("{}", d);
 }
 
-pub async fn process() -> RepoResult<()> {
+pub async fn process() -> anyhow::Result<()> {
     let repo = FileRepo::new(
         "./data/".to_owned(),
     )?;
@@ -35,7 +35,7 @@ pub async fn process() -> RepoResult<()> {
 }
 
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> RepoResult<()>{
+async fn main() -> anyhow::Result<()>{
     println!("Elapsed: {} milliseconds", process.elapsed().await?);
     Ok(())
 }
