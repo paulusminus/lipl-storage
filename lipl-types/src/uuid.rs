@@ -5,7 +5,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use bs58::{decode, encode};
 use crate::error::{RepoError};
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
 pub struct Uuid(uuid::Uuid);
 
 impl Uuid {
