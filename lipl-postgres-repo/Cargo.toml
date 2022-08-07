@@ -13,6 +13,7 @@ lipl-types = { path = "../lipl-types" }
 parts = { path = "../parts" }
 thiserror = "1.0.32"
 tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
+tracing = "0.1.36"
 uuid = "1"
 
 [dev-dependencies]

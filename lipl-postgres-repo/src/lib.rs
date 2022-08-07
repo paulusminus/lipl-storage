@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
 use lipl_types::{Lyric, LiplRepo, Playlist, Summary, Uuid};
@@ -43,6 +45,13 @@ fn summary_try_from(row: Row) -> Result<Summary> {
 #[derive(Clone)]
 pub struct PostgresRepo {
     pool: Pool,
+    connection_string: String,
+}
+
+impl Debug for PostgresRepo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Postgres repo: {}", self.connection_string)
+    }
 }
 
 impl PostgresRepo {
@@ -58,7 +67,7 @@ impl PostgresRepo {
             pool.get().await?.execute(*sql, &[]).await?;
         };
 
-        Ok(Self { pool })
+        Ok(Self { pool, connection_string })
     }
 
     query! (
@@ -209,29 +218,36 @@ fn identity<T>(t: T) -> Result<T> {
 
 #[async_trait]
 impl LiplRepo for PostgresRepo {
+
+    #[tracing::instrument]
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
         let lyrics = self.lyrics().await?;
         Ok(lyrics)
     }
 
+    #[tracing::instrument]
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         self.lyric_summaries().await
     }
 
+    #[tracing::instrument]
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
         self.lyric_detail(id.inner()).await
     }
 
+    #[tracing::instrument]
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
         let text = to_text(&lyric.parts[..]);
         self.upsert_lyric(lyric.id.inner(), &lyric.title, &text).await.map(ignore)?;
         self.lyric_detail(lyric.id.inner()).await
     }
 
+    #[tracing::instrument]
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
         self.delete_lyric(id.inner()).await.map(ignore)
     }
 
+    #[tracing::instrument]
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
         let mut result = vec![];
         let summaries = self.get_playlist_summaries().await?;
@@ -242,10 +258,12 @@ impl LiplRepo for PostgresRepo {
         Ok(result)
     }
 
+    #[tracing::instrument]
     async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         self.playlist_summaries().await
     }
 
+    #[tracing::instrument]
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
         let members = self.playlist_members(id.inner()).await?;
         let ids = members.into_iter().map(|s| s.id).collect::<Vec<_>>();
@@ -258,6 +276,7 @@ impl LiplRepo for PostgresRepo {
         Ok(playlist)
     }
 
+    #[tracing::instrument]
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
         self.upsert_playlist(playlist.id.inner(), &playlist.title).await.map(ignore)?;
         self.set_playlist_members(
@@ -269,10 +288,12 @@ impl LiplRepo for PostgresRepo {
         Ok(playlist)
     }
 
+    #[tracing::instrument]
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         self.delete_playlist(id.inner()).await.map(ignore)
     }
 
+    #[tracing::instrument]
     async fn stop(&self) -> anyhow::Result<()> {
         Ok(())
     }

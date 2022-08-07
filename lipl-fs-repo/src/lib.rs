@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use async_trait::async_trait;
@@ -25,6 +26,13 @@ mod request;
 pub struct FileRepo {
     join_handle: Arc<JoinHandle<RepoResult<()>>>,
     tx: mpsc::Sender<Request>,
+    path: String,
+}
+
+impl Debug for FileRepo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FileRepo: {}", self.path)
+    }
 }
 
 impl FileRepo {
@@ -36,6 +44,7 @@ impl FileRepo {
         let (tx, mut rx) = mpsc::channel::<Request>(10);
 
         Ok(FileRepo {
+            path: source_dir.clone(),
             tx,
             join_handle: Arc::new(tokio::spawn(async move {
                 let lyric_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), LYRIC_EXTENSION);
@@ -215,56 +224,68 @@ impl FileRepo {
 
 #[async_trait]
 impl LiplRepo for FileRepo {
+
+    #[tracing::instrument]
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
         let lyrics = select(&mut self.tx.clone(), Request::LyricList).await?;
         Ok(lyrics)
     }
 
+    #[tracing::instrument]
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         let summaries = select(&mut self.tx.clone(), Request::LyricSummaries).await?;
         Ok(summaries)
     }
 
+    #[tracing::instrument]
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
         let lyric = select_by_id(&mut self.tx.clone(), id, Request::LyricItem).await?;
         Ok(lyric)
     }
 
+    #[tracing::instrument]
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
         let lyric = post(&mut self.tx.clone(), lyric, Request::LyricPost).await?;
         Ok(lyric)
     }
 
+    #[tracing::instrument]
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(&mut self.tx.clone(), id, Request::LyricDelete).await?;
         Ok(())
     }
 
+    #[tracing::instrument]
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
         let playlists = select(&mut self.tx.clone(), Request::PlaylistList).await?;
         Ok(playlists)
     }
 
+    #[tracing::instrument]
     async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         let summaries = select(&mut self.tx.clone(), Request::PlaylistSummaries).await?;
         Ok(summaries)
     }
 
+    #[tracing::instrument]
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
         let playlist = select_by_id(&mut self.tx.clone(), id, Request::PlaylistItem).await?;
         Ok(playlist)
     }
 
+    #[tracing::instrument]
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
         let playlist = post(&mut self.tx.clone(), playlist, Request::PlaylistPost).await?;
         Ok(playlist)
     }
 
+    #[tracing::instrument]
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete).await?;
         Ok(())
     }
 
+    #[tracing::instrument]
     async fn stop(&self) -> anyhow::Result<()> {
         select(&mut self.tx.clone(), Request::Stop).await?;
         self.join_handle.abort();

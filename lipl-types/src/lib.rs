@@ -87,7 +87,7 @@ impl From<Lyric> for LyricPost {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Playlist {
     pub id: Uuid,
     pub title: String,

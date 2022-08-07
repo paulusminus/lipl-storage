@@ -11,6 +11,7 @@ lipl-types = { path = "../lipl-types/" }
 thiserror = "1.0.32"
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread", "sync"] }
 tokio-stream = { version = "0.1", features = ["fs", "io-util"] }
+tracing = "0.1.36"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread", "sync", "time"] }
