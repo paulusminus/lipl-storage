@@ -40,12 +40,14 @@ fn summary_try_from(row: Row) -> Result<Summary> {
     )    
 }
 
-pub struct Dal {
+#[derive(Clone)]
+pub struct PostgresRepo {
     pool: Pool,
 }
 
-impl Dal {
-    pub async fn new(pool: Pool, clear: bool) -> Result<Dal> {
+impl PostgresRepo {
+    pub async fn new(connection_string: String, clear: bool) -> Result<Self> {
+        let pool = pool::get(&connection_string, 16)?;
         if clear {
             for sql in db::DROP {
                 pool.get().await?.execute(*sql, &[]).await?;
@@ -56,7 +58,7 @@ impl Dal {
             pool.get().await?.execute(*sql, &[]).await?;
         };
 
-        Ok(Dal { pool })
+        Ok(Self { pool })
     }
 
     query! (
@@ -206,7 +208,7 @@ fn identity<T>(t: T) -> Result<T> {
 }
 
 #[async_trait]
-impl LiplRepo for Dal {
+impl LiplRepo for PostgresRepo {
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
         let lyrics = self.lyrics().await?;
         Ok(lyrics)
@@ -269,6 +271,10 @@ impl LiplRepo for Dal {
 
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         self.delete_playlist(id.inner()).await.map(ignore)
+    }
+
+    async fn stop(&self) -> anyhow::Result<()> {
+        Ok(())
     }
 }
 

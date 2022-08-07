@@ -9,5 +9,8 @@ pub enum Error {
     Uuid(#[from] uuid::Error),
 
     #[error("Pool: {0}")]
-    Pool(#[from] deadpool_postgres::PoolError)
+    Pool(#[from] deadpool_postgres::PoolError),
+
+    #[error("Pool build: {0}")]
+    PoolBuild(#[from] deadpool_postgres::BuildError),
 }

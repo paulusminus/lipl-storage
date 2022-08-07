@@ -211,11 +211,6 @@ impl FileRepo {
         })
     }
 
-    pub async fn stop(&self) -> anyhow::Result<()> {
-        select(&mut self.tx.clone(), Request::Stop).await?;
-        self.join_handle.abort();
-        Ok(())
-    }
 }
 
 #[async_trait]
@@ -267,6 +262,12 @@ impl LiplRepo for FileRepo {
 
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete).await?;
+        Ok(())
+    }
+
+    async fn stop(&self) -> anyhow::Result<()> {
+        select(&mut self.tx.clone(), Request::Stop).await?;
+        self.join_handle.abort();
         Ok(())
     }
 }

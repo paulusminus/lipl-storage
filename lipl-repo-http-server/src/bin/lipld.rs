@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
         param::Command::Db(db) => {
             match db {
                 param::DbCommand::Copy(copy_args) => {
-                    db::copy(copy_args).await
+                    db::repo_copy(copy_args).await
                 },
                 param::DbCommand::List(list_args) => {
                     db::repo_list(list_args).await

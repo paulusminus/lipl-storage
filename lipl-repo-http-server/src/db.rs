@@ -1,15 +1,10 @@
-use crate::param::{ListCommand, CopyCommand};
+use crate::param::{ListCommand, CopyCommand, DbType, get_file_repo, get_postgres_repo};
 use anyhow::Result;
-use lipl_fs_repo::FileRepo;
-use lipl_types::{LiplRepo};
+use lipl_types::LiplRepo;
 use log::{info};
 
-pub async fn repo_list(args: ListCommand) -> Result<()> {
+pub async fn list(repo: impl LiplRepo) -> Result<()> {
     let now = std::time::Instant::now();
-    let path = args.source.to_owned().to_string_lossy().to_string();
-    let repo = lipl_fs_repo::FileRepo::new(
-        path, 
-    )?;
 
     println!("Lyrics:");
     let lyrics = repo.get_lyrics().await?;
@@ -35,21 +30,23 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
     Ok(())
 }
 
-pub async fn copy(args: CopyCommand) -> Result<()> {
-    info!(
-        "Start copying {} to {}",
-        &args.source.to_string_lossy(),
-        &args.target.to_string_lossy(),
-     );
+pub async fn repo_list(args: ListCommand) -> Result<()> {
 
-    let source = FileRepo::new(
-        args.source.to_string_lossy().to_string(), 
-    )?;
+    match args.source.parse::<DbType>()? {
+        DbType::File(s) => {
+            let repo = get_file_repo(s)?;
+            list(repo).await?;
+        },
+        DbType::Postgres(s) => {
+            let repo = get_postgres_repo(s).await?;
+            list(repo).await?;
+        }
+    }
 
-    let target = FileRepo::new(
-        args.target.to_string_lossy().to_string(),
-    )?;
+    Ok(())
+}
 
+pub async fn copy(source: impl LiplRepo, target: impl LiplRepo) -> Result<()> {
     for lyric in source.get_lyrics().await? {
         log::info!("Copying lyric {} with id {}", lyric.title, lyric.id);
         target.post_lyric(lyric).await?;
@@ -60,10 +57,52 @@ pub async fn copy(args: CopyCommand) -> Result<()> {
         target.post_playlist(playlist).await?;
     }
 
-    info!(
-        "Finished copying {} to {}",
-        args.source.to_string_lossy(),
-        args.target.to_string_lossy(),
-    );
     Ok(())
+}
+
+
+pub async fn repo_copy(args: CopyCommand) -> Result<()> {
+    info!(
+        "Start copying {} to {}",
+        &args.source,
+        &args.target,
+    );
+
+    let source_db_type = args.source.parse::<DbType>()?;
+    let target_db_type = args.target.parse::<DbType>()?;
+
+    match source_db_type {
+        DbType::File(file) => {
+            let source_repo = get_file_repo(file)?;
+
+            match target_db_type {
+                DbType::File(file) => {
+                    let target_repo = get_file_repo(file)?;
+                    copy(source_repo, target_repo).await?;
+                },
+                DbType::Postgres(postgres) => {
+                    let target_repo = get_postgres_repo(postgres).await?;
+                    copy(source_repo, target_repo).await?;
+                }
+            }
+        },
+        DbType::Postgres(postgres) => {
+            let source_repo = get_postgres_repo(postgres).await?;
+
+            match target_db_type {
+                DbType::File(file) => {
+                    let target_repo = get_file_repo(file)?;
+                    copy(source_repo, target_repo).await?;
+                },
+                DbType::Postgres(postgres) => {
+                    let target_repo = get_postgres_repo(postgres).await?;
+                    copy(source_repo, target_repo).await?;
+                }
+            }
+
+        },
+    }
+
+     Ok(())
+
 }

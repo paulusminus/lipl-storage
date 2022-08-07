@@ -14,7 +14,7 @@ mod uuid;
 // pub type RepoResult<T> = Result<T, error::RepoError>;
 
 #[async_trait]
-pub trait LiplRepo {
+pub trait LiplRepo: Clone + Send + Sync {
     async fn get_lyrics(&self) -> Result<Vec<Lyric>>;
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
     async fn get_lyric(&self, id: Uuid) -> Result<Lyric>;
@@ -25,6 +25,7 @@ pub trait LiplRepo {
     async fn get_playlist(&self, id: Uuid) -> Result<Playlist>;
     async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist>;
     async fn delete_playlist(&self, id: Uuid) -> Result<()>;
+    async fn stop(&self) -> Result<()>;
 }
 
 pub trait HasSummary {

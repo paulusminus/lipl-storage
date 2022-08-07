@@ -2,7 +2,7 @@ use deadpool_postgres::{Pool, Manager, ManagerConfig, RecyclingMethod};
 use tokio_postgres::Config;
 use tokio_postgres::tls::NoTls;
 
-pub fn get(connection: &str, max_size: usize) -> anyhow::Result<Pool> {
+pub fn get(connection: &str, max_size: usize) -> Result<Pool, crate::error::Error> {
     let postgres_config: Config = connection.parse()?;
     let manager_config = ManagerConfig {
         recycling_method: RecyclingMethod::Fast

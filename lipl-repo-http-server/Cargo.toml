@@ -4,13 +4,19 @@ version = "0.1.7"
 authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2021"
 
+[features]
+default = ["file", "postgres"]
+postgres = ["dep:lipl-postgres-repo"]
+file = ["dep:lipl-fs-repo"]
+
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "3.0", features = ["derive"] }
 env_logger = "0.9"
 lipl-types = { path = "../lipl-types" }
-lipl-fs-repo = { path = "../lipl-fs-repo" }
+lipl-fs-repo = { path = "../lipl-fs-repo", optional = true }
+lipl-postgres-repo = { path = "../lipl-postgres-repo", optional = true }
 log = "0.4"
 serde = "1.0"
 tokio = { version = "1.0", features = ["macros", "rt", "signal", "sync"] }
