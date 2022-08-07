@@ -26,7 +26,7 @@ pub async fn to_parts_async(mut s: impl Stream<Item=Result<String, Error>> + Unp
 mod test {
     use futures::io::{AsyncBufReadExt, BufReader, Cursor, Error};
     use futures::{Stream};
-    use crate::st::to_parts_async;
+    use super::to_parts_async;
 
     fn get_data() -> impl Stream<Item=Result<String, Error>> + Unpin {
         const BUFFER: &[u8] = b"Hallo allemaal\r\n  Wat fijn dat u er bent\t\n\n En dan ook nog\neen tweede couplet";
