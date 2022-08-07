@@ -6,6 +6,7 @@ members = [
     "lipl-fs-repo",
     "lipl-postgres-repo",
     "lipl-types",
+    "parts",
 ]
 
 [profile.release]
