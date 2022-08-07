@@ -34,7 +34,7 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
 
     match args.source.parse::<DbType>()? {
         DbType::File(s) => {
-            let repo = get_file_repo(s)?;
+            let repo = get_file_repo(s).await?;
             list(repo).await?;
         },
         DbType::Postgres(s) => {
@@ -73,11 +73,11 @@ pub async fn repo_copy(args: CopyCommand) -> Result<()> {
 
     match source_db_type {
         DbType::File(file) => {
-            let source_repo = get_file_repo(file)?;
+            let source_repo = get_file_repo(file).await?;
 
             match target_db_type {
                 DbType::File(file) => {
-                    let target_repo = get_file_repo(file)?;
+                    let target_repo = get_file_repo(file).await?;
                     copy(source_repo, target_repo).await?;
                 },
                 DbType::Postgres(postgres) => {
@@ -91,7 +91,7 @@ pub async fn repo_copy(args: CopyCommand) -> Result<()> {
 
             match target_db_type {
                 DbType::File(file) => {
-                    let target_repo = get_file_repo(file)?;
+                    let target_repo = get_file_repo(file).await?;
                     copy(source_repo, target_repo).await?;
                 },
                 DbType::Postgres(postgres) => {

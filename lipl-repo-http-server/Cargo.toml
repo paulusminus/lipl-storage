@@ -14,6 +14,7 @@ anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "3.0", features = ["derive"] }
 env_logger = "0.9"
+futures = "0.3.21"
 lipl-types = { path = "../lipl-types" }
 lipl-fs-repo = { path = "../lipl-fs-repo", optional = true }
 lipl-postgres-repo = { path = "../lipl-postgres-repo", optional = true }

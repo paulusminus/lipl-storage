@@ -49,7 +49,7 @@ pub async fn serve(param: param::Serve) -> Result<()> {
 
     match param.source.parse::<DbType>()? {
         DbType::File(s) => {
-            run(get_file_repo(s)?, param.port).await?;
+            run(get_file_repo(s).await?, param.port).await?;
 
         },
         DbType::Postgres(s) => {
@@ -57,5 +57,4 @@ pub async fn serve(param: param::Serve) -> Result<()> {
         }
     }
     Ok(())
-
 }
