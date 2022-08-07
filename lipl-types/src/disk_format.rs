@@ -1,6 +1,7 @@
 use std::str::{FromStr};
 use std::fmt::{Display, Formatter};
 use std::str::Lines;
+use std::iter::once;
 
 use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Without, Playlist};
 use crate::error::{RepoError};
@@ -37,12 +38,10 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, se
         )
     }
     else {
-        let mut new_acc = acc.parts.clone();
-        new_acc.push(next);
         lines_to_lyric_post(
             LyricPost {
                 title: acc.title,
-                parts: new_acc,
+                parts: acc.parts.into_iter().chain(once(next)).collect::<Vec<_>>(),
             },
             lines
         )
@@ -65,7 +64,7 @@ impl Display for Lyric {
         };
         let yaml = serde_yaml::to_string(&lyric_meta).unwrap();
         let parts_string: String = self.parts.iter().map(|p| p.join("  \n")).collect::<Vec<_>>().join("\n\n");
-        write!(f, "{}---\n\n{}", yaml, parts_string)
+        write!(f, "---\n{}---\n\n{}", yaml, parts_string)
     }
 }
 
@@ -114,9 +113,9 @@ impl FromStr for LyricMeta {
 mod tests {
 
     use std::vec;
-
     use super::{Lyric, LyricMeta, LyricPost, PlaylistPost};
     use crate::{Uuid};
+
 
     fn hertog_jan_lyric() -> Lyric { 
         Lyric {
@@ -228,7 +227,8 @@ mod tests {
 
     #[test]
     fn lyric_post_parse() {
-        let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
+        let hertog_jan = hertog_jan_lyric().to_string();
+        let lyric_post = hertog_jan.as_str().parse::<LyricPost>().unwrap();
 
         assert_eq!(lyric_post.title, HERTOG_JAN_TITLE.to_owned());
         assert_eq!(lyric_post.parts.len(), 9);

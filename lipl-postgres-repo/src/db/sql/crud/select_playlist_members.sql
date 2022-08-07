@@ -1,0 +1,1 @@
+SELECT lyric_id AS id, lyric_title AS title FROM membership WHERE playlist_id = $1 ORDER BY ordering;

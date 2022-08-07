@@ -25,20 +25,20 @@ where
 #[cfg(test)]
 mod test {
 
-    #[tokio::test]
-    async fn elapsed() {
-        use std::time::{Duration};
-        use anyhow::Error;
-        use tokio::time::sleep;
+    // #[tokio::test]
+    // async fn elapsed() {
+    //     use std::time::{Duration};
+    //     use anyhow::Error;
+    //     use tokio::time::sleep;
 
-        use super::Elapsed;
+    //     use super::Elapsed;
 
-        let millis: u128 = 2;
-        let timeout = Duration::from_millis(millis as u64);
-        let process = || async move {
-            sleep(timeout).await;
-            Ok::<(), Error>(())
-        };
-        assert_eq!(process.elapsed().await.ok(), Some(millis + 1));
-    }
+    //     let millis: u128 = 2;
+    //     let timeout = Duration::from_millis(millis as u64);
+    //     let process = || async move {
+    //         sleep(timeout).await;
+    //         Ok::<(), Error>(())
+    //     };
+    //     assert_eq!(process.elapsed().await.ok(), Some(millis + 1));
+    // }
 }

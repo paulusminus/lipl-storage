@@ -1,0 +1,1 @@
+SELECT id, title, parts FROM lyric WHERE id = $1;

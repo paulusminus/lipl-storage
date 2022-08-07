@@ -1,0 +1,1 @@
+SELECT id, title FROM playlist ORDER BY title;

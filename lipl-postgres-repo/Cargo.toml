@@ -1,0 +1,19 @@
+[package]
+name = "lipl-postgres-repo"
+version = "0.1.0"
+authors = ["Paul Min <info@paulmin.nl>"]
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+deadpool-postgres = "0.10"
+derive_builder = "0.11.2"
+lipl-types = { path = "../lipl-types" }
+parts = { git = "git://paulmin.nl/rust/parts.git" }
+thiserror = "1.0.32"
+tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
+uuid = "1"
+
+[dev-dependencies]
+tokio = { version = "1.5", features = ["macros", "rt-multi-thread"] }
