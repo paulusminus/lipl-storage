@@ -18,30 +18,6 @@ mod macros;
 
 type Result<T> = std::result::Result<T, error::Error>;
 
-fn lyric_try_from(row: Row) -> Result<Lyric> {
-    let uuid = row.try_get::<&str, uuid::Uuid>("id")?;
-    let title = row.try_get::<&str, String>("title")?;
-    let parts = row.try_get::<&str, String>("parts")?;
-    Ok(
-        Lyric {
-            id: uuid.into(),
-            title,
-            parts: to_parts(parts),
-        }
-    )    
-}
-
-fn summary_try_from(row: Row) -> Result<Summary> {
-    let uuid = row.try_get::<&str, uuid::Uuid>("id")?;
-    let title = row.try_get::<&str, String>("title")?;
-    Ok(
-        Summary {
-            id: uuid.into(),
-            title,
-        }
-    )    
-}
-
 #[derive(Clone)]
 pub struct PostgresRepo {
     pool: Pool,
@@ -187,29 +163,41 @@ impl PostgresRepo {
 
 
 fn to_lyric(row: Row) -> Result<Lyric> {
-    lyric_try_from(row)
+    let uuid = row.try_get::<&str, uuid::Uuid>("id")?;
+    let title = row.try_get::<&str, String>("title")?;
+    let parts = row.try_get::<&str, String>("parts")?;
+    Ok(
+        Lyric {
+            id: uuid.into(),
+            title,
+            parts: to_parts(parts),
+        }
+    )    
 }
 
 fn to_lyrics(rows: Vec<Row>) -> Result<Vec<Lyric>> {
-    let mut result = vec![];
-    for row in rows {
-        let lyric = to_lyric(row)?;
-        result.push(lyric);
-    }
-    Ok(result)
+    rows
+    .into_iter()
+    .map(to_lyric)
+    .collect::<Result<Vec<_>>>()
 }
 
 fn to_summary(row: Row) -> Result<Summary> {
-    summary_try_from(row)
+    let uuid = row.try_get::<&str, uuid::Uuid>("id")?;
+    let title = row.try_get::<&str, String>("title")?;
+    Ok(
+        Summary {
+            id: uuid.into(),
+            title,
+        }
+    )
 }
 
 fn to_summaries(rows: Vec<Row>) -> Result<Vec<Summary>> {
-    let mut result = vec![];
-    for row in rows {
-        let summary = to_summary(row)?;
-        result.push(summary);
-    }
-    Ok(result)
+    rows
+    .into_iter()
+    .map(to_summary)
+    .collect::<Result<Vec<_>>>()
 }
 
 fn identity<T>(t: T) -> Result<T> {
