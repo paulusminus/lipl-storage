@@ -10,7 +10,7 @@ macro_rules! create_handler {
             use crate::model::{Query};
 
             pub async fn list_summary<D>(db: D) -> Result<impl Reply, Rejection> 
-            where D: LiplRepo + Clone
+            where D: LiplRepo
             {
                 db.$summaries().await
                 .map(|result| warp::reply::json(&result))
@@ -18,7 +18,7 @@ macro_rules! create_handler {
             }
 
             pub async fn list<D>(db: D, query: Query) -> Result<impl Reply, Rejection>
-            where D: LiplRepo + Clone
+            where D: LiplRepo
             {
                 if query.full {
                     db.$list().await
@@ -30,7 +30,7 @@ macro_rules! create_handler {
             }
 
             pub async fn item<D>(id: Uuid, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo + Clone
+            where D: LiplRepo
             {
                 db.$item(id).await
                 .map(|r| warp::reply::json(&r))
@@ -41,7 +41,7 @@ macro_rules! create_handler {
                 db: D,
                 json: $post_type,
             ) -> Result<impl Reply, Rejection>
-            where D: LiplRepo + Clone
+            where D: LiplRepo
             {
                 let o: $posted_type = (None, json).into();
                 db.$update(o).await
@@ -50,7 +50,7 @@ macro_rules! create_handler {
             }
 
             pub async fn delete<D>(id: Uuid, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo + Clone
+            where D: LiplRepo
             {
                 db.$delete(id).await
                 .map(|_| with_status(warp::reply::reply(), StatusCode::NO_CONTENT))
@@ -62,7 +62,7 @@ macro_rules! create_handler {
                 db: D,
                 json: $post_type,
             ) -> Result<impl Reply, Rejection>
-            where D: LiplRepo + Clone
+            where D: LiplRepo
             {
                 let o: $posted_type = (Some(id), json).into();
                 db.$update(o).await
