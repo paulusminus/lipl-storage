@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::fmt::{Display, Formatter, Result};
 
@@ -18,25 +19,27 @@ impl Display for Parts {
     }
 }
 
-fn trim(s: &str) -> &str {
-    s.trim()
+fn trim_end(s: &str) -> &str {
+    s.trim_end()
 }
 
 fn to_lines(s: &str) -> Vec<String> {
     s.split('\n')
-        .map(trim)
+        .map(trim_end)
         .filter(|&s| !s.is_empty())
         .map(|s| s.to_string())
         .collect()
 }
 
 pub fn to_parts(s: String) -> Vec<Vec<String>> {
-    Regex::new(r"\n\s*\n")
-        .unwrap()
-        .split(&s)
-        .map(to_lines)
-        .filter(|p| !p.is_empty())
-        .collect()
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"\n\s*\n").unwrap();
+    }
+    RE
+    .split(&s)
+    .map(to_lines)
+    .filter(|p| !p.is_empty())
+    .collect()
 }
 
 pub fn to_text(parts: &[Vec<String>]) -> String {
@@ -49,12 +52,12 @@ pub fn to_text(parts: &[Vec<String>]) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::{to_lines, to_parts, trim, Parts};
+    use super::{to_lines, to_parts, trim_end, Parts};
 
     #[test]
     fn test_trim() {
         let test = "\rHallo allema  \t";
-        assert_eq!(trim(test), "Hallo allema");
+        assert_eq!(trim_end(test), "\rHallo allema");
     }
 
     #[test]

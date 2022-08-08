@@ -1,7 +1,6 @@
-use std::fmt::{Display};
+use std::{fmt::{Display}, time::Instant};
 use lipl_fs_repo::{FileRepo};
 use lipl_types::{LiplRepo};
-use lipl_fs_repo::elapsed::{Elapsed};
 
 pub fn print<D>(d: D) 
 where 
@@ -36,6 +35,8 @@ pub async fn process() -> anyhow::Result<()> {
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()>{
-    println!("Elapsed: {} milliseconds", process.elapsed().await?);
+    let now = Instant::now();
+    process().await?;
+    println!("Took {} milliseconds", now.elapsed().as_millis());
     Ok(())
 }
