@@ -203,113 +203,108 @@ fn identity<T>(t: T) -> Result<T> {
     Ok(t)
 }
 
+macro_rules! time_it {
+    ($process:expr) => {{
+        let now = Instant::now();
+        let result = $process.await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(result)    
+    }};
+}
+
 #[async_trait]
 impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
-        let now = Instant::now();
-        let lyrics = self.lyrics().await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(lyrics)
+        time_it!(self.lyrics())
     }
 
     #[tracing::instrument]
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
-        let now = Instant::now();
-        let summaries = self.lyric_summaries().await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(summaries)
+        time_it!(self.lyric_summaries())
     }
 
     #[tracing::instrument]
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
-        let now = Instant::now();
-        let lyric = self.lyric_detail(id.inner()).await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(lyric)
+        time_it!(self.lyric_detail(id.inner()))
     }
 
     #[tracing::instrument]
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
-        let now = Instant::now();
-        let text = to_text(&lyric.parts[..]);
-        self.upsert_lyric(lyric.id.inner(), &lyric.title, &text).await.map(ignore)?;
-        let lyric = self.lyric_detail(lyric.id.inner()).await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(lyric)
+        time_it!(async {
+            let text = to_text(&lyric.parts[..]);
+            self.upsert_lyric(lyric.id.inner(), &lyric.title, &text).await.map(ignore)?;
+            self.lyric_detail(lyric.id.inner()).await
+        })
     }
 
     #[tracing::instrument]
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
-        let now = Instant::now();
-        self.lyric_delete(id.inner()).await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(())
+        time_it!(async {
+            self.lyric_delete(id.inner()).await?;
+            Ok::<(), anyhow::Error>(())
+        })
     }
 
     #[tracing::instrument]
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
-        let now = Instant::now();
-        let mut result = vec![];
-        let summaries = self.get_playlist_summaries().await?;
-        for summary in summaries {
-            let playlist = self.get_playlist(summary.id).await?;
-            result.push(playlist);
-        }
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(result)
+        time_it!(
+            async {
+                let mut result = vec![];
+                let summaries = self.get_playlist_summaries().await?;
+                for summary in summaries {
+                    let playlist = self.get_playlist(summary.id).await?;
+                    result.push(playlist);
+                }
+                Ok::<Vec<Playlist>, anyhow::Error>(result)        
+            }
+        )
     }
 
     #[tracing::instrument]
     async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
-        let now = Instant::now();
-        let summaries = self.playlist_summaries().await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(summaries)
+        time_it!(self.playlist_summaries())
     }
 
     #[tracing::instrument]
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
-        let now = Instant::now();
-        let members = self.playlist_members(id.inner()).await?;
-        let ids = members.into_iter().map(|s| s.id).collect::<Vec<_>>();
-        let summary = self.playlist_summary(id.inner()).await?;
-        let playlist = Playlist {
-            id: summary.id,
-            title: summary.title,
-            members: ids,
-        };
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(playlist)
+        time_it!(async {
+            let members = self.playlist_members(id.inner()).await?;
+            let ids = members.into_iter().map(|s| s.id).collect::<Vec<_>>();
+            let summary = self.playlist_summary(id.inner()).await?;
+            Ok::<Playlist, anyhow::Error>(Playlist {
+                id: summary.id,
+                title: summary.title,
+                members: ids,
+            })
+        })
     }
 
     #[tracing::instrument]
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
-        let now = Instant::now();
-        self.upsert_playlist(playlist.id.inner(), &playlist.title).await.map(ignore)?;
-        self.set_playlist_members(
-            playlist.id.inner(),
-            playlist.members.iter().map(|uuid| uuid.inner()).collect::<Vec<_>>()
-        )
-        .await?;
-        let playlist = self.get_playlist(playlist.id).await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(playlist)
+        time_it!(async {
+            self.upsert_playlist(playlist.id.inner(), &playlist.title).await.map(ignore)?;
+            self.set_playlist_members(
+                playlist.id.inner(),
+                playlist.members.iter().map(|uuid| uuid.inner()).collect::<Vec<_>>()
+            )
+            .await?;
+            self.get_playlist(playlist.id).await
+        })
     }
 
     #[tracing::instrument]
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
-        let now = Instant::now();
-        self.playlist_delete(id.inner()).await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(())
+        time_it!(async {
+            self.playlist_delete(id.inner()).await?;
+            Ok::<(), anyhow::Error>(())
+        })
     }
 
     #[tracing::instrument]
     async fn stop(&self) -> anyhow::Result<()> {
-        tracing::info!(elapsed_microseconds = Instant::now().elapsed().as_micros());
-        Ok(())
+        time_it!(async { Ok::<(), anyhow::Error>(())})
     }
 }
 
