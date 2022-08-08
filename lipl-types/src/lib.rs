@@ -97,7 +97,7 @@ pub struct Playlist {
 impl HasSummary for Playlist {
     fn summary(&self) -> Summary {
         Summary {
-            id: self.id.clone(),
+            id: self.id,
             title: self.title.clone(),
         }
     }

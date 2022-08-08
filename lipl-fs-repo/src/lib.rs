@@ -184,7 +184,7 @@ impl FileRepo {
                         }
                         Request::PlaylistPost(playlist, sender) => {
                             let f = async {
-                                let id = playlist.id.clone();
+                                let id = playlist.id;
                                 let summaries = io::get_list(
                                     &source_dir,
                                     LYRIC_EXTENSION,

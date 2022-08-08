@@ -60,7 +60,7 @@ pub enum DbType {
 impl FromStr for DbType {
     type Err = lipl_types::error::RepoError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let splitted = s.split(":").collect::<Vec<&str>>();
+        let splitted = s.split(':').collect::<Vec<&str>>();
         if splitted.len() == 2 {
             if splitted[0] == "file" {
                 return Ok(DbType::File(splitted[1].to_owned()));

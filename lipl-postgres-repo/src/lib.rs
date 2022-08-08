@@ -288,5 +288,5 @@ impl LiplRepo for PostgresRepo {
 }
 
 fn ignore<T>(_: T) {
-    ()
+    
 }
