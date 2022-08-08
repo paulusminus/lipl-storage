@@ -4,7 +4,7 @@ use std::time::{Instant};
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
 use lipl_types::{Lyric, LiplRepo, Playlist, Summary, Uuid};
-use parts::{to_parts, to_text};
+use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
 
 use crate::db::crud;
@@ -25,7 +25,7 @@ pub struct PostgresRepo {
 
 impl Debug for PostgresRepo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Postgres repo: {}", self.connection_string)
+        write!(f, "Postgres {}", self.connection_string)
     }
 }
 
@@ -160,16 +160,26 @@ impl PostgresRepo {
 
 }
 
+fn get_id(row: &Row) -> Result<Uuid> {
+    Ok(row.try_get::<&str, uuid::Uuid>("id").map(Uuid::from)?)
+}
+
+fn get_title(row: &Row) -> Result<String> {
+    Ok(row.try_get::<&str, String>("title")?)
+}
+
+fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
+    Ok(
+        to_parts(row.try_get::<&str, String>("parts")?)
+    )
+}
 
 fn to_lyric(row: Row) -> Result<Lyric> {
-    let uuid = row.try_get::<&str, uuid::Uuid>("id")?;
-    let title = row.try_get::<&str, String>("title")?;
-    let parts = row.try_get::<&str, String>("parts")?;
     Ok(
         Lyric {
-            id: uuid.into(),
-            title,
-            parts: to_parts(parts),
+            id: get_id(&row)?,
+            title: get_title(&row)?,
+            parts: get_parts(&row)?,
         }
     )    
 }
@@ -182,12 +192,10 @@ fn to_lyrics(rows: Vec<Row>) -> Result<Vec<Lyric>> {
 }
 
 fn to_summary(row: Row) -> Result<Summary> {
-    let uuid = row.try_get::<&str, uuid::Uuid>("id")?;
-    let title = row.try_get::<&str, String>("title")?;
     Ok(
         Summary {
-            id: uuid.into(),
-            title,
+            id: get_id(&row)?,
+            title: get_title(&row)?,
         }
     )
 }
