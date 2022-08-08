@@ -1,14 +1,12 @@
-#[macro_use]
-extern crate log;
-
 use anyhow::Result;
 use clap::Parser;
+use tracing::{info};
 
-use lipl_repo_http_server::{constant, param, serve, db, message};
+use lipl_repo_http_server::{param, serve, db, message};
 
 #[tokio::main(flavor = "current_thread") ]
 async fn main() -> Result<()> {
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(constant::LOG_LEVEL)).init();
+    tracing_subscriber::fmt::init();
     info!("{}", message::STARTING);
 
     let arguments = param::Arguments::parse();

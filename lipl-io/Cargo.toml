@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.57"
 lipl-types = { path = "../lipl-types/" }
-log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
 tokio = { version = "1", default-features = false, features = ["sync"] }
+tracing = "0.1"

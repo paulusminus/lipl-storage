@@ -2,6 +2,7 @@ use anyhow::Result;
 use lipl_types::LiplRepo;
 use tokio::sync::oneshot;
 use tokio::signal;
+use tracing::{info, error};
 use warp::Filter;
 
 use crate::constant;
@@ -26,7 +27,7 @@ async fn run(repo: impl LiplRepo + 'static, port: u16) -> Result<()> {
         .or(
             get_playlist_routes(repo.clone(), constant::PLAYLIST)
         )
-        .with(warp::log(constant::LOG_NAME));
+        .with(warp::trace::request());
 
     let (_address, server) = 
         warp::serve(routes)

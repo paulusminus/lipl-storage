@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use lipl_postgres_repo::{ConnectionBuilder, PostgresRepo};
+use lipl_postgres_repo::{PostgresRepo};
 use lipl_types::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
 
 const CONNECTION: &str = "host=/var/run/postgresql/ user=paul dbname=test";
@@ -20,15 +20,7 @@ fn create_lyric(text: &str) -> Lyric {
 #[tokio::test]
 async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
 
-    let connection = 
-        ConnectionBuilder::default()
-        .host("/var/run/postgresql/")
-        .user("paul")
-        .dbname("test")
-        .build()?;
-
-    assert_eq!(connection.to_string().as_str(), CONNECTION);
-    let repo = PostgresRepo::new(connection.to_string(), true).await?;
+    let repo = PostgresRepo::new(CONNECTION.to_owned(), true).await?;
 
     let lyric1 = create_lyric(ROODKAPJE);
 

@@ -1,16 +1,15 @@
 use std::fmt::Debug;
+use std::time::{Instant};
 
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
 use lipl_types::{Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_parts, to_text};
 use tokio_postgres::{Row};
-pub use connection::{ConnectionBuilder};
 
 use crate::db::crud;
 use crate::macros::query;
 
-mod connection;
 mod db;
 mod error;
 pub mod pool;
@@ -70,7 +69,7 @@ impl PostgresRepo {
     );
 
     query! (
-        delete_lyric,
+        lyric_delete,
         execute,
         u64,
         crud::DELETE_LYRIC,
@@ -80,7 +79,7 @@ impl PostgresRepo {
     );
 
     query! (
-        delete_playlist,
+        playlist_delete,
         execute,
         u64,
         crud::DELETE_PLAYLIST,
@@ -209,50 +208,70 @@ impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+        let now = Instant::now();
         let lyrics = self.lyrics().await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
         Ok(lyrics)
     }
 
     #[tracing::instrument]
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
-        self.lyric_summaries().await
+        let now = Instant::now();
+        let summaries = self.lyric_summaries().await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(summaries)
     }
 
     #[tracing::instrument]
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
-        self.lyric_detail(id.inner()).await
+        let now = Instant::now();
+        let lyric = self.lyric_detail(id.inner()).await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(lyric)
     }
 
     #[tracing::instrument]
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
+        let now = Instant::now();
         let text = to_text(&lyric.parts[..]);
         self.upsert_lyric(lyric.id.inner(), &lyric.title, &text).await.map(ignore)?;
-        self.lyric_detail(lyric.id.inner()).await
+        let lyric = self.lyric_detail(lyric.id.inner()).await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(lyric)
     }
 
     #[tracing::instrument]
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
-        self.delete_lyric(id.inner()).await.map(ignore)
+        let now = Instant::now();
+        self.lyric_delete(id.inner()).await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(())
     }
 
     #[tracing::instrument]
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+        let now = Instant::now();
         let mut result = vec![];
         let summaries = self.get_playlist_summaries().await?;
         for summary in summaries {
             let playlist = self.get_playlist(summary.id).await?;
             result.push(playlist);
         }
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
         Ok(result)
     }
 
     #[tracing::instrument]
     async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
-        self.playlist_summaries().await
+        let now = Instant::now();
+        let summaries = self.playlist_summaries().await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(summaries)
     }
 
     #[tracing::instrument]
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+        let now = Instant::now();
         let members = self.playlist_members(id.inner()).await?;
         let ids = members.into_iter().map(|s| s.id).collect::<Vec<_>>();
         let summary = self.playlist_summary(id.inner()).await?;
@@ -261,28 +280,35 @@ impl LiplRepo for PostgresRepo {
             title: summary.title,
             members: ids,
         };
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
         Ok(playlist)
     }
 
     #[tracing::instrument]
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
+        let now = Instant::now();
         self.upsert_playlist(playlist.id.inner(), &playlist.title).await.map(ignore)?;
         self.set_playlist_members(
             playlist.id.inner(),
             playlist.members.iter().map(|uuid| uuid.inner()).collect::<Vec<_>>()
         )
         .await?;
-        // let playlist = self.get_playlist(playlist.id).await?;
+        let playlist = self.get_playlist(playlist.id).await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
         Ok(playlist)
     }
 
     #[tracing::instrument]
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
-        self.delete_playlist(id.inner()).await.map(ignore)
+        let now = Instant::now();
+        self.playlist_delete(id.inner()).await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        Ok(())
     }
 
     #[tracing::instrument]
     async fn stop(&self) -> anyhow::Result<()> {
+        tracing::info!(elapsed_microseconds = Instant::now().elapsed().as_micros());
         Ok(())
     }
 }

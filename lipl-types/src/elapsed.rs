@@ -3,21 +3,21 @@ use futures::{Future};
 use anyhow::{Result};
 
 #[async_trait]
-pub trait Elapsed
+pub trait Elapsed<T>
 {
-    async fn elapsed(&self) -> Result<u128>;
+    async fn elapsed(&self) -> Result<(T, u128)>;
 }
 
 #[async_trait]
-impl<T, F, Fut> Elapsed for F
+impl<T, F, Fut> Elapsed<T> for F
 where
     F: Fn() -> Fut + Send + Sync,
     Fut: Future<Output=Result<T>> + Send,
 {
-    async fn elapsed(&self) -> Result<u128> {
+    async fn elapsed(&self) -> Result<(T, u128)> {
         let now = std::time::Instant::now();
-        self().await?;
-        Ok(now.elapsed().as_millis())
+        let t = self().await?;
+        Ok((t, now.elapsed().as_millis()))
     }
 }
 

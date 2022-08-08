@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate log;
-
 pub mod handler;
 pub mod constant;
 pub mod db;

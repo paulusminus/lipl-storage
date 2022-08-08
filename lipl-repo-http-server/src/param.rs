@@ -3,7 +3,6 @@ use clap::{Parser, Subcommand};
 use lipl_fs_repo::FileRepo;
 use lipl_postgres_repo::{PostgresRepo};
 use lipl_types::{RepoError, LiplRepo};
-use futures::future::ready;
 
 #[derive(Parser, Debug)]
 #[clap(about = "Serving the db through http")]
@@ -77,7 +76,10 @@ impl FromStr for DbType {
 }
 
 pub async fn get_file_repo(dir: String) -> anyhow::Result<impl LiplRepo> {
-    Ok(ready(FileRepo::new(dir)).await?)
+    let f = async move {
+        FileRepo::new(dir)
+    };
+    Ok(f.await?)
 }
 
 pub async fn get_postgres_repo(connection_string: String) -> anyhow::Result<impl LiplRepo> {

@@ -16,7 +16,6 @@ use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 use tokio::task::JoinHandle;
 
 mod constant;
-pub mod elapsed;
 mod error;
 mod fs;
 mod io;

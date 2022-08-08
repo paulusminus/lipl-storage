@@ -1,7 +1,7 @@
 use crate::param::{ListCommand, CopyCommand, DbType, get_file_repo, get_postgres_repo};
 use anyhow::Result;
 use lipl_types::LiplRepo;
-use log::{info};
+use tracing::{info};
 
 pub async fn list(repo: impl LiplRepo) -> Result<()> {
     let now = std::time::Instant::now();
@@ -48,12 +48,12 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
 
 pub async fn copy(source: impl LiplRepo, target: impl LiplRepo) -> Result<()> {
     for lyric in source.get_lyrics().await? {
-        log::info!("Copying lyric {} with id {}", lyric.title, lyric.id);
+        info!("Copying lyric {} with id {}", lyric.title, lyric.id);
         target.post_lyric(lyric).await?;
     }
 
     for playlist in source.get_playlists().await? {
-        log::info!("Copying playlist {} with id {}", playlist.title, playlist.id);
+        info!("Copying playlist {} with id {}", playlist.title, playlist.id);
         target.post_playlist(playlist).await?;
     }
 

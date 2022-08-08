@@ -8,12 +8,11 @@ edition = "2021"
 anyhow = "1.0"
 async-trait = "0.1"
 deadpool-postgres = "0.10"
-derive_builder = "0.11.2"
 lipl-types = { path = "../lipl-types" }
 parts = { path = "../parts" }
 thiserror = "1.0.32"
 tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
-tracing = "0.1.36"
+tracing = "0.1"
 uuid = "1"
 
 [dev-dependencies]

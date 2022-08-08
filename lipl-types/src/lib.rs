@@ -7,6 +7,7 @@ pub use path_ext::{PathExt};
 pub use error::RepoError;
 
 mod disk_format;
+pub mod elapsed;
 pub mod error;
 mod path_ext;
 mod uuid;
