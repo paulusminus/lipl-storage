@@ -5,7 +5,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use bs58::{decode, encode};
 use crate::error::{RepoError};
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
 pub struct Uuid(uuid::Uuid);
 
 impl Uuid {
@@ -18,6 +18,12 @@ impl Display for Uuid {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let bytes = self.0.as_bytes();
         write!(f, "{}", encode(bytes).into_string())
+    }
+}
+
+impl std::fmt::Debug for Uuid {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.to_string())
     }
 }
 
