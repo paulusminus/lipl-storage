@@ -1,32 +1,16 @@
 use crate::param::{ListCommand, CopyCommand, DbType};
 use anyhow::Result;
-use lipl_types::LiplRepo;
+use lipl_types::{LiplRepo, RepoDb};
 use tracing::{info};
 
-pub async fn list(repo: impl LiplRepo) -> Result<()> {
-    let now = std::time::Instant::now();
+pub async fn list(repo: impl LiplRepo, yaml: bool) -> Result<()> {
 
-    println!("Lyrics:");
-    let lyrics = repo.get_lyrics().await?;
-    
-    for lyric in lyrics.iter() {
-        println!(" - {}, {} parts", lyric.title, lyric.parts.len());
-    }
+    let db = RepoDb {
+        lyrics: repo.get_lyrics().await?,
+        playlists: repo.get_playlists().await?,
+    };
 
-    let playlists = repo.get_playlists().await?;
-    for playlist in playlists {
-        println!();
-        println!("{}", playlist.title);
-
-        for member in playlist.members {
-            if let Some(lyric) = lyrics.iter().filter(|lyric| lyric.id == member).last() {
-                println!(" - {}", lyric.title);
-            };
-        }
-    }
-
-    println!();
-    println!("Elapsed: {} milliseconds", now.elapsed().as_millis());
+    println!("{}", if yaml { db.to_yaml()? } else { db.to_string() }) ;
     Ok(())
 }
 
@@ -34,10 +18,10 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
 
     match args.source.parse::<DbType>()? {
         DbType::File(f) => {
-            list(f.await?).await?;
+            list(f.await?, args.yaml).await?;
         },
         DbType::Postgres(f) => {
-            list(f.await?).await?;
+            list(f.await?, args.yaml).await?;
         }
     }
 

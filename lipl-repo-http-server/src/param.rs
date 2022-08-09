@@ -18,6 +18,8 @@ pub struct Serve {
 pub struct ListCommand {
     #[clap(short, long)]
     pub source: String,
+    #[clap(long)]
+    pub yaml: bool,
 }
 
 #[derive(Parser, Debug)]

@@ -240,6 +240,52 @@ impl<T: Serialize> Etag for T {
     }
 }
 
+#[derive(Debug, Serialize)]
+pub struct RepoDb {
+    pub lyrics: Vec<Lyric>,
+    pub playlists: Vec<Playlist>,
+}
+
+impl RepoDb {
+    pub fn to_yaml(&self) -> Result<String> {
+        let s = serde_yaml::to_string(self)?;
+        Ok(s)
+    }
+}
+
+impl std::fmt::Display for RepoDb {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let lyrics = 
+            std::iter::once("Lyrics:".to_owned())
+            .chain(
+                self
+                .lyrics
+                .iter()
+                .map(|lyric| 
+                    format!(" - {}, {} parts", lyric.title, lyric.parts.len()
+                )
+            )
+            .chain(
+                std::iter::once("".to_owned()),
+            )
+            .chain(
+                std::iter::once(
+                    "Playlists:".to_owned(),
+                )
+            )
+            .chain(
+                self
+                .playlists
+                .iter()
+                .map(|playlist| 
+                    format!(" - {}", playlist.title)
+                )
+            )
+        );
+        write!(f, "{}", lyrics.collect::<Vec<_>>().join("\n"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
