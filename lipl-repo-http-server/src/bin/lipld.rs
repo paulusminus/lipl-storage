@@ -6,13 +6,13 @@ use lipl_repo_http_server::{param, serve, db, message};
 
 #[tokio::main(flavor = "current_thread") ]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt::init();
-    info!("{}", message::STARTING);
 
     let arguments = param::Arguments::parse();
     match arguments.command {
         param::Command::Serve(serve_args) => {
-            serve::serve(serve_args).await
+            tracing_subscriber::fmt::init();
+            info!("{}", message::STARTING);
+                    serve::serve(serve_args).await
         },
         param::Command::Db(db) => {
             match db {
