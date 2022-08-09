@@ -10,8 +10,6 @@ use crate::message;
 use crate::param;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
 use crate::param::DbType;
-use crate::param::get_file_repo;
-use crate::param::get_postgres_repo;
 
 async fn run(repo: impl LiplRepo + 'static, port: u16) -> Result<()> {
     let (tx, rx) = oneshot::channel::<()>();
@@ -49,12 +47,12 @@ async fn run(repo: impl LiplRepo + 'static, port: u16) -> Result<()> {
 pub async fn serve(param: param::Serve) -> Result<()> {
 
     match param.source.parse::<DbType>()? {
-        DbType::File(s) => {
-            run(get_file_repo(s).await?, param.port).await?;
+        DbType::File(file) => {
+            run(file.await?, param.port).await?;
 
         },
-        DbType::Postgres(s) => {
-            run(get_postgres_repo(s).await?, param.port).await?;
+        DbType::Postgres(postgres) => {
+            run(postgres.await?, param.port).await?;
         }
     }
     Ok(())

@@ -1,8 +1,8 @@
-use std::{str::FromStr};
+use std::{str::FromStr, pin::Pin, future::Future};
 use clap::{Parser, Subcommand};
 use lipl_fs_repo::FileRepo;
 use lipl_postgres_repo::{PostgresRepo};
-use lipl_types::{RepoError, LiplRepo};
+use lipl_types::{RepoError, error::RepoResult};
 
 #[derive(Parser, Debug)]
 #[clap(about = "Serving the db through http")]
@@ -52,8 +52,8 @@ pub struct Arguments {
 }
 
 pub enum DbType {
-    File(String),
-    Postgres(String),
+    File(Pin<Box<dyn Future<Output = RepoResult<FileRepo>>>>),
+    Postgres(Pin<Box<dyn Future<Output = RepoResult<PostgresRepo>>>>),
 }
 
 impl FromStr for DbType {
@@ -61,11 +61,26 @@ impl FromStr for DbType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let splitted = s.split(':').collect::<Vec<&str>>();
         if splitted.len() == 2 {
+            let repo_dir = splitted[0].to_owned();
             if splitted[0] == "file" {
-                return Ok(DbType::File(splitted[1].to_owned()));
+                return Ok(
+                    DbType::File(Box::pin(
+                        async move {
+                            FileRepo::new(repo_dir)
+                        }
+                    ))
+                );
             }
             else if splitted[0] == "postgres" {
-                return Ok(DbType::Postgres(splitted[1].to_owned()));
+                return Ok(DbType::Postgres(
+                    Box::pin(
+                        async move {
+                            PostgresRepo::new(repo_dir, false)
+                            .await
+                            .map_err(|_| lipl_types::error::RepoError::Argument("Invalid postgres connection string".to_owned()))
+                        }
+                    ))
+                );
             }
             else {
                 return Err(lipl_types::RepoError::Argument("Unknown prefix for db connection string".to_owned()));
@@ -73,16 +88,5 @@ impl FromStr for DbType {
         }
         Err(RepoError::Argument("Unknown format for db connection string. Use '<PREFIX>:<Connection string>'".to_owned()))
     }
-}
-
-pub async fn get_file_repo(dir: String) -> anyhow::Result<impl LiplRepo> {
-    let f = async move {
-        FileRepo::new(dir)
-    };
-    Ok(f.await?)
-}
-
-pub async fn get_postgres_repo(connection_string: String) -> anyhow::Result<impl LiplRepo> {
-    Ok(PostgresRepo::new(connection_string, false).await?)
 }
 

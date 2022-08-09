@@ -1,4 +1,4 @@
-use crate::param::{ListCommand, CopyCommand, DbType, get_file_repo, get_postgres_repo};
+use crate::param::{ListCommand, CopyCommand, DbType};
 use anyhow::Result;
 use lipl_types::LiplRepo;
 use tracing::{info};
@@ -33,13 +33,11 @@ pub async fn list(repo: impl LiplRepo) -> Result<()> {
 pub async fn repo_list(args: ListCommand) -> Result<()> {
 
     match args.source.parse::<DbType>()? {
-        DbType::File(s) => {
-            let repo = get_file_repo(s).await?;
-            list(repo).await?;
+        DbType::File(f) => {
+            list(f.await?).await?;
         },
-        DbType::Postgres(s) => {
-            let repo = get_postgres_repo(s).await?;
-            list(repo).await?;
+        DbType::Postgres(f) => {
+            list(f.await?).await?;
         }
     }
 
@@ -72,34 +70,25 @@ pub async fn repo_copy(args: CopyCommand) -> Result<()> {
     let target_db_type = args.target.parse::<DbType>()?;
 
     match source_db_type {
-        DbType::File(file) => {
-            let source_repo = get_file_repo(file).await?;
-
+        DbType::File(source_file) => {
             match target_db_type {
-                DbType::File(file) => {
-                    let target_repo = get_file_repo(file).await?;
-                    copy(source_repo, target_repo).await?;
+                DbType::File(target_file) => {
+                    copy(source_file.await?, target_file.await?).await?;
                 },
-                DbType::Postgres(postgres) => {
-                    let target_repo = get_postgres_repo(postgres).await?;
-                    copy(source_repo, target_repo).await?;
+                DbType::Postgres(target_postgres) => {
+                    copy(source_file.await?, target_postgres.await?).await?;
                 }
             }
         },
-        DbType::Postgres(postgres) => {
-            let source_repo = get_postgres_repo(postgres).await?;
-
+        DbType::Postgres(source_postgres) => {
             match target_db_type {
-                DbType::File(file) => {
-                    let target_repo = get_file_repo(file).await?;
-                    copy(source_repo, target_repo).await?;
+                DbType::File(target_file) => {
+                    copy(source_postgres.await?, target_file.await?).await?;
                 },
-                DbType::Postgres(postgres) => {
-                    let target_repo = get_postgres_repo(postgres).await?;
-                    copy(source_repo, target_repo).await?;
+                DbType::Postgres(target_postgres) => {
+                    copy(source_postgres.await?, target_postgres.await?).await?;
                 }
             }
-
         },
     }
 
