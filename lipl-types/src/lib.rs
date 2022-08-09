@@ -13,6 +13,16 @@ mod path_ext;
 mod uuid;
 
 // pub type RepoResult<T> = Result<T, error::RepoError>;
+#[macro_export]
+macro_rules! time_it {
+    ($process:expr) => {{
+        let now = std::time::Instant::now();
+        let result = $process.await?;
+        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+        anyhow::Ok(result)    
+    }};
+}
+
 
 #[async_trait]
 pub trait LiplRepo: Clone + Send + Sync {

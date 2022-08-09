@@ -1,9 +1,8 @@
 use std::fmt::Debug;
-use std::time::{Instant};
 
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
-use lipl_types::{Lyric, LiplRepo, Playlist, Summary, Uuid};
+use lipl_types::{time_it, Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
 
@@ -211,14 +210,14 @@ fn identity<T>(t: T) -> Result<T> {
     Ok(t)
 }
 
-macro_rules! time_it {
-    ($process:expr) => {{
-        let now = Instant::now();
-        let result = $process.await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(result)    
-    }};
-}
+// macro_rules! time_it {
+//     ($process:expr) => {{
+//         let now = Instant::now();
+//         let result = $process.await?;
+//         tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+//         Ok(result)    
+//     }};
+// }
 
 #[async_trait]
 impl LiplRepo for PostgresRepo {
@@ -265,7 +264,7 @@ impl LiplRepo for PostgresRepo {
                     let playlist = self.get_playlist(summary.id).await?;
                     result.push(playlist);
                 }
-                Ok::<Vec<Playlist>, anyhow::Error>(result)        
+                anyhow::Ok::<Vec<Playlist>>(result)        
             }
         )
     }
@@ -281,11 +280,13 @@ impl LiplRepo for PostgresRepo {
             let members = self.playlist_members(id.inner()).await?;
             let ids = members.into_iter().map(|s| s.id).collect::<Vec<_>>();
             let summary = self.playlist_summary(id.inner()).await?;
-            Ok::<Playlist, anyhow::Error>(Playlist {
-                id: summary.id,
-                title: summary.title,
-                members: ids,
-            })
+            anyhow::Ok::<Playlist>(
+                Playlist {
+                    id: summary.id,
+                    title: summary.title,
+                    members: ids,
+                }
+            )
         })
     }
 

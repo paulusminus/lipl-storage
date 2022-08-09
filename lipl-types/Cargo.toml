@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.59"
+anyhow = { version = "1.0.59", features = ["std"] }
 async-trait = "0.1"
 bincode = "1"
 bs58 = "0.4"
