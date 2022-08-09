@@ -58,13 +58,14 @@ impl PostgresRepo {
 
     query! (
         upsert_playlist,
-        execute,
-        u64,
+        query,
+        Vec<Row>,
         crud::UPSERT_PLAYLIST,
         crud::UPSERT_PLAYLIST_TYPES,
         identity,
         id: uuid::Uuid,
         title: &str,
+        members: Vec<uuid::Uuid>,
     );
 
     query! (
@@ -115,6 +116,25 @@ impl PostgresRepo {
         id: uuid::Uuid,
     );
 
+    query!{
+        playlists,
+        query,
+        Vec<Playlist>,
+        crud::SELECT_PLAYLISTS,
+        crud::SELECT_PLAYLISTS_TYPES,
+        to_playlists,
+    }
+
+    query!{
+        playlist_detail,
+        query_one,
+        Playlist,
+        crud::SELECT_PLAYLIST_DETAIL,
+        crud::SELECT_PLAYLIST_DETAIL_TYPES,
+        to_playlist,
+        id: uuid::Uuid,
+    }
+
     query! (
         playlist_summaries,
         query,
@@ -123,40 +143,6 @@ impl PostgresRepo {
         crud::SELECT_PLAYLIST_SUMMARIES_TYPES,
         to_summaries,
     );
-
-    query! (
-        playlist_summary,
-        query_one,
-        Summary,
-        crud::SELECT_PLAYLIST_SUMMARY,
-        crud::SELECT_PLAYLIST_SUMMARY_TYPES,
-        to_summary,
-        id: uuid::Uuid,
-    );
-
-
-    query! (
-        playlist_members,
-        query,
-        Vec<Summary>,
-        crud::SELECT_PLAYLIST_MEMBERS,
-        crud::SELECT_PLAYLIST_MEMBERS_TYPES,
-        to_summaries,
-        id: uuid::Uuid,
-    );
-
-    query! (
-        set_playlist_members,
-        execute,
-        u64,
-        crud::SET_PLAYLIST_MEMBERS,
-        crud::SET_PLAYLIST_MEMBERS_TYPES,
-        identity,
-        id: uuid::Uuid,
-        members: Vec<uuid::Uuid>,
-    );
-
-
 }
 
 fn get_id(row: &Row) -> Result<Uuid> {
@@ -173,6 +159,12 @@ fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
     )
 }
 
+fn get_members(row: &Row) -> Result<Vec<Uuid>> {
+    Ok(
+        row.try_get::<&str, Vec<uuid::Uuid>>("members")?.into_iter().map(Uuid::from).collect()
+    )
+}
+
 fn to_lyric(row: Row) -> Result<Lyric> {
     Ok(
         Lyric {
@@ -183,10 +175,27 @@ fn to_lyric(row: Row) -> Result<Lyric> {
     )    
 }
 
+fn to_playlist(row: Row) -> Result<Playlist> {
+    Ok(
+        Playlist {
+            id: get_id(&row)?,
+            title: get_title(&row)?,
+            members: get_members(&row)?,
+        }
+    )
+}
+
 fn to_lyrics(rows: Vec<Row>) -> Result<Vec<Lyric>> {
     rows
     .into_iter()
     .map(to_lyric)
+    .collect::<Result<Vec<_>>>()
+}
+
+fn to_playlists(rows: Vec<Row>) -> Result<Vec<Playlist>> {
+    rows
+    .into_iter()
+    .map(to_playlist)
     .collect::<Result<Vec<_>>>()
 }
 
@@ -256,17 +265,7 @@ impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
-        time_it!(
-            async {
-                let mut result = vec![];
-                let summaries = self.get_playlist_summaries().await?;
-                for summary in summaries {
-                    let playlist = self.get_playlist(summary.id).await?;
-                    result.push(playlist);
-                }
-                anyhow::Ok::<Vec<Playlist>>(result)        
-            }
-        )
+        time_it!(self.playlists())
     }
 
     #[tracing::instrument]
@@ -276,30 +275,18 @@ impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
-        time_it!(async {
-            let members = self.playlist_members(id.inner()).await?;
-            let ids = members.into_iter().map(|s| s.id).collect::<Vec<_>>();
-            let summary = self.playlist_summary(id.inner()).await?;
-            anyhow::Ok::<Playlist>(
-                Playlist {
-                    id: summary.id,
-                    title: summary.title,
-                    members: ids,
-                }
-            )
-        })
+        time_it!(self.playlist_detail(id.inner()))
     }
 
     #[tracing::instrument]
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
         time_it!(async {
-            self.upsert_playlist(playlist.id.inner(), &playlist.title).await.map(ignore)?;
-            self.set_playlist_members(
+            self.upsert_playlist(
                 playlist.id.inner(),
-                playlist.members.iter().map(|uuid| uuid.inner()).collect::<Vec<_>>()
-            )
-            .await?;
-            self.get_playlist(playlist.id).await
+                &playlist.title,
+                playlist.members.into_iter().map(|uuid| uuid.inner()).collect()
+            ).await?;
+            anyhow::Ok(self.get_playlist(playlist.id).await?)
         })
     }
 

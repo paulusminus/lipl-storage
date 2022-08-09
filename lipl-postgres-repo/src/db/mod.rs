@@ -14,6 +14,7 @@ pub const CREATE: &[&str] = &[
     include_str!("./sql/create/005_index_member_playlist.sql"),
     include_str!("./sql/create/006_view_membership.sql"),
     include_str!("./sql/create/007_function_set_members.sql"),
+    include_str!("./sql/create/008_function_upsert_playlist.sql"),
 ];
 
 pub mod crud {
@@ -23,7 +24,7 @@ pub mod crud {
     pub const UPSERT_LYRIC_TYPES: &[Type] = &[Type::UUID, Type::TEXT, Type::TEXT];
 
     pub const UPSERT_PLAYLIST: &str = include_str!("./sql/crud/upsert_playlist.sql");
-    pub const UPSERT_PLAYLIST_TYPES: &[Type] = &[Type::UUID, Type::TEXT];
+    pub const UPSERT_PLAYLIST_TYPES: &[Type] = &[Type::UUID, Type::TEXT, Type::UUID_ARRAY];
     
     pub const DELETE_LYRIC: &str = include_str!("./sql/crud/delete_lyric.sql");
     pub const DELETE_LYRIC_TYPES: &[Type] = &[Type::UUID];
@@ -43,12 +44,9 @@ pub mod crud {
     pub const SELECT_PLAYLIST_SUMMARIES: &str = include_str!("./sql/crud/select_playlist_summaries.sql");
     pub const SELECT_PLAYLIST_SUMMARIES_TYPES: &[Type] = &[];
     
-    pub const SELECT_PLAYLIST_SUMMARY: &str = include_str!("./sql/crud/select_playlist_summary.sql");
-    pub const SELECT_PLAYLIST_SUMMARY_TYPES: &[Type] = &[Type::UUID];
-    
-    pub const SELECT_PLAYLIST_MEMBERS: &str = include_str!("./sql/crud/select_playlist_members.sql"); 
-    pub const SELECT_PLAYLIST_MEMBERS_TYPES: &[Type] = &[Type::UUID];
+    pub const SELECT_PLAYLISTS: &str = include_str!("./sql/crud/select_playlists.sql");
+    pub const SELECT_PLAYLISTS_TYPES: &[Type] = &[];
 
-    pub const SET_PLAYLIST_MEMBERS: &str = include_str!("./sql/crud/set_members.sql");
-    pub const SET_PLAYLIST_MEMBERS_TYPES: &[Type] = &[Type::UUID, Type::UUID_ARRAY];
+    pub const SELECT_PLAYLIST_DETAIL: &str = include_str!("./sql/crud/select_playlist_detail.sql");
+    pub const SELECT_PLAYLIST_DETAIL_TYPES: &[Type] = &[Type::UUID];
 }

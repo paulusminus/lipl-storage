@@ -1,5 +1,1 @@
-INSERT INTO playlist (id, title)
-VALUES($1, $2)
-ON CONFLICT (id)
-DO
-  UPDATE SET title = $2;
+SELECT fn_upsert_playlist($1, $2, $3);

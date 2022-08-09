@@ -61,7 +61,7 @@ impl FromStr for DbType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let splitted = s.split(':').collect::<Vec<&str>>();
         if splitted.len() == 2 {
-            let repo_dir = splitted[0].to_owned();
+            let repo_dir = splitted[1].to_owned();
             if splitted[0] == "file" {
                 return Ok(
                     DbType::File(Box::pin(
