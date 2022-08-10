@@ -34,8 +34,19 @@ impl PostgresRepo {
     pub async fn new(connection_string: String, clear: bool) -> Result<Self> {
         let pool = pool::get(&connection_string, 16)?;
         if clear {
-            for sql in db::DROP {
-                pool.get().await?.execute(*sql, &[]).await?;
+            for sql in db::DROP.into_iter() {
+                pool.get()
+                .map_err(PostgresRepoError::from)
+                .and_then(
+                    |pool| async move {
+                        pool
+                        .execute(*sql, &[])
+                        .map_err(PostgresRepoError::from)
+                        .map_ok(to_unit)
+                        .await
+                    }
+                )
+                .await?;
             }
         }
 
@@ -52,7 +63,7 @@ impl PostgresRepo {
         u64,
         crud::UPSERT_LYRIC,
         crud::UPSERT_LYRIC_TYPES,
-        identity,
+        to_ok,
         id: uuid::Uuid,
         title: &str,
         text: &str,
@@ -64,7 +75,7 @@ impl PostgresRepo {
         Vec<Row>,
         crud::UPSERT_PLAYLIST,
         crud::UPSERT_PLAYLIST_TYPES,
-        identity,
+        to_ok,
         id: uuid::Uuid,
         title: &str,
         members: Vec<uuid::Uuid>,
@@ -76,7 +87,7 @@ impl PostgresRepo {
         u64,
         crud::DELETE_LYRIC,
         crud::DELETE_LYRIC_TYPES,
-        identity,
+        to_ok,
         id: uuid::Uuid,
     );
 
@@ -86,7 +97,7 @@ impl PostgresRepo {
         u64,
         crud::DELETE_PLAYLIST,
         crud::DELETE_PLAYLIST_TYPES,
-        identity,
+        to_ok,
         id: uuid::Uuid,
     );
 
@@ -96,7 +107,7 @@ impl PostgresRepo {
         Vec<Summary>,
         crud::SELECT_LYRIC_SUMMARIES,
         crud::SELECT_LYRIC_SUMMARIES_TYPES,
-        to_summaries,
+        try_convert_vec(to_summary),
     );
 
     query! (
@@ -105,7 +116,7 @@ impl PostgresRepo {
         Vec<Lyric>,
         crud::SELECT_LYRICS,
         crud::SELECT_LYRICS_TYPES,
-        to_lyrics,
+        try_convert_vec(to_lyric),
     );
 
     query! (
@@ -124,7 +135,7 @@ impl PostgresRepo {
         Vec<Playlist>,
         crud::SELECT_PLAYLISTS,
         crud::SELECT_PLAYLISTS_TYPES,
-        to_playlists,
+        try_convert_vec(to_playlist),
     }
 
     query!{
@@ -143,30 +154,44 @@ impl PostgresRepo {
         Vec<Summary>,
         crud::SELECT_PLAYLIST_SUMMARIES,
         crud::SELECT_PLAYLIST_SUMMARIES_TYPES,
-        to_summaries,
+        try_convert_vec(to_summary),
     );
 }
 
 fn get_id(row: &Row) -> Result<Uuid> {
-    Ok(row.try_get::<&str, uuid::Uuid>("id").map(Uuid::from)?)
+    row.try_get::<&str, uuid::Uuid>("id")
+    .map_err(PostgresRepoError::from)
+    .map(Uuid::from)
 }
 
 fn get_title(row: &Row) -> Result<String> {
-    Ok(row.try_get::<&str, String>("title")?)
+    row.try_get::<&str, String>("title")
+    .map_err(PostgresRepoError::from)
+    .map(std::convert::identity)
 }
 
 fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
-    Ok(
-        to_parts(row.try_get::<&str, String>("parts")?)
-    )
+    row.try_get::<&str, String>("parts")
+    .map_err(PostgresRepoError::from)
+    .map(to_parts)
 }
 
 fn get_members(row: &Row) -> Result<Vec<Uuid>> {
-    Ok(
-        row.try_get::<&str, Vec<uuid::Uuid>>("members")?
-        .into_iter().map(Uuid::from)
-        .collect()
-    )
+    row.try_get::<&str, Vec<uuid::Uuid>>("members")
+    .map_err(PostgresRepoError::from)
+    .map(convert_vec(Uuid::from))
+}
+
+fn convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> Vec<U>
+where F: Fn(T) -> U + Copy
+{
+    move |v| v.into_iter().map(f).collect()
+}
+
+fn try_convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> Result<Vec<U>>
+where F: Fn(T) -> Result<U> + Copy
+{
+    move |v| v.into_iter().map(f).collect()
 }
 
 fn to_lyric(row: Row) -> Result<Lyric> {
@@ -189,20 +214,6 @@ fn to_playlist(row: Row) -> Result<Playlist> {
     )
 }
 
-fn to_lyrics(rows: Vec<Row>) -> Result<Vec<Lyric>> {
-    rows
-    .into_iter()
-    .map(to_lyric)
-    .collect::<Result<Vec<_>>>()
-}
-
-fn to_playlists(rows: Vec<Row>) -> Result<Vec<Playlist>> {
-    rows
-    .into_iter()
-    .map(to_playlist)
-    .collect::<Result<Vec<_>>>()
-}
-
 fn to_summary(row: Row) -> Result<Summary> {
     Ok(
         Summary {
@@ -212,14 +223,7 @@ fn to_summary(row: Row) -> Result<Summary> {
     )
 }
 
-fn to_summaries(rows: Vec<Row>) -> Result<Vec<Summary>> {
-    rows
-    .into_iter()
-    .map(to_summary)
-    .collect::<Result<Vec<_>>>()
-}
-
-fn identity<T>(t: T) -> Result<T> {
+fn to_ok<T>(t: T) -> Result<T> {
     Ok(t)
 }
 
@@ -249,17 +253,23 @@ impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
-        time_it!(async {
-            let text = to_text(&lyric.parts[..]);
-            self.upsert_lyric(lyric.id.inner(), &lyric.title, &text).await.map(ignore)?;
-            self.lyric_detail(lyric.id.inner()).await
-        })
+        time_it!(
+            self.upsert_lyric(
+                lyric.id.inner(),
+                &lyric.title,
+                &to_text(&lyric.parts[..])
+            )
+            .and_then(
+                |_| self.lyric_detail(lyric.id.inner())
+            )
+        )
     }
 
     #[tracing::instrument]
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
         time_it!(
-            self.lyric_delete(id.inner()).map_ok(|_| {})
+            self.lyric_delete(id.inner())
+            .map_ok(to_unit)
         )
     }
 
@@ -299,14 +309,19 @@ impl LiplRepo for PostgresRepo {
     #[tracing::instrument]
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         time_it!(
-            self.playlist_delete(id.inner()).map_ok(|_| {})
+            self.playlist_delete(id.inner())
+            .map_ok(to_unit)
         )
     }
 
     #[tracing::instrument]
     async fn stop(&self) -> anyhow::Result<()> {
-        time_it!(async { anyhow::Ok::<()>(())})
+        time_it!(
+            async {
+                anyhow::Ok::<()>(())
+            }
+        )
     }
 }
 
-fn ignore<T>(_: T) { }
+fn to_unit<T>(_: T) { }
