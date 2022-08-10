@@ -222,84 +222,83 @@ impl FileRepo {
 }
 
 #[async_trait]
-impl LiplRepo for FileRepo {
+impl LiplRepo<FileRepoError> for FileRepo {
 
     #[tracing::instrument]
-    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>, FileRepoError> {
         time_it!(
             select(&mut self.tx.clone(), Request::LyricList)    
         )
     }
 
     #[tracing::instrument]
-    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, FileRepoError> {
         time_it!(
             select(&mut self.tx.clone(), Request::LyricSummaries)
         )
     }
 
     #[tracing::instrument]
-    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, FileRepoError> {
         time_it!(
             select_by_id(&mut self.tx.clone(), id, Request::LyricItem)
         )
     }
 
     #[tracing::instrument]
-    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, FileRepoError> {
         time_it!(
             post(&mut self.tx.clone(), lyric, Request::LyricPost)
         )
     }
 
     #[tracing::instrument]
-    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_lyric(&self, id: Uuid) -> Result<(), FileRepoError> {
         time_it!(
             delete_by_id(&mut self.tx.clone(), id, Request::LyricDelete)
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+    async fn get_playlists(&self) -> Result<Vec<Playlist>, FileRepoError> {
         time_it!(
             select(&mut self.tx.clone(), Request::PlaylistList)
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, FileRepoError> {
         time_it!(
             select(&mut self.tx.clone(), Request::PlaylistSummaries)
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, FileRepoError> {
         time_it!(
             select_by_id(&mut self.tx.clone(), id, Request::PlaylistItem)
         )
     }
 
     #[tracing::instrument]
-    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, FileRepoError> {
         time_it!(
             post(&mut self.tx.clone(), playlist, Request::PlaylistPost)
         )
     }
 
     #[tracing::instrument]
-    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_playlist(&self, id: Uuid) -> Result<(), FileRepoError> {
         time_it!(
             delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete)
         )
     }
 
     #[tracing::instrument]
-    async fn stop(&self) -> anyhow::Result<()> {
+    async fn stop(&self) -> Result<(), FileRepoError> {
         time_it!(
             select(&mut self.tx.clone(), Request::Stop)
-        )?;
-        self.join_handle.abort();
-        anyhow::Ok(())
+        )
+        .map(|_| self.join_handle.abort())
     }
 }

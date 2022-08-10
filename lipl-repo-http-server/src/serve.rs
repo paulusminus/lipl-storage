@@ -11,7 +11,7 @@ use crate::param;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
 use crate::param::DbType;
 
-async fn run(repo: impl LiplRepo + 'static, port: u16) -> Result<()> {
+async fn run<T: LiplRepo<E> + 'static, E: std::error::Error + 'static>(repo: T, port: u16) -> Result<()> {
     let (tx, rx) = oneshot::channel::<()>();
     let signals = signal::ctrl_c();
     
@@ -48,11 +48,13 @@ pub async fn serve(param: param::Serve) -> Result<()> {
 
     match param.source.parse::<DbType>()? {
         DbType::File(_, file) => {
-            run(file.await?, param.port).await?;
+            let repo = file.await?;
+            run(repo, param.port).await?;
 
         },
         DbType::Postgres(_, postgres) => {
-            run(postgres.await?, param.port).await?;
+            let repo = postgres.await?;
+            run(repo, param.port).await?;
         }
     }
     Ok(())

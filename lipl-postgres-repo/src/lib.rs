@@ -228,31 +228,31 @@ fn to_ok<T>(t: T) -> Result<T> {
 }
 
 #[async_trait]
-impl LiplRepo for PostgresRepo {
+impl LiplRepo<PostgresRepoError> for PostgresRepo {
 
     #[tracing::instrument]
-    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
         time_it!(
             self.lyrics()
         )
     }
 
     #[tracing::instrument]
-    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
         time_it!(
             self.lyric_summaries()
         )
     }
 
     #[tracing::instrument]
-    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric> {
         time_it!(
             self.lyric_detail(id.inner())
         )
     }
 
     #[tracing::instrument]
-    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric> {
         time_it!(
             self.upsert_lyric(
                 lyric.id.inner(),
@@ -266,7 +266,7 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_lyric(&self, id: Uuid) -> Result<()> {
         time_it!(
             self.lyric_delete(id.inner())
             .map_ok(to_unit)
@@ -274,28 +274,28 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+    async fn get_playlists(&self) -> Result<Vec<Playlist>> {
         time_it!(
             self.playlists()
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
         time_it!(
             self.playlist_summaries()
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist> {
         time_it!(
             self.playlist_detail(id.inner())
         )
     }
 
     #[tracing::instrument]
-    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist> {
         time_it!(
             self.upsert_playlist(
                 playlist.id.inner(),
@@ -307,7 +307,7 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_playlist(&self, id: Uuid) -> Result<()> {
         time_it!(
             self.playlist_delete(id.inner())
             .map_ok(to_unit)
@@ -315,10 +315,10 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn stop(&self) -> anyhow::Result<()> {
+    async fn stop(&self) -> Result<()> {
         time_it!(
             async {
-                anyhow::Ok::<()>(())
+                Ok::<(), PostgresRepoError>(())
             }
         )
     }

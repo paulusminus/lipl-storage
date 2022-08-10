@@ -11,30 +11,31 @@ pub mod error;
 mod path_ext;
 mod uuid;
 
+
 #[macro_export]
 macro_rules! time_it {
     ($process:expr) => {{
         let now = std::time::Instant::now();
         let result = $process.await?;
         tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        anyhow::Ok(result)    
+        Ok(result)    
     }};
 }
 
 
 #[async_trait]
-pub trait LiplRepo: Clone + Send + Sync {
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>>;
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric>;
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric>;
-    async fn delete_lyric(&self, id: Uuid) -> Result<()>;
-    async fn get_playlists(&self) -> Result<Vec<Playlist>>;
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>>;
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist>;
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist>;
-    async fn delete_playlist(&self, id: Uuid) -> Result<()>;
-    async fn stop(&self) -> Result<()>;
+pub trait LiplRepo<E: std::error::Error>: Clone + Send + Sync {
+    async fn get_lyrics(&self) -> std::result::Result<Vec<Lyric>, E>;
+    async fn get_lyric_summaries(&self) -> std::result::Result<Vec<Summary>, E>;
+    async fn get_lyric(&self, id: Uuid) -> std::result::Result<Lyric, E>;
+    async fn post_lyric(&self, lyric: Lyric) -> std::result::Result<Lyric, E>;
+    async fn delete_lyric(&self, id: Uuid) -> std::result::Result<(), E>;
+    async fn get_playlists(&self) -> std::result::Result<Vec<Playlist>, E>;
+    async fn get_playlist_summaries(&self) -> std::result::Result<Vec<Summary>, E>;
+    async fn get_playlist(&self, id: Uuid) -> std::result::Result<Playlist, E>;
+    async fn post_playlist(&self, playlist: Playlist) -> std::result::Result<Playlist, E>;
+    async fn delete_playlist(&self, id: Uuid) -> std::result::Result<(), E>;
+    async fn stop(&self) -> std::result::Result<(), E>;
 }
 
 pub trait HasSummary {
