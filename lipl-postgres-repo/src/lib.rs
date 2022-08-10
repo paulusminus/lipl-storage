@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
+use futures_util::TryFutureExt;
 use lipl_types::{time_it, Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
@@ -162,7 +163,9 @@ fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
 
 fn get_members(row: &Row) -> Result<Vec<Uuid>> {
     Ok(
-        row.try_get::<&str, Vec<uuid::Uuid>>("members")?.into_iter().map(Uuid::from).collect()
+        row.try_get::<&str, Vec<uuid::Uuid>>("members")?
+        .into_iter().map(Uuid::from)
+        .collect()
     )
 }
 
@@ -220,31 +223,28 @@ fn identity<T>(t: T) -> Result<T> {
     Ok(t)
 }
 
-// macro_rules! time_it {
-//     ($process:expr) => {{
-//         let now = Instant::now();
-//         let result = $process.await?;
-//         tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-//         Ok(result)    
-//     }};
-// }
-
 #[async_trait]
 impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
-        time_it!(self.lyrics())
+        time_it!(
+            self.lyrics()
+        )
     }
 
     #[tracing::instrument]
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
-        time_it!(self.lyric_summaries())
+        time_it!(
+            self.lyric_summaries()
+        )
     }
 
     #[tracing::instrument]
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
-        time_it!(self.lyric_detail(id.inner()))
+        time_it!(
+            self.lyric_detail(id.inner())
+        )
     }
 
     #[tracing::instrument]
@@ -258,53 +258,55 @@ impl LiplRepo for PostgresRepo {
 
     #[tracing::instrument]
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
-        time_it!(async {
-            self.lyric_delete(id.inner()).await?;
-            Ok::<(), anyhow::Error>(())
-        })
+        time_it!(
+            self.lyric_delete(id.inner()).map_ok(|_| {})
+        )
     }
 
     #[tracing::instrument]
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
-        time_it!(self.playlists())
+        time_it!(
+            self.playlists()
+        )
     }
 
     #[tracing::instrument]
     async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
-        time_it!(self.playlist_summaries())
+        time_it!(
+            self.playlist_summaries()
+        )
     }
 
     #[tracing::instrument]
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
-        time_it!(self.playlist_detail(id.inner()))
+        time_it!(
+            self.playlist_detail(id.inner())
+        )
     }
 
     #[tracing::instrument]
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
-        time_it!(async {
+        time_it!(
             self.upsert_playlist(
                 playlist.id.inner(),
                 &playlist.title,
                 playlist.members.into_iter().map(|uuid| uuid.inner()).collect()
-            ).await?;
-            anyhow::Ok(self.get_playlist(playlist.id).await?)
-        })
+            )
+            .and_then(|_| self.get_playlist(playlist.id))
+        )
     }
 
     #[tracing::instrument]
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
-        time_it!(async {
-            self.playlist_delete(id.inner()).await?;
-            Ok::<(), anyhow::Error>(())
-        })
+        time_it!(
+            self.playlist_delete(id.inner()).map_ok(|_| {})
+        )
     }
 
     #[tracing::instrument]
     async fn stop(&self) -> anyhow::Result<()> {
-        time_it!(async { Ok::<(), anyhow::Error>(())})
+        time_it!(async { anyhow::Ok::<()>(())})
     }
 }
 
-fn ignore<T>(_: T) {
-    
-}
+fn ignore<T>(_: T) { }

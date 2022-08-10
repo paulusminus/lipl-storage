@@ -8,6 +8,7 @@ edition = "2021"
 anyhow = "1.0"
 async-trait = "0.1"
 deadpool-postgres = "0.10"
+futures-util = "0.3"
 lipl-types = { path = "../lipl-types" }
 parts = { path = "../parts" }
 thiserror = "1.0.32"
