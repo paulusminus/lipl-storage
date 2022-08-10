@@ -164,6 +164,7 @@ fn get_id(row: &Row) -> Result<Uuid> {
     .map(Uuid::from)
 }
 
+#[allow(clippy::map_identity)]
 fn get_title(row: &Row) -> Result<String> {
     row.try_get::<&str, String>("title")
     .map_err(PostgresRepoError::from)

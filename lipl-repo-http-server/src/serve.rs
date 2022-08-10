@@ -11,7 +11,11 @@ use crate::param;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
 use crate::param::DbType;
 
-async fn run<T: LiplRepo<E> + 'static, E: std::error::Error + 'static>(repo: T, port: u16) -> Result<()> {
+async fn run<R, E>(repo: R, port: u16) -> Result<()> 
+where
+    R: LiplRepo<E> + 'static,
+    E: std::error::Error + 'static,
+{
     let (tx, rx) = oneshot::channel::<()>();
     let signals = signal::ctrl_c();
     
