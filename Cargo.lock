@@ -705,7 +705,6 @@ dependencies = [
  "lipl-fs-repo",
  "lipl-postgres-repo",
  "lipl-types",
- "log",
  "serde",
  "thiserror",
  "tokio",
