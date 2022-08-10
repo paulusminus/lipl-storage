@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::str::FromStr;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use bs58::{decode, encode};
-use crate::error::{RepoError};
+use crate::error::{ModelError};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
 pub struct Uuid(uuid::Uuid);
@@ -28,7 +28,7 @@ impl std::fmt::Debug for Uuid {
 }
 
 impl FromStr for Uuid {
-    type Err = RepoError;
+    type Err = ModelError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut decoded = [0xFF; 16];

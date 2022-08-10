@@ -4,7 +4,7 @@ use std::str::Lines;
 use std::iter::once;
 
 use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Without, Playlist};
-use crate::error::{RepoError};
+use crate::error::{ModelError};
 
 const YAML_PREFIX: &str = "---";
 
@@ -49,7 +49,7 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, se
 }
 
 impl FromStr for LyricPost {
-    type Err = RepoError;
+    type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let lyric_post = lines_to_lyric_post(Default::default(), s.lines())?;
         Ok(lyric_post)
@@ -69,9 +69,9 @@ impl Display for Lyric {
 }
 
 impl FromStr for PlaylistPost {
-    type Err = RepoError;
+    type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_yaml::from_str::<PlaylistPost>(s).map_err(RepoError::from)
+        serde_yaml::from_str::<PlaylistPost>(s).map_err(ModelError::from)
     }
 }
 
@@ -92,7 +92,7 @@ fn non_empty_line(s: &&str) -> bool {
 }
 
 impl FromStr for LyricMeta {
-    type Err = RepoError;
+    type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // let lines = s.lines();
         let yaml = 

@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use error::FileRepoError;
+pub use error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
 use futures::StreamExt;
 use lipl_types::{
-    time_it, LiplRepo, Lyric, Playlist, error::{RepoError, RepoResult}, Summary, Uuid, Without,
+    time_it, LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
@@ -23,7 +23,7 @@ mod request;
 
 #[derive(Clone)]
 pub struct FileRepo {
-    join_handle: Arc<JoinHandle<RepoResult<()>>>,
+    join_handle: Arc<JoinHandle<ModelResult<()>>>,
     tx: mpsc::Sender<Request>,
     path: String,
 }
@@ -37,8 +37,8 @@ impl Debug for FileRepo {
 impl FileRepo {
     pub fn new(
         source_dir: String,
-    ) -> RepoResult<FileRepo> {
-        source_dir.is_dir().map_err(|_| RepoError::NoPath(source_dir.clone().into()))?;
+    ) -> ModelResult<FileRepo> {
+        source_dir.is_dir().map_err(|_| ModelError::NoPath(source_dir.clone().into()))?;
 
         let (tx, mut rx) = mpsc::channel::<Request>(10);
 
@@ -52,7 +52,7 @@ impl FileRepo {
                     match request {
                         Request::Stop(sender) => {
                             sender.send(Ok(()))
-                            .map_err(|_| RepoError::SendFailed("Stop".to_string()))?;
+                            .map_err(|_| ModelError::SendFailed("Stop".to_string()))?;
                             break;
                         },
                         Request::LyricSummaries(sender) => {
@@ -66,7 +66,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed("LyricSummaries".to_string()))?;
+                                .map_err(|_| ModelError::SendFailed("LyricSummaries".to_string()))?;
                         }
                         Request::LyricList(sender) => {
                             let f = async {
@@ -79,7 +79,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed("LyricList".to_string()))?;
+                                .map_err(|_| ModelError::SendFailed("LyricList".to_string()))?;
                         }
                         Request::LyricItem(uuid, sender) => {
                             let f = async {
@@ -88,7 +88,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed(format!("LyricItem {uuid}")))?;
+                                .map_err(|_| ModelError::SendFailed(format!("LyricItem {uuid}")))?;
                         }
                         Request::LyricDelete(uuid, sender) => {
                             let f = async {
@@ -116,7 +116,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed(format!("LyricDelete {uuid}")))?;
+                                .map_err(|_| ModelError::SendFailed(format!("LyricDelete {uuid}")))?;
                         }
                         Request::LyricPost(lyric, sender) => {
                             let f = async {
@@ -133,7 +133,7 @@ impl FileRepo {
                                 .send(
                                     f.await,
                                 )
-                                .map_err(|e| RepoError::SendFailed(format!("LyricPost {}", e.unwrap().title)))?;
+                                .map_err(|e| ModelError::SendFailed(format!("LyricPost {}", e.unwrap().title)))?;
                         }
                         Request::PlaylistSummaries(sender) => {
                             let f = async {
@@ -147,7 +147,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed("PlaylistSummaries".to_string()))?;
+                                .map_err(|_| ModelError::SendFailed("PlaylistSummaries".to_string()))?;
                         }
                         Request::PlaylistList(sender) => {
                             let f = async {
@@ -160,7 +160,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed("PlaylistList".to_string()))?;
+                                .map_err(|_| ModelError::SendFailed("PlaylistList".to_string()))?;
                         }
                         Request::PlaylistItem(uuid, sender) => {
                             let f = async {
@@ -169,7 +169,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed(format!("PlaylistItem {uuid}")))?;
+                                .map_err(|_| ModelError::SendFailed(format!("PlaylistItem {uuid}")))?;
                         }
                         Request::PlaylistDelete(uuid, sender) => {
                             let f = async {
@@ -179,7 +179,7 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|_| RepoError::SendFailed(format!("PlaylistDelete {uuid}")))?;
+                                .map_err(|_| ModelError::SendFailed(format!("PlaylistDelete {uuid}")))?;
                         }
                         Request::PlaylistPost(playlist, sender) => {
                             let f = async {
@@ -209,12 +209,12 @@ impl FileRepo {
                             };
                             sender
                                 .send(f.await)
-                                .map_err(|e| RepoError::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))?;
+                                .map_err(|e| ModelError::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))?;
                         }
                     }
                 }
 
-                Ok::<(), RepoError>(())
+                Ok::<(), ModelError>(())
             })),
         })
     }

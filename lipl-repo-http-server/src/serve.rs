@@ -47,11 +47,11 @@ async fn run(repo: impl LiplRepo + 'static, port: u16) -> Result<()> {
 pub async fn serve(param: param::Serve) -> Result<()> {
 
     match param.source.parse::<DbType>()? {
-        DbType::File(file) => {
+        DbType::File(_, file) => {
             run(file.await?, param.port).await?;
 
         },
-        DbType::Postgres(postgres) => {
+        DbType::Postgres(_, postgres) => {
             run(postgres.await?, param.port).await?;
         }
     }

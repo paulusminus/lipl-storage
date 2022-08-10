@@ -4,7 +4,7 @@ use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
 pub use path_ext::{PathExt};
-pub use error::RepoError;
+pub use error::ModelError;
 
 mod disk_format;
 pub mod elapsed;

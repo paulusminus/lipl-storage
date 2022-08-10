@@ -1,10 +1,10 @@
 use futures::channel::oneshot::Canceled;
 use thiserror::{Error};
 
-pub type RepoResult<T> = std::result::Result<T, RepoError>;
+pub type ModelResult<T> = std::result::Result<T, ModelError>;
 
 #[derive(Error, Debug)]
-pub enum RepoError {
+pub enum ModelError {
     #[error("File {0:?} has invalid filestem")]
     Filestem(Option<String>),
 

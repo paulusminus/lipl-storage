@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum PostgresRepoError {
     #[error("Postgres: {0}")]
     Postgres(#[from] tokio_postgres::Error),
 

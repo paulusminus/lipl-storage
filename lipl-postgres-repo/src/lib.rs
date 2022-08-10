@@ -8,13 +8,14 @@ use tokio_postgres::{Row};
 
 use crate::db::crud;
 use crate::macros::query;
+pub use error::PostgresRepoError;
 
 mod db;
 mod error;
 pub mod pool;
 mod macros;
 
-type Result<T> = std::result::Result<T, error::Error>;
+type Result<T> = std::result::Result<T, PostgresRepoError>;
 
 #[derive(Clone)]
 pub struct PostgresRepo {

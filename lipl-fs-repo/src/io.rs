@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::path::{Path, PathBuf};
 use futures::{TryFuture, TryStreamExt};
 
-use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid, RepoError};
+use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid, ModelError};
 use crate::fs::IO;
 
 use crate::error::FileRepoError;
@@ -20,7 +20,7 @@ where P: AsRef<Path> + Send + Sync
 
 pub fn get_item<F, G>(s: String, id: Uuid) -> Result<G>
 where
-    F: FromStr<Err=RepoError>,
+    F: FromStr<Err=ModelError>,
     G: From<(F, Uuid)>,
 {
     s.parse::<F>().map_err(|_| FileRepoError::Parse(format!("{id}"))).map(|f| G::from((f, id)))

@@ -1,8 +1,8 @@
-use std::{str::FromStr, pin::Pin, future::Future};
+use std::{str::FromStr, pin::Pin, future::Future, fmt::Debug};
 use clap::{Parser, Subcommand};
 use lipl_fs_repo::FileRepo;
 use lipl_postgres_repo::{PostgresRepo};
-use lipl_types::{RepoError, error::RepoResult};
+use lipl_types::{ModelError, error::ModelResult};
 
 #[derive(Parser, Debug)]
 #[clap(about = "Serving the db through http")]
@@ -17,7 +17,7 @@ pub struct Serve {
 #[clap(about = "Show db summary on console")]
 pub struct ListCommand {
     #[clap(short, long)]
-    pub source: String,
+    pub source: DbType,
     #[clap(long)]
     pub yaml: bool,
 }
@@ -25,10 +25,10 @@ pub struct ListCommand {
 #[derive(Parser, Debug)]
 #[clap(about = "Copy db to another destination")]
 pub struct CopyCommand {
-    #[clap(short, long, help = "")]
-    pub source: String,
-    #[clap(short, long, help = "")]
-    pub target: String,
+    #[clap(short, long)]
+    pub source: DbType,
+    #[clap(short, long)]
+    pub target: DbType,
 }
 
 #[derive(Subcommand, Debug)]
@@ -54,41 +54,57 @@ pub struct Arguments {
 }
 
 pub enum DbType {
-    File(Pin<Box<dyn Future<Output = RepoResult<FileRepo>>>>),
-    Postgres(Pin<Box<dyn Future<Output = RepoResult<PostgresRepo>>>>),
+    File(String, Pin<Box<dyn Future<Output = ModelResult<FileRepo>>>>),
+    Postgres(String, Pin<Box<dyn Future<Output = ModelResult<PostgresRepo>>>>),
 }
 
+impl Debug for DbType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            DbType::File(file, _) => format!("File connection: {file}"),
+            DbType::Postgres(postgres, _) => format!("Postgres connection: {postgres}"),
+        })
+    }
+}
+
+
 impl FromStr for DbType {
-    type Err = lipl_types::error::RepoError;
+    type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let splitted = s.split(':').collect::<Vec<&str>>();
         if splitted.len() == 2 {
             let repo_dir = splitted[1].to_owned();
             if splitted[0] == "file" {
                 return Ok(
-                    DbType::File(Box::pin(
-                        async move {
-                            FileRepo::new(repo_dir)
-                        }
-                    ))
+                    DbType::File(
+                        repo_dir.clone(),
+                        Box::pin(
+                            async move {
+                                FileRepo::new(repo_dir)
+                            }
+                        )
+                    )
                 );
             }
             else if splitted[0] == "postgres" {
-                return Ok(DbType::Postgres(
-                    Box::pin(
-                        async move {
-                            PostgresRepo::new(repo_dir, false)
-                            .await
-                            .map_err(|_| lipl_types::error::RepoError::Argument("Invalid postgres connection string".to_owned()))
-                        }
-                    ))
+                return Ok(
+                    DbType::Postgres(
+                        repo_dir.clone(),
+                        Box::pin(
+                            async move {
+                                PostgresRepo::new(repo_dir, false)
+                                .await
+                                .map_err(|_| ModelError::Argument("Invalid postgres connection string".to_owned()))
+                            }
+                        )
+                    )
                 );
             }
             else {
-                return Err(lipl_types::RepoError::Argument("Unknown prefix for db connection string".to_owned()));
+                return Err(ModelError::Argument("Unknown prefix for db connection string".to_owned()));
             }
         }
-        Err(RepoError::Argument("Unknown format for db connection string. Use '<PREFIX>:<Connection string>'".to_owned()))
+        Err(ModelError::Argument("Unknown format for db connection string. Use '<PREFIX>:<Connection string>'".to_owned()))
     }
 }
 
