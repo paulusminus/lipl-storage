@@ -71,7 +71,8 @@ impl Display for Lyric {
 impl FromStr for PlaylistPost {
     type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_yaml::from_str::<PlaylistPost>(s).map_err(ModelError::from)
+        serde_yaml::from_str::<PlaylistPost>(s)
+        .map_err(ModelError::from)
     }
 }
 

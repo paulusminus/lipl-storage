@@ -30,9 +30,10 @@ mod test {
 
     fn get_data() -> impl Stream<Item=Result<String, Error>> + Unpin {
         const BUFFER: &[u8] = b"Hallo allemaal\r\n  Wat fijn dat u er bent\t\n\n En dan ook nog\neen tweede couplet";
-        let cursor = Cursor::new(BUFFER);
-        let line_stream = BufReader::new(cursor).lines();
-        line_stream
+        BufReader::new(
+            Cursor::new(BUFFER)
+        )
+        .lines()
     }
 
     #[tokio::test]

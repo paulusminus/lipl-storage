@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use crate::text::StringExt;
 use crate::error::UploadError;
 use futures::TryStream;
 use futures::stream::iter;
 use crate::{fs, UploadResult};
+use parts::{to_parts};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Summary {
@@ -32,7 +32,7 @@ impl From<fs::Entry> for LyricPost {
             .unwrap()
             .to_string_lossy()
             .to_string();
-        let parts = entry.contents.to_parts();
+        let parts = to_parts(entry.contents);
         LyricPost {
             title,
             parts,

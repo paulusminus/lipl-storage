@@ -5,6 +5,12 @@ use std::fmt::{Display, Formatter, Result};
 mod st;
 pub use st::to_parts_async;
 
+const DOUBLE_LINE: &str = r"\n\s*\n";
+
+lazy_static! {
+    static ref DOUBLE_LINE_REGEX: Regex = DOUBLE_LINE.parse().unwrap();
+}
+
 struct Parts(Vec<Vec<String>>);
 
 impl From<String> for Parts {
@@ -32,10 +38,7 @@ fn to_lines(s: &str) -> Vec<String> {
 }
 
 pub fn to_parts(s: String) -> Vec<Vec<String>> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"\n\s*\n").unwrap();
-    }
-    RE
+    DOUBLE_LINE_REGEX
     .split(&s)
     .map(to_lines)
     .filter(|p| !p.is_empty())

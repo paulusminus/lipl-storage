@@ -7,12 +7,10 @@ pub use path_ext::{PathExt};
 pub use error::ModelError;
 
 mod disk_format;
-pub mod elapsed;
 pub mod error;
 mod path_ext;
 mod uuid;
 
-// pub type RepoResult<T> = Result<T, error::RepoError>;
 #[macro_export]
 macro_rules! time_it {
     ($process:expr) => {{

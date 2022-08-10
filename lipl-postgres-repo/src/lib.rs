@@ -34,7 +34,7 @@ impl PostgresRepo {
     pub async fn new(connection_string: String, clear: bool) -> Result<Self> {
         let pool = pool::get(&connection_string, 16)?;
         if clear {
-            for sql in db::DROP.into_iter() {
+            for sql in db::DROP.iter() {
                 pool.get()
                 .map_err(PostgresRepoError::from)
                 .and_then(

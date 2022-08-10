@@ -766,6 +766,7 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "lazy_static",
+ "parts",
  "regex",
  "serde",
  "serde_json",
