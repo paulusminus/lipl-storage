@@ -1,6 +1,5 @@
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::fmt::{Display, Formatter, Result};
 
 mod st;
 pub use st::to_parts_async;
@@ -11,17 +10,41 @@ lazy_static! {
     static ref DOUBLE_LINE_REGEX: Regex = DOUBLE_LINE.parse().unwrap();
 }
 
-struct Parts(Vec<Vec<String>>);
+pub struct Markdown {
+    pub frontmatter: Option<String>,
+    pub parts: Vec<Vec<String>>,
+}
 
-impl From<String> for Parts {
+impl From<String> for Markdown {
     fn from(s: String) -> Self {
-        Parts(to_parts(s))
+        parse_markdown(s, "---")
     }
 }
 
-impl Display for Parts {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}", to_text(&self.0))
+fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
+    let parts = to_parts(text);
+    if 
+        !parts.is_empty()
+        && !parts[0].is_empty()
+        && parts[0][0] == yaml_separator.to_owned() 
+    {
+        Markdown {
+            frontmatter: Some(
+                parts[0]
+                .clone()
+                .into_iter()
+                .filter(|s| s != yaml_separator)
+                .collect::<Vec<_>>()
+                .join("\n")
+            ),
+            parts: parts[1..].to_vec(),
+        }
+    }
+    else {
+        Markdown {
+            frontmatter: None,
+            parts
+        }
     }
 }
 
@@ -55,18 +78,17 @@ pub fn to_text(parts: &[Vec<String>]) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::{to_lines, to_parts, trim_end, Parts};
 
     #[test]
     fn test_trim() {
         let test = "\rHallo allema  \t";
-        assert_eq!(trim_end(test), "\rHallo allema");
+        assert_eq!(super::trim_end(test), "\rHallo allema");
     }
 
     #[test]
     fn test_to_lines() {
         let test = "Hallo\nAllemaal\r\nWat fijn  \n\r\n";
-        let result = to_lines(test);
+        let result = super::to_lines(test);
         assert_eq!(result.len(), 3);
         assert_eq!(result[0], "Hallo");
         assert_eq!(result[1], "Allemaal");
@@ -76,7 +98,7 @@ mod test {
     #[test]
     fn test_to_parts() {
         let test = "Hallo\nAllemaal\r\n\nWat fijn  \n\r\n".to_owned();
-        let result = to_parts(test);
+        let result = super::to_parts(test);
         assert_eq!(result.len(), 2);
         assert_eq!(&result[0][0], "Hallo");
         assert_eq!(&result[0][1], "Allemaal");
@@ -85,10 +107,22 @@ mod test {
         assert_eq!(result[1].len(), 1);
     }
 
+
     #[test]
-    fn test_to_text() {
-        let test = "Hallo\nAllemaal\r\n\nWat fijn  \n\r\n".to_owned();
-        let result = Parts::from(test).to_string();
-        assert_eq!(result, "Hallo\nAllemaal\n\nWat fijn");
+    fn test_parse_markdown() {
+        let test = "---\nyaml: is_fine\n---\n\nAllemaal\r\n\nWat fijn  \n\r\n".to_owned();
+        let result = super::parse_markdown(test, "---");
+        assert_eq!(result.parts, vec![vec!["Allemaal"], vec!["Wat fijn"]]);
+        assert_eq!(result.frontmatter, Some("yaml: is_fine".to_owned()))
     }
+
+    #[test]
+    fn test_parse_markdown_no_content() {
+        let test = "---\nyaml: is_fine\n---".to_owned();
+        let result = super::parse_markdown(test, "---");
+        assert!(result.parts.is_empty());
+        assert_eq!(result.frontmatter, Some("yaml: is_fine".to_owned()))
+    }
+
+
 }

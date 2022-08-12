@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::pin::Pin;
 
 use async_trait::{async_trait};
-use futures::{Stream, StreamExt, TryStreamExt};
+use futures::{Stream, StreamExt, TryStreamExt, TryFutureExt};
 use futures::future::{ready, Ready};
 use tokio::fs::{read_dir, File, remove_file};
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -41,19 +41,20 @@ where
     }
 
     async fn read_frontmatter(&self) -> Result<String> {
-        let file = File::open(self).await?;
-        let reader = BufReader::new(file).lines();
-        let lines = LinesStream::new(reader).map_err(FileRepoError::from);
-        let part: Vec<String> = 
-            lines
-            .map_err(FileRepoError::from)
+        File::open(self)
+        .map_ok(BufReader::new)
+        .map_ok(|buf_reader| buf_reader.lines())
+        .map_ok(LinesStream::new)
+        .and_then(|stream|
+            stream
             .try_skip_while(|l| ready(Ok(l.trim() != "---")))
             .try_skip_while(|l| ready(Ok(l.trim() == "---")))
             .try_take_while(|l| ready(Ok(l.trim() != "---")))
-            .try_collect()
-            .await?;
-
-        Ok(part.join("\n"))
+            .try_collect::<Vec<String>>()
+        )
+        .map_err(FileRepoError::from)
+        .map_ok(|parts| parts.join("\n"))
+        .await
     }
 
     async fn remove(&self) -> Result<()> {
@@ -62,8 +63,9 @@ where
     }
 
     async fn write_string(&self, s: String) -> Result<()> {
-        tokio::fs::write(self, s).await?;
-        Ok(())
+        tokio::fs::write(self, s)
+        .map_err(FileRepoError::from)
+        .await
     }
 
     async fn get_files<'a, F>(&self, filter: F) -> Result<Pin<Box<dyn Stream<Item=Result<PathBuf>> + Send + 'a>>>
@@ -71,9 +73,8 @@ where
         F: Fn(&PathBuf) -> Ready<bool> + Send + 'a,
     {
         read_dir(self)
-        .await
         .map_err(FileRepoError::from)
-        .map(
+        .map_ok(
             |de| 
                 ReadDirStream::new(de)
                 .map_err(FileRepoError::from)
@@ -81,6 +82,7 @@ where
                 .try_filter(filter)
                 .boxed()
         )
+        .await
     }
     
     fn is_dir(&self) -> Result<()> {

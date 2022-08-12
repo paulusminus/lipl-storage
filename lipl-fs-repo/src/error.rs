@@ -24,3 +24,9 @@ pub enum FileRepoError {
     #[error("Parse error for {0}")]
     Parse(String),
 }
+
+impl Default for FileRepoError {
+    fn default() -> Self {
+        FileRepoError::Parse("Hallo".to_owned())
+    }
+}

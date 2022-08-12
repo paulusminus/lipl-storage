@@ -1,6 +1,5 @@
 use anyhow::Result;
 use lipl_types::LiplRepo;
-use tokio::sync::oneshot;
 use tokio::signal;
 use tracing::{info, error};
 use warp::Filter;
@@ -16,30 +15,23 @@ where
     R: LiplRepo<E> + 'static,
     E: std::error::Error + 'static,
 {
-    let (tx, rx) = oneshot::channel::<()>();
-    let signals = signal::ctrl_c();
-    
-    tokio::task::spawn(async move {
-        signals.await
-        .map(|_| tx.send(()))
-    });
-
     let routes = 
         get_lyric_routes(repo.clone(), constant::LYRIC)
         .or(
             get_playlist_routes(repo.clone(), constant::PLAYLIST)
         )
-        .with(warp::trace::request());
+        .with(warp::trace::request())
+        .recover(crate::recover::handle_rejection);
 
     let (_address, server) = 
         warp::serve(routes)
         .try_bind_with_graceful_shutdown((constant::HOST, port), async move {
-            rx.await.ok();
+            signal::ctrl_c().await.unwrap();
             info!("{}", message::STOPPING);
             if let Err(error) = repo.stop().await {
                 error!("{}", error);
             };
-            info!("{}", message::BACKUP_COMPLETE);
+            info!("{}", message::FINISHED);
         })?;
 
     server.await;

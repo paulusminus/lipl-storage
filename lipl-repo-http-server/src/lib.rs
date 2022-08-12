@@ -6,4 +6,5 @@ mod filter;
 pub mod message;
 mod model;
 pub mod param;
+mod recover;
 pub mod serve;
