@@ -6,7 +6,7 @@ use async_trait::async_trait;
 pub use error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
-use futures::StreamExt;
+use futures::{StreamExt, TryFutureExt};
 use lipl_types::{
     time_it, LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
 };
@@ -56,50 +56,46 @@ impl FileRepo {
                             break;
                         },
                         Request::LyricSummaries(sender) => {
-                            let f = async {
+                            let f = 
                                 io::get_list(
                                     &source_dir,
                                     LYRIC_EXTENSION,
                                     io::get_lyric_summary,
-                                )
-                                .await
-                            };
+                                );
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed("LyricSummaries".to_string()))?;
                         }
                         Request::LyricList(sender) => {
-                            let f = async {
+                            let f = 
                                 io::get_list(
                                     &source_dir, 
                                     LYRIC_EXTENSION, 
                                     io::get_lyric,
-                                )
-                                .await
-                            };
+                                );
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed("LyricList".to_string()))?;
                         }
                         Request::LyricItem(uuid, sender) => {
-                            let f = async {
+                            let f =
                                 io::get_lyric(lyric_path(&uuid))
-                                .await
-                            };
+                            ;
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed(format!("LyricItem {uuid}")))?;
                         }
                         Request::LyricDelete(uuid, sender) => {
                             let f = async {
-                                lyric_path(&uuid)
-                                    .remove()
-                                    .await?;
                                 let playlists =
-                                    io::get_list(
-                                        &source_dir,
-                                        YAML_EXTENSION,
-                                        io::get_playlist
+                                    lyric_path(&uuid)
+                                    .remove()
+                                    .and_then(|_|
+                                        io::get_list(
+                                            &source_dir,
+                                            YAML_EXTENSION,
+                                            io::get_playlist
+                                        )
                                     )
                                     .await?;
                                 for mut playlist in playlists {
@@ -119,16 +115,14 @@ impl FileRepo {
                                 .map_err(|_| ModelError::SendFailed(format!("LyricDelete {uuid}")))?;
                         }
                         Request::LyricPost(lyric, sender) => {
-                            let f = async {
-                                let path = lyric_path(&lyric.id);
+                            let path = lyric_path(&lyric.id);
+                            let f =
                                 io::post_item(
                                     &path,
                                     lyric,
                                 )
-                                .await?;
-                                let lyric = io::get_lyric(&path).await?;
-                                Ok::<Lyric, FileRepoError>(lyric)
-                            };
+                                .and_then(|_| io::get_lyric(&path))
+                            ;
                             sender
                                 .send(
                                     f.await,
@@ -136,47 +130,44 @@ impl FileRepo {
                                 .map_err(|e| ModelError::SendFailed(format!("LyricPost {}", e.unwrap().title)))?;
                         }
                         Request::PlaylistSummaries(sender) => {
-                            let f = async {
+                            let f =
                                 io::get_list(
                                     &source_dir,
                                     YAML_EXTENSION,
                                     io::get_playlist,
                                 )
-                                .await
-                                .map(lipl_types::summaries)
-                            };
+                                .map_ok(lipl_types::summaries)
+                            ;
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed("PlaylistSummaries".to_string()))?;
                         }
                         Request::PlaylistList(sender) => {
-                            let f = async {
+                            let f =
                                 io::get_list(
                                     &source_dir,
                                     YAML_EXTENSION,
                                     io::get_playlist
                                 )
-                                .await
-                            };
+                            ;
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed("PlaylistList".to_string()))?;
                         }
                         Request::PlaylistItem(uuid, sender) => {
-                            let f = async {
+                            let f =
                                 io::get_playlist(playlist_path(&uuid))
-                                .await
-                            };
+                            ;
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed(format!("PlaylistItem {uuid}")))?;
                         }
                         Request::PlaylistDelete(uuid, sender) => {
-                            let f = async {
-                                playlist_path(&uuid)
+                            let path = playlist_path(&uuid);
+                            let f =
+                                path
                                 .remove()
-                                .await
-                            };
+                            ;
                             sender
                                 .send(f.await)
                                 .map_err(|_| ModelError::SendFailed(format!("PlaylistDelete {uuid}")))?;
