@@ -49,4 +49,7 @@ pub enum ModelError {
 
     #[error("Canceled")]
     Canceled(#[from] Canceled),
+
+    #[error("Stopped on request")]
+    Stop,
 }

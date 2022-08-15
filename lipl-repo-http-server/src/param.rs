@@ -1,6 +1,6 @@
 use std::{str::FromStr, pin::Pin, future::Future, fmt::Debug};
 use clap::{Parser, Subcommand};
-use lipl_fs_repo::FileRepo;
+use lipl_fs_repo::{FileRepo};
 use lipl_postgres_repo::{PostgresRepo};
 use lipl_types::{ModelError, error::ModelResult};
 
@@ -75,14 +75,13 @@ impl FromStr for DbType {
         if splitted.len() == 2 {
             let repo_dir = splitted[1].to_owned();
             if splitted[0] == "file" {
+                let repo = FileRepo::new(repo_dir.clone()).map(|s| s.0);
                 return Ok(
                     DbType::File(
                         repo_dir.clone(),
-                        Box::pin(
-                            async move {
-                                FileRepo::new(repo_dir)
-                            }
-                        )
+                        Box::pin(async move {
+                            repo
+                        }) 
                     )
                 );
             }
@@ -108,3 +107,17 @@ impl FromStr for DbType {
     }
 }
 
+
+// pub async fn to_repo_ref<E>(db_type: DbType) -> Result<dyn LiplRepo<E>, ModelError> 
+// where FileRepo: LiplRepo<E>, E: std::error::Error + Into<ModelError>, PostgresRepo: LiplRepo<E> 
+// {
+//     if let DbType::File(dir, file) = db_type {
+//         file.map_ok(|r| r).await
+//     }
+//     else if let DbType::Postgres(connection, postgres) = db_type {
+//         postgres.map_ok(|r| r).await
+//     }
+//     else {
+//         Err(ModelError::Argument("invalid".to_owned()))
+//     }
+// }

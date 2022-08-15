@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::result::Result as StdResult;
 use anyhow::Result;
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
@@ -24,18 +25,18 @@ macro_rules! time_it {
 
 
 #[async_trait]
-pub trait LiplRepo<E: std::error::Error>: Clone + Send + Sync {
-    async fn get_lyrics(&self) -> std::result::Result<Vec<Lyric>, E>;
-    async fn get_lyric_summaries(&self) -> std::result::Result<Vec<Summary>, E>;
-    async fn get_lyric(&self, id: Uuid) -> std::result::Result<Lyric, E>;
-    async fn post_lyric(&self, lyric: Lyric) -> std::result::Result<Lyric, E>;
-    async fn delete_lyric(&self, id: Uuid) -> std::result::Result<(), E>;
-    async fn get_playlists(&self) -> std::result::Result<Vec<Playlist>, E>;
-    async fn get_playlist_summaries(&self) -> std::result::Result<Vec<Summary>, E>;
-    async fn get_playlist(&self, id: Uuid) -> std::result::Result<Playlist, E>;
-    async fn post_playlist(&self, playlist: Playlist) -> std::result::Result<Playlist, E>;
-    async fn delete_playlist(&self, id: Uuid) -> std::result::Result<(), E>;
-    async fn stop(&self) -> std::result::Result<(), E>;
+pub trait LiplRepo<E: std::error::Error>: Clone + Send + Sync + Sized {
+    async fn get_lyrics(&self) -> StdResult<Vec<Lyric>, E>;
+    async fn get_lyric_summaries(&self) -> StdResult<Vec<Summary>, E>;
+    async fn get_lyric(&self, id: Uuid) -> StdResult<Lyric, E>;
+    async fn post_lyric(&self, lyric: Lyric) -> StdResult<Lyric, E>;
+    async fn delete_lyric(&self, id: Uuid) -> StdResult<(), E>;
+    async fn get_playlists(&self) -> StdResult<Vec<Playlist>, E>;
+    async fn get_playlist_summaries(&self) -> StdResult<Vec<Summary>, E>;
+    async fn get_playlist(&self, id: Uuid) -> StdResult<Playlist, E>;
+    async fn post_playlist(&self, playlist: Playlist) -> StdResult<Playlist, E>;
+    async fn delete_playlist(&self, id: Uuid) -> StdResult<(), E>;
+    async fn stop(&self) -> StdResult<(), E>;
 }
 
 pub trait HasSummary {

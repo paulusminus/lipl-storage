@@ -1,19 +1,19 @@
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::path::PathBuf;
 
 use async_trait::async_trait;
 
 pub use error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
-use futures::{StreamExt, TryFutureExt};
+use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt, Future};
 use lipl_types::{
     time_it, LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 
-use tokio::task::JoinHandle;
+use tokio::task::{JoinError};
 
 mod constant;
 mod error;
@@ -23,7 +23,7 @@ mod request;
 
 #[derive(Clone)]
 pub struct FileRepo {
-    join_handle: Arc<JoinHandle<ModelResult<()>>>,
+    // join_handle: Arc<Pin<Box<dyn Future<Output = bool>>>>,
     tx: mpsc::Sender<Request>,
     path: String,
 }
@@ -34,180 +34,192 @@ impl Debug for FileRepo {
     }
 }
 
+fn check_members(playlist: &Playlist, lyric_ids: &[Uuid]) -> impl futures::Future<Output = Result<(), FileRepoError>> {
+    if let Some(member) = playlist.members.iter().find(|member| !lyric_ids.contains(member))
+    {
+        futures::future::ready(Err(FileRepoError::PlaylistInvalidMember(playlist.id.to_string(), member.to_string())))
+    }
+    else {
+        futures::future::ready(Ok(()))
+    }
+}
+
+
+async fn handle_request<P, Q>(request: Request, source_dir: String, lyric_path: P, playlist_path: Q) -> Result<(), ModelError> 
+where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
+{
+    match request {
+        Request::Stop(sender) => {
+            async {
+                Ok::<(), FileRepoError>(())
+            }
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed("Stop".to_string()))
+            .await?;
+            Err(ModelError::Stop)
+        },
+        Request::LyricSummaries(sender) => {
+            io::get_list(
+                &source_dir,
+                LYRIC_EXTENSION,
+                io::get_lyric_summary,
+            )
+            .map(|v|sender.send(v))
+            .map_err(|_| ModelError::SendFailed("LyricSummaries".to_string()))
+            .await
+        }
+        Request::LyricList(sender) => {
+            io::get_list(
+                &source_dir, 
+                LYRIC_EXTENSION, 
+                io::get_lyric,
+            )
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed("LyricList".to_string()))
+            .await
+        }
+        Request::LyricItem(uuid, sender) => {
+            io::get_lyric(lyric_path(&uuid))
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed(format!("LyricItem {uuid}")))
+            .await
+        }
+        Request::LyricDelete(uuid, sender) => {
+            async {
+                let playlists =
+                    lyric_path(&uuid)
+                    .remove()
+                    .and_then(|_|
+                        io::get_list(
+                            &source_dir,
+                            YAML_EXTENSION,
+                            io::get_playlist
+                        )
+                    )
+                    .await?;
+                for mut playlist in playlists {
+                    if playlist.members.contains(&uuid) {
+                        playlist.members = playlist.members.without(&uuid);
+                        io::post_item(
+                            source_dir.full_path(&uuid.to_string(), YAML_EXTENSION),
+                            playlist,
+                        )
+                        .await?;
+                    }
+                }
+                Ok::<(), FileRepoError>(())
+            }
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed(format!("LyricDelete {uuid}")))
+            .await
+        }
+        Request::LyricPost(lyric, sender) => {
+            let path = lyric_path(&lyric.id);
+            io::post_item(
+                &path,
+                lyric,
+            )
+            .and_then(|_| io::get_lyric(&path))
+            .map(|v| sender.send(v))
+            .map_err(|e| ModelError::SendFailed(format!("LyricPost {}", e.unwrap().title)))
+            .await
+        }
+        Request::PlaylistSummaries(sender) => {
+            io::get_list(
+                &source_dir,
+                YAML_EXTENSION,
+                io::get_playlist,
+            )
+            .map_ok(lipl_types::summaries)
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed("PlaylistSummaries".to_string()))
+            .await
+        }
+        Request::PlaylistList(sender) => {
+            io::get_list(
+                &source_dir,
+                YAML_EXTENSION,
+                io::get_playlist
+            )
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed("PlaylistList".to_string()))
+            .await
+        }
+        Request::PlaylistItem(uuid, sender) => {
+            io::get_playlist(playlist_path(&uuid))
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed(format!("PlaylistItem {uuid}")))
+            .await
+        }
+        Request::PlaylistDelete(uuid, sender) => {
+            let path = playlist_path(&uuid);
+            path
+            .remove()
+            .map(|v| sender.send(v))
+            .map_err(|_| ModelError::SendFailed(format!("PlaylistDelete {uuid}")))
+            .await
+        }
+        Request::PlaylistPost(playlist, sender) => {
+            io::get_list(
+                &source_dir,
+                LYRIC_EXTENSION,
+                io::get_lyric_summary,
+            )
+            .map_ok(|summaries| lipl_types::ids(summaries.into_iter()))
+            .and_then(|ids| check_members(&playlist, &ids))
+            .and_then(
+                |_| io::post_item(
+                    playlist_path(&playlist.id),
+                    playlist.clone(),
+                )
+            )
+            .and_then(|_| io::get_playlist(
+                    playlist_path(&playlist.id)
+                )
+            )
+            .map(|v| sender.send(v))
+            .map_err(|e| ModelError::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))
+            .await
+        }
+    }
+}
+
 impl FileRepo {
     pub fn new(
         source_dir: String,
-    ) -> ModelResult<FileRepo> {
+    ) -> ModelResult<(FileRepo, impl Future<Output = Result<bool, JoinError>>)> {
         source_dir.is_dir().map_err(|_| ModelError::NoPath(source_dir.clone().into()))?;
+        let dir = source_dir.clone();
 
-        let (tx, mut rx) = mpsc::channel::<Request>(10);
+        let (tx, rx) = mpsc::channel::<Request>(10);
 
-        Ok(FileRepo {
-            path: source_dir.clone(),
-            tx,
-            join_handle: Arc::new(tokio::spawn(async move {
-                let lyric_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), LYRIC_EXTENSION);
-                let playlist_path = |uuid: &Uuid| source_dir.full_path(&uuid.to_string(), YAML_EXTENSION);
-                while let Some(request) = rx.next().await {
-                    match request {
-                        Request::Stop(sender) => {
-                            sender.send(Ok(()))
-                            .map_err(|_| ModelError::SendFailed("Stop".to_string()))?;
-                            break;
-                        },
-                        Request::LyricSummaries(sender) => {
-                            let f = 
-                                io::get_list(
-                                    &source_dir,
-                                    LYRIC_EXTENSION,
-                                    io::get_lyric_summary,
-                                );
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed("LyricSummaries".to_string()))?;
-                        }
-                        Request::LyricList(sender) => {
-                            let f = 
-                                io::get_list(
-                                    &source_dir, 
-                                    LYRIC_EXTENSION, 
-                                    io::get_lyric,
-                                );
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed("LyricList".to_string()))?;
-                        }
-                        Request::LyricItem(uuid, sender) => {
-                            let f =
-                                io::get_lyric(lyric_path(&uuid))
-                            ;
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed(format!("LyricItem {uuid}")))?;
-                        }
-                        Request::LyricDelete(uuid, sender) => {
-                            let f = async {
-                                let playlists =
-                                    lyric_path(&uuid)
-                                    .remove()
-                                    .and_then(|_|
-                                        io::get_list(
-                                            &source_dir,
-                                            YAML_EXTENSION,
-                                            io::get_playlist
-                                        )
-                                    )
-                                    .await?;
-                                for mut playlist in playlists {
-                                    if playlist.members.contains(&uuid) {
-                                        playlist.members = playlist.members.without(&uuid);
-                                        io::post_item(
-                                            source_dir.full_path(&uuid.to_string(), YAML_EXTENSION),
-                                            playlist,
-                                        )
-                                        .await?;
-                                    }
-                                }
-                                Ok::<(), FileRepoError>(())
-                            };
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed(format!("LyricDelete {uuid}")))?;
-                        }
-                        Request::LyricPost(lyric, sender) => {
-                            let path = lyric_path(&lyric.id);
-                            let f =
-                                io::post_item(
-                                    &path,
-                                    lyric,
-                                )
-                                .and_then(|_| io::get_lyric(&path))
-                            ;
-                            sender
-                                .send(
-                                    f.await,
-                                )
-                                .map_err(|e| ModelError::SendFailed(format!("LyricPost {}", e.unwrap().title)))?;
-                        }
-                        Request::PlaylistSummaries(sender) => {
-                            let f =
-                                io::get_list(
-                                    &source_dir,
-                                    YAML_EXTENSION,
-                                    io::get_playlist,
-                                )
-                                .map_ok(lipl_types::summaries)
-                            ;
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed("PlaylistSummaries".to_string()))?;
-                        }
-                        Request::PlaylistList(sender) => {
-                            let f =
-                                io::get_list(
-                                    &source_dir,
-                                    YAML_EXTENSION,
-                                    io::get_playlist
-                                )
-                            ;
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed("PlaylistList".to_string()))?;
-                        }
-                        Request::PlaylistItem(uuid, sender) => {
-                            let f =
-                                io::get_playlist(playlist_path(&uuid))
-                            ;
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed(format!("PlaylistItem {uuid}")))?;
-                        }
-                        Request::PlaylistDelete(uuid, sender) => {
-                            let path = playlist_path(&uuid);
-                            let f =
-                                path
-                                .remove()
-                            ;
-                            sender
-                                .send(f.await)
-                                .map_err(|_| ModelError::SendFailed(format!("PlaylistDelete {uuid}")))?;
-                        }
-                        Request::PlaylistPost(playlist, sender) => {
-                            let f = async {
-                                let id = playlist.id;
-                                let summaries = io::get_list(
-                                    &source_dir,
-                                    LYRIC_EXTENSION,
-                                    io::get_lyric_summary,
-                                )
-                                .await?;
-                                let lyric_ids = lipl_types::ids(summaries.into_iter());
-                                for member in playlist.members.iter() {
-                                    if !lyric_ids.contains(member) {
-                                        return Err(FileRepoError::PlaylistInvalidMember(
-                                            id.to_string(),
-                                            member.to_string(),
-                                        ));
-                                    }
-                                }
-                                io::post_item(
-                                    playlist_path(&id),
-                                    playlist
-                                )
-                                .await?;
-                                let playlist = io::get_playlist(playlist_path(&id)).await?;
-                                Ok::<Playlist, FileRepoError>(playlist)
-                            };
-                            sender
-                                .send(f.await)
-                                .map_err(|e| ModelError::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))?;
-                        }
-                    }
-                }
+        let join_handle = tokio::spawn(async move {
+            let lyric_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), LYRIC_EXTENSION);
+            let playlist_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), YAML_EXTENSION);
 
-                Ok::<(), ModelError>(())
-            })),
-        })
+            rx
+            .then(|request| 
+                handle_request(
+                    request,
+                    source_dir.clone(),
+                    lyric_path,
+                    playlist_path,
+                )
+            )
+            .try_fold(0usize, |acc, _| async move { Ok(acc + 1) })
+            .await
+            .is_ok()
+        });
+
+        Ok(
+            (
+                FileRepo {
+                    path: dir,
+                    tx,
+                },
+                async move { join_handle.await },
+            )
+        )
     }
 
 }
@@ -287,9 +299,7 @@ impl LiplRepo<FileRepoError> for FileRepo {
 
     #[tracing::instrument]
     async fn stop(&self) -> Result<(), FileRepoError> {
-        time_it!(
-            select(&mut self.tx.clone(), Request::Stop)
-        )
-        .map(|_| self.join_handle.abort())
+        select(&mut self.tx.clone(), Request::Stop).await?;
+        Ok::<(), FileRepoError>(())
     }
 }

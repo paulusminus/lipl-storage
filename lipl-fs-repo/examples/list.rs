@@ -10,7 +10,7 @@ where
 }
 
 pub async fn process() -> anyhow::Result<()> {
-    let repo = FileRepo::new(
+    let (repo, stop) = FileRepo::new(
         "./data/".to_owned(),
     )?;
 
@@ -30,6 +30,7 @@ pub async fn process() -> anyhow::Result<()> {
     .into_iter()
     .for_each(print);
 
+    let _finished = stop.await?;
     Ok(())
 }
 
