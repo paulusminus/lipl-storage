@@ -31,7 +31,7 @@ impl Debug for PostgresRepo {
 }
 
 impl PostgresRepo {
-    pub async fn new(connection_string: String, clear: bool) -> Result<Self> {
+    pub async fn new(connection_string: String, clear: bool) -> Result<PostgresRepo> {
         let pool = pool::get(&connection_string, 16)?;
         if clear {
             for sql in db::DROP.iter() {
@@ -229,7 +229,8 @@ fn to_ok<T>(t: T) -> Result<T> {
 }
 
 #[async_trait]
-impl LiplRepo<PostgresRepoError> for PostgresRepo {
+impl LiplRepo for PostgresRepo {
+    type Error = PostgresRepoError;
 
     #[tracing::instrument]
     async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
@@ -326,3 +327,16 @@ impl LiplRepo<PostgresRepoError> for PostgresRepo {
 }
 
 fn to_unit<T>(_: T) { }
+
+
+#[cfg(test)]
+mod test {
+    use std::mem::size_of;
+
+
+    #[test]
+    fn postgres_repo_is_sized() {
+        assert_eq!(1, 1);
+        assert_eq!(size_of::<super::PostgresRepo>(), 32);
+    }
+}

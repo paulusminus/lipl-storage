@@ -10,7 +10,7 @@ pub struct Serve {
     #[clap(short, long, required = true)]
     pub port: u16,
     #[clap(short, long)]
-    pub source: String,
+    pub source: DbType,
 }
 
 #[derive(Parser, Debug)]
@@ -67,7 +67,6 @@ impl Debug for DbType {
     }
 }
 
-
 impl FromStr for DbType {
     type Err = ModelError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -75,7 +74,9 @@ impl FromStr for DbType {
         if splitted.len() == 2 {
             let repo_dir = splitted[1].to_owned();
             if splitted[0] == "file" {
-                let repo = FileRepo::new(repo_dir.clone()).map(|s| s.0);
+                let repo = 
+                    FileRepo::new(repo_dir.clone())
+                    .map(|s| s.0);
                 return Ok(
                     DbType::File(
                         repo_dir.clone(),
@@ -107,17 +108,15 @@ impl FromStr for DbType {
     }
 }
 
+#[cfg(test)]
+mod test {
+    // use lipl_fs_repo::FileRepoError;
+    // use lipl_types::LiplRepo;
+    // use std::mem::size_of;
 
-// pub async fn to_repo_ref<E>(db_type: DbType) -> Result<dyn LiplRepo<E>, ModelError> 
-// where FileRepo: LiplRepo<E>, E: std::error::Error + Into<ModelError>, PostgresRepo: LiplRepo<E> 
-// {
-//     if let DbType::File(dir, file) = db_type {
-//         file.map_ok(|r| r).await
-//     }
-//     else if let DbType::Postgres(connection, postgres) = db_type {
-//         postgres.map_ok(|r| r).await
-//     }
-//     else {
-//         Err(ModelError::Argument("invalid".to_owned()))
-//     }
-// }
+
+    #[test]
+    fn memsize_of_lipl_repo() {
+        // assert_eq!(size_of::<dyn LiplRepo<FileRepoError>>(), 32);
+    }
+}

@@ -1,7 +1,7 @@
 use futures::channel::oneshot::Canceled;
 use thiserror::{Error};
 
-pub type ModelResult<T> = std::result::Result<T, ModelError>;
+pub type ModelResult<T> = core::result::Result<T, ModelError>;
 
 #[derive(Error, Debug)]
 pub enum ModelError {

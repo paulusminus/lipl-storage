@@ -3,7 +3,7 @@ use anyhow::Result;
 use lipl_types::{LiplRepo, RepoDb};
 use tracing::{info};
 
-pub async fn list<E: std::error::Error>(repo: impl LiplRepo<E>, yaml: bool) -> std::result::Result<(), E> {
+pub async fn list<E: std::error::Error>(repo: impl LiplRepo<Error = E>, yaml: bool) -> std::result::Result<(), E> {
 
     let db = RepoDb {
         lyrics: repo.get_lyrics().await?,
@@ -28,13 +28,17 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
     Ok(())
 }
 
-pub async fn copy<E: std::error::Error + Send + Sync, F: std::error::Error + Send + Sync>(source: impl LiplRepo<E>, target: impl LiplRepo<F>) -> anyhow::Result<()> {
-    for lyric in source.get_lyrics().await.unwrap() {
+pub async fn copy<E, F>(source: impl LiplRepo<Error = E>, target: impl LiplRepo<Error = F>) -> anyhow::Result<()> 
+where 
+    E: std::error::Error + Send + Sync + 'static, 
+    F: std::error::Error + Send + Sync + 'static, 
+{
+    for lyric in source.get_lyrics().await? {
         info!("Copying lyric {} with id {}", lyric.title, lyric.id);
         target.post_lyric(lyric).await.unwrap();
     }
 
-    for playlist in source.get_playlists().await.unwrap() {
+    for playlist in source.get_playlists().await? {
         info!("Copying playlist {} with id {}", playlist.title, playlist.id);
         target.post_playlist(playlist).await.unwrap();
     }

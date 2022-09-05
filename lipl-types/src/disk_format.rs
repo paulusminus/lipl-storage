@@ -1,7 +1,7 @@
-use std::str::{FromStr};
-use std::fmt::{Display, Formatter};
-use std::str::Lines;
-use std::iter::once;
+use core::str::{FromStr};
+use core::fmt::{Display, Formatter};
+use core::str::Lines;
+use core::iter::once;
 
 use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Without, Playlist};
 use crate::error::{ModelError};
@@ -57,7 +57,7 @@ impl FromStr for LyricPost {
 }
 
 impl Display for Lyric {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         let lyric_meta = LyricMeta {
             title: self.title.clone(),
             hash: self.etag(),

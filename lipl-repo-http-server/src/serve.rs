@@ -12,7 +12,7 @@ use crate::param::DbType;
 
 async fn run<R, E>(repo: R, port: u16) -> Result<()> 
 where
-    R: LiplRepo<E> + 'static,
+    R: LiplRepo<Error = E> + 'static,
     E: std::error::Error + 'static,
 {
     let routes = 
@@ -30,8 +30,10 @@ where
             info!("{}", message::STOPPING);
             if let Err(error) = repo.stop().await {
                 error!("{}", error);
-            };
-            info!("{}", message::FINISHED);
+            }
+            else {
+                info!("{}", message::FINISHED);
+            }
         })?;
 
     server.await;
@@ -41,16 +43,13 @@ where
 }
 
 pub async fn serve(param: param::Serve) -> Result<()> {
-
-    match param.source.parse::<DbType>()? {
-        DbType::File(_, file) => {
-            let repo = file.await?;
-            run(repo, param.port).await?;
+    match param.source {
+        DbType::File(_, f) => {
+            run(f.await?, param.port).await?;
 
         },
-        DbType::Postgres(_, postgres) => {
-            let repo = postgres.await?;
-            run(repo, param.port).await?;
+        DbType::Postgres(_, f) => {
+            run(f.await?, param.port).await?;
         }
     }
     Ok(())

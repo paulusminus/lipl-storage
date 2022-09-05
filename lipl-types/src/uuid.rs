@@ -1,6 +1,6 @@
-use std::default::Default;
+use core::default::Default;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::str::FromStr;
+use core::str::FromStr;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use bs58::{decode, encode};
 use crate::error::{ModelError};

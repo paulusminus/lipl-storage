@@ -198,7 +198,8 @@ impl FileRepo {
             let playlist_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), YAML_EXTENSION);
 
             rx
-            .then(|request| 
+            .map(Ok)
+            .try_for_each(|request| 
                 handle_request(
                     request,
                     source_dir.clone(),
@@ -206,7 +207,6 @@ impl FileRepo {
                     playlist_path,
                 )
             )
-            .try_fold(0usize, |acc, _| async move { Ok(acc + 1) })
             .await
             .is_ok()
         });
@@ -225,7 +225,8 @@ impl FileRepo {
 }
 
 #[async_trait]
-impl LiplRepo<FileRepoError> for FileRepo {
+impl LiplRepo for FileRepo {
+    type Error = FileRepoError;
 
     #[tracing::instrument]
     async fn get_lyrics(&self) -> Result<Vec<Lyric>, FileRepoError> {
@@ -301,5 +302,16 @@ impl LiplRepo<FileRepoError> for FileRepo {
     async fn stop(&self) -> Result<(), FileRepoError> {
         select(&mut self.tx.clone(), Request::Stop).await?;
         Ok::<(), FileRepoError>(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::mem::size_of;
+
+
+    #[test]
+    fn file_repo_is_sized() {
+        assert_eq!(size_of::<super::FileRepo>(), 48);
     }
 }

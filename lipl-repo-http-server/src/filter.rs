@@ -20,7 +20,7 @@ macro_rules! and {
 macro_rules! create_fn {
     ($name:ident, $handler:ident) => {
         pub fn $name<R, E>(repo: R, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
-        where R: LiplRepo<E>, E: std::error::Error
+        where R: LiplRepo<Error = E>, E: std::error::Error
         {
             let repo_filter  = warp::any().map(move || repo.clone());
             let prefix = join_paths!(API, VERSION, name);

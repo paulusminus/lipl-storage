@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::result::Result as StdResult;
+use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use core::result::Result as StdResult;
 use anyhow::Result;
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
@@ -25,18 +25,19 @@ macro_rules! time_it {
 
 
 #[async_trait]
-pub trait LiplRepo<E: std::error::Error>: Clone + Send + Sync + Sized {
-    async fn get_lyrics(&self) -> StdResult<Vec<Lyric>, E>;
-    async fn get_lyric_summaries(&self) -> StdResult<Vec<Summary>, E>;
-    async fn get_lyric(&self, id: Uuid) -> StdResult<Lyric, E>;
-    async fn post_lyric(&self, lyric: Lyric) -> StdResult<Lyric, E>;
-    async fn delete_lyric(&self, id: Uuid) -> StdResult<(), E>;
-    async fn get_playlists(&self) -> StdResult<Vec<Playlist>, E>;
-    async fn get_playlist_summaries(&self) -> StdResult<Vec<Summary>, E>;
-    async fn get_playlist(&self, id: Uuid) -> StdResult<Playlist, E>;
-    async fn post_playlist(&self, playlist: Playlist) -> StdResult<Playlist, E>;
-    async fn delete_playlist(&self, id: Uuid) -> StdResult<(), E>;
-    async fn stop(&self) -> StdResult<(), E>;
+pub trait LiplRepo: Clone + Send + Sync {
+    type Error: std::error::Error + Debug + Display;
+    async fn get_lyrics(&self) -> StdResult<Vec<Lyric>, Self::Error>;
+    async fn get_lyric_summaries(&self) -> StdResult<Vec<Summary>, Self::Error>;
+    async fn get_lyric(&self, id: Uuid) -> StdResult<Lyric, Self::Error>;
+    async fn post_lyric(&self, lyric: Lyric) -> StdResult<Lyric, Self::Error>;
+    async fn delete_lyric(&self, id: Uuid) -> StdResult<(), Self::Error>;
+    async fn get_playlists(&self) -> StdResult<Vec<Playlist>, Self::Error>;
+    async fn get_playlist_summaries(&self) -> StdResult<Vec<Summary>, Self::Error>;
+    async fn get_playlist(&self, id: Uuid) -> StdResult<Playlist, Self::Error>;
+    async fn post_playlist(&self, playlist: Playlist) -> StdResult<Playlist, Self::Error>;
+    async fn delete_playlist(&self, id: Uuid) -> StdResult<(), Self::Error>;
+    async fn stop(&self) -> StdResult<(), Self::Error>;
 }
 
 pub trait HasSummary {
@@ -256,7 +257,7 @@ impl RepoDb {
 impl std::fmt::Display for RepoDb {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         let lyrics = 
-            std::iter::once("Lyrics:".to_owned())
+            core::iter::once("Lyrics:".to_owned())
             .chain(
                 self
                 .lyrics
@@ -266,10 +267,10 @@ impl std::fmt::Display for RepoDb {
                 )
             )
             .chain(
-                std::iter::once("".to_owned()),
+                core::iter::once("".to_owned()),
             )
             .chain(
-                std::iter::once(
+                core::iter::once(
                     "Playlists:".to_owned(),
                 )
             )
