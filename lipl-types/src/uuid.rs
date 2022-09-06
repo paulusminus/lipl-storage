@@ -31,8 +31,7 @@ impl FromStr for Uuid {
     type Err = ModelError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut decoded = [0xFF; 16];
-        decode(s).into(&mut decoded)?;
+        let decoded = decode(s).into_vec()?;
         let uuid = uuid::Uuid::from_slice(&decoded)?;
         Ok(Uuid(uuid))
     }

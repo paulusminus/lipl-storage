@@ -3,11 +3,14 @@
 macro_rules! create_handler {
     ($name:ident, $list:ident, $summaries:ident, $item:ident, $delete:ident, $update:ident, $post_type:path, $posted_type:path) => {
         pub mod $name {
+            use std::fmt::Debug;
             use lipl_types::{LiplRepo, Uuid};
+            use tracing::instrument;
             use warp::{Reply, Rejection};
             use warp::reply::with_status;
             use warp::http::status::StatusCode;
             use crate::model::{Query};
+            use crate::error::{RepoError};
 
             pub async fn list_summary<D, E>(db: D) -> Result<impl Reply, Rejection> 
             where D: LiplRepo<Error = E>, E: std::error::Error
@@ -29,24 +32,25 @@ macro_rules! create_handler {
                 }
             }
 
-            pub async fn item<D, E>(id: Uuid, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E>, E: std::error::Error
+            #[instrument]
+            pub async fn item<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
+            where D: LiplRepo<Error = E> + Debug, E: std::error::Error + Into<RepoError>
             {
-                db.$item(id).await
-                .map(|r| warp::reply::json(&r))
-                .map_err(|_| warp::reject::not_found())
+                let uuid = id.parse::<Uuid>().map_err(|e| warp::reject::custom::<RepoError>(e.into()))?;
+                tracing::info!("Uuid: {uuid}");
+                let data = db.$item(uuid).await.map_err(|e| warp::reject::custom::<RepoError>(e.into()))?;
+                Ok(warp::reply::json(&data))
             }
 
             pub async fn post<D, E>(
                 db: D,
                 json: $post_type,
             ) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E>, E: std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
                 let o: $posted_type = (None, json).into();
-                db.$update(o).await
-                .map(|result| with_status(warp::reply::json(&result), StatusCode::CREATED))
-                .map_err(|_| warp::reject::custom(crate::error::PostError {}))
+                let data = db.$update(o).await.map_err(|e| warp::reject::custom::<RepoError>(e.into()))?;
+                Ok(with_status(warp::reply::json(&data), StatusCode::CREATED))
             }
 
             pub async fn delete<D, E>(id: Uuid, db: D) -> Result<impl Reply, Rejection>

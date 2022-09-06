@@ -4,30 +4,40 @@ use tracing::error;
 
 use serde::Serialize;
 use warp::{Rejection, hyper::StatusCode, Reply};
+use crate::error::RepoError;
 
 #[derive(Serialize)]
-struct ErrorMessage {
+struct ErrorMessage<'a> {
     code: u16,
-    message: &'static str,
+    message: &'a str,
 }
 
-impl ErrorMessage {
-    fn new(code: StatusCode, message: &'static str) -> ErrorMessage {
+impl<'a> ErrorMessage<'a> {
+    fn new(code: StatusCode, message: &'a str) -> ErrorMessage {
         ErrorMessage { code: code.as_u16(), message }
     }
 }
 
-pub fn json_response(code: StatusCode, message: &'static str) -> Result<impl Reply, Infallible> {
+pub fn json_response(code: StatusCode, message: &str) -> Result<impl Reply, Infallible> {
     let json = warp::reply::json(&ErrorMessage::new(code, message));
-    Ok(
-        
+    Ok(    
         warp::reply::with_status(json, code)
     )
 }
 
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
-    if err.is_not_found() {
-        return json_response(StatusCode::NOT_FOUND, "NOT_FOUND");
+    if let Some(e) = err.find::<RepoError>() {
+        match e {
+            RepoError::Model(m) => {
+                return json_response(StatusCode::NOT_FOUND, &m.to_string());
+            },
+            RepoError::File(f) => {
+                return json_response(StatusCode::INTERNAL_SERVER_ERROR, &f.to_string());
+            },
+            RepoError::Postgres(p) => {
+                return json_response(StatusCode::INTERNAL_SERVER_ERROR, &p.to_string());
+            }
+        }
     }
     else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
         // This error happens if the body could not be deserialized correctly

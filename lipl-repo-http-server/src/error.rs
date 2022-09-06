@@ -5,11 +5,6 @@ use lipl_types::ModelError;
 
 use warp::reject::Reject;
 
-#[derive(Debug)]
-pub struct PostError;
-
-impl Reject for PostError {}
-
 #[derive(Debug, Error)]
 pub enum RepoError {
     #[error("Postgres: {0}")]
@@ -21,3 +16,5 @@ pub enum RepoError {
     #[error("Model: {0}")]
     Model(#[from] ModelError),
 }
+
+impl Reject for RepoError {}

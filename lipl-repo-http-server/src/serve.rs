@@ -5,6 +5,7 @@ use tracing::{info, error};
 use warp::Filter;
 
 use crate::constant;
+use crate::error::RepoError;
 use crate::message;
 use crate::param;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
@@ -12,8 +13,8 @@ use crate::param::DbType;
 
 async fn run<R, E>(repo: R, port: u16) -> Result<()> 
 where
-    R: LiplRepo<Error = E> + 'static,
-    E: std::error::Error + 'static,
+    R: LiplRepo<Error = E> + 'static + std::fmt::Debug,
+    E: std::error::Error + 'static + Into<RepoError>,
 {
     let routes = 
         get_lyric_routes(repo.clone(), constant::LYRIC)
