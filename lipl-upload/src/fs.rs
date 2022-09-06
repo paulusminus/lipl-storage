@@ -8,7 +8,8 @@ use tokio::fs::{read_dir, read_to_string, DirEntry};
 use crate::api::Api;
 use crate::client::UploadClient;
 use crate::UploadResult;
-use crate::model::{LyricPost};
+use crate::model::lyric_post_from_entry;
+use lipl_types::{Uuid};
 use crate::error::UploadError;
 
 pub struct Entry {
@@ -33,7 +34,7 @@ async fn get_files_stream<P: AsRef<Path>>(path: P) -> UploadResult<impl Stream<I
     Ok(ReadDirStream::new(entries))
 }
 
-pub async fn post_lyrics<'a, P, F, Fut>(path: P, filter: F, client: &'a UploadClient) -> UploadResult<impl TryStream<Ok=String, Error=UploadError> + 'a>
+pub async fn post_lyrics<'a, P, F, Fut>(path: P, filter: F, client: &'a UploadClient) -> UploadResult<impl TryStream<Ok=Uuid, Error=UploadError> + 'a>
 where 
     P: AsRef<Path> + 'a,
     F: Fn(&PathBuf) -> Fut + 'a,
@@ -46,7 +47,7 @@ where
         .map_err(UploadError::from)
         .try_filter(filter)
         .and_then(get_entry)
-        .map_ok(LyricPost::from)
+        .map_ok(lyric_post_from_entry)
         .and_then(|lp| client.lyric_insert(lp))
         .map_ok(|lyric| lyric.id)
     )

@@ -29,13 +29,13 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
     if let Some(e) = err.find::<RepoError>() {
         match e {
             RepoError::Model(m) => {
-                return json_response(StatusCode::NOT_FOUND, &m.to_string());
+                json_response(StatusCode::NOT_FOUND, &m.to_string())
             },
             RepoError::File(f) => {
-                return json_response(StatusCode::INTERNAL_SERVER_ERROR, &f.to_string());
+                json_response(StatusCode::INTERNAL_SERVER_ERROR, &f.to_string())
             },
             RepoError::Postgres(p) => {
-                return json_response(StatusCode::INTERNAL_SERVER_ERROR, &p.to_string());
+                json_response(StatusCode::INTERNAL_SERVER_ERROR, &p.to_string())
             }
         }
     }
@@ -52,13 +52,13 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
             }
             None => "BAD_REQUEST",
         };
-        return json_response(StatusCode::BAD_REQUEST, message);
+        json_response(StatusCode::BAD_REQUEST, message)
     }
-    else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
-        return json_response(StatusCode::METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED");
+    else if err.find::<warp::reject::MethodNotAllowed>().is_some() {
+        json_response(StatusCode::METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED")
     } 
     else {
         error!("unhandled rejection: {:?}", err);
-        return json_response(StatusCode::INTERNAL_SERVER_ERROR, "UNHANDLED_REJECTION");
+        json_response(StatusCode::INTERNAL_SERVER_ERROR, "UNHANDLED_REJECTION")
     }
 }

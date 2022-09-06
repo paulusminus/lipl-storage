@@ -9,8 +9,9 @@ use crate::api::Api;
 use crate::error::UploadError;
 use clap::Parser;
 use futures::{Future, TryStreamExt, TryFutureExt};
+use lipl_types::{Summary, Uuid, PlaylistPost};
 use std::time::Instant;
-use crate::model::{PlaylistPost, Summary, try_iter};
+use crate::model::{try_iter};
 
 pub type UploadResult<T> = std::result::Result<T, UploadError>;
 
@@ -55,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
             &client,
         )
         .await?
-        .try_collect::<Vec<String>>()
+        .try_collect::<Vec<Uuid>>()
         .await?;
 
     ids.iter().for_each(

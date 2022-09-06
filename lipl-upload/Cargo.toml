@@ -14,6 +14,7 @@ futures = "0.3"
 hyper = { version = "0.14", default-features = false, features = ["client", "http2"] }
 hyper-rustls = { version = "0.23", features = ["webpki-roots"] }
 lazy_static = "1"
+lipl-types = { path = "../lipl-types" }
 regex = "1"
 parts = { path = "../parts" }
 serde = { version = "1", features = ["derive"] }

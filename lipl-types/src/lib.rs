@@ -51,7 +51,7 @@ where
     fn without(self, t: &T) -> Self;
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Lyric {
     pub id: Uuid,
     pub title: String,

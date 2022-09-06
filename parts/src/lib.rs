@@ -26,7 +26,7 @@ fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
     if 
         !parts.is_empty()
         && !parts[0].is_empty()
-        && parts[0][0] == yaml_separator.to_owned() 
+        && parts[0][0] == *yaml_separator
     {
         Markdown {
             frontmatter: Some(

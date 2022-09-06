@@ -1,16 +1,15 @@
 use async_trait::async_trait;
-use crate::model::{Lyric, LyricPost, Playlist, PlaylistPost, Summary};
+use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
 use crate::UploadResult;
 use crate::client::UploadClient;
-
 
 #[async_trait]
 pub trait Api {
     async fn lyric_summaries(&self) -> UploadResult<Vec<Summary>>;
-    async fn lyric_delete(&self, id: String) -> UploadResult<()>;
+    async fn lyric_delete(&self, id: Uuid) -> UploadResult<()>;
     async fn lyric_insert(&self, lyric_post: LyricPost) -> UploadResult<Lyric>;
     async fn playlist_summaries(&self) -> UploadResult<Vec<Summary>>;
-    async fn playlist_delete(&self, id: String) -> UploadResult<()>;
+    async fn playlist_delete(&self, id: Uuid) -> UploadResult<()>;
     async fn playlist_insert(&self, playlist_post: PlaylistPost) -> UploadResult<Playlist>;
 }
 
@@ -20,7 +19,7 @@ impl Api for UploadClient {
         self.get_object("lyric").await
     }
 
-    async fn lyric_delete(&self, id: String) -> UploadResult<()> {
+    async fn lyric_delete(&self, id: Uuid) -> UploadResult<()> {
         self.delete_object(&format!("lyric/{}", id)).await
     }
 
@@ -32,7 +31,7 @@ impl Api for UploadClient {
         self.get_object("playlist").await
     }
 
-    async fn playlist_delete(&self, id: String) -> UploadResult<()> {
+    async fn playlist_delete(&self, id: Uuid) -> UploadResult<()> {
         self.delete_object(&format!("playlist/{}", id)).await
     }
 

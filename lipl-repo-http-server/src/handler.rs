@@ -5,7 +5,7 @@ macro_rules! create_handler {
         pub mod $name {
             use lipl_types::{LiplRepo, Uuid};
             use warp::{Reply, Rejection};
-            use warp::reply::with_status;
+            use warp::reply::{json, with_status};
             use warp::http::status::StatusCode;
             use crate::model::{Query};
             use crate::error::{RepoError};
@@ -14,7 +14,7 @@ macro_rules! create_handler {
             where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
                 let data = db.$summaries().await.map_err(reject)?;
-                Ok(warp::reply::json(&data))
+                Ok(json(&data))
             }
 
             pub async fn list<D, E>(db: D, query: Query) -> Result<impl Reply, Rejection>
@@ -22,7 +22,7 @@ macro_rules! create_handler {
             {
                 if query.full {
                     let data = db.$list().await.map_err(reject)?;
-                    Ok(warp::reply::json(&data))
+                    Ok(json(&data))
                 } else {
                     Err(warp::reject::not_found())
                 }
@@ -33,22 +33,22 @@ macro_rules! create_handler {
             }
 
             pub async fn item<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E>, E: std::error::Error + Into<RepoError>
+            where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
                 let uuid = id.parse::<Uuid>().map_err(reject)?;
                 let data = db.$item(uuid).await.map_err(reject)?;
-                Ok(warp::reply::json(&data))
+                Ok(json(&data))
             }
 
             pub async fn post<D, E>(
                 db: D,
-                json: $post_type,
+                object: $post_type,
             ) -> Result<impl Reply, Rejection>
             where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
-                let o: $posted_type = (None, json).into();
+                let o: $posted_type = (None, object).into();
                 let data = db.$update(o).await.map_err(reject)?;
-                Ok(with_status(warp::reply::json(&data), StatusCode::CREATED))
+                Ok(with_status(json(&data), StatusCode::CREATED))
             }
 
             pub async fn delete<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
@@ -62,14 +62,14 @@ macro_rules! create_handler {
             pub async fn put<D, E>(
                 id: String,
                 db: D,
-                json: $post_type,
+                object: $post_type,
             ) -> Result<impl Reply, Rejection>
             where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
                 let uuid = id.parse::<Uuid>().map_err(reject)?;
-                let o: $posted_type = (Some(uuid), json).into();
+                let o: $posted_type = (Some(uuid), object).into();
                 let data = db.$update(o).await.map_err(reject)?;
-                Ok(warp::reply::json(&data))
+                Ok(json(&data))
             }
         }
     };

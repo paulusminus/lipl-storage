@@ -79,7 +79,7 @@ impl FromStr for DbType {
                     .map(|s| s.0);
                 return Ok(
                     DbType::File(
-                        repo_dir.clone(),
+                        repo_dir,
                         Box::pin(async move {
                             repo
                         }) 
