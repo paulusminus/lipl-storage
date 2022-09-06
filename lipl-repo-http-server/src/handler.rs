@@ -3,9 +3,7 @@
 macro_rules! create_handler {
     ($name:ident, $list:ident, $summaries:ident, $item:ident, $delete:ident, $update:ident, $post_type:path, $posted_type:path) => {
         pub mod $name {
-            use std::fmt::Debug;
             use lipl_types::{LiplRepo, Uuid};
-            use tracing::instrument;
             use warp::{Reply, Rejection};
             use warp::reply::with_status;
             use warp::http::status::StatusCode;
@@ -13,32 +11,32 @@ macro_rules! create_handler {
             use crate::error::{RepoError};
 
             pub async fn list_summary<D, E>(db: D) -> Result<impl Reply, Rejection> 
-            where D: LiplRepo<Error = E>, E: std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
-                db.$summaries().await
-                .map(|result| warp::reply::json(&result))
-                .map_err(|_| warp::reject::not_found())
+                let data = db.$summaries().await.map_err(reject)?;
+                Ok(warp::reply::json(&data))
             }
 
             pub async fn list<D, E>(db: D, query: Query) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E>, E: std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
                 if query.full {
-                    db.$list().await
-                    .map(|result| warp::reply::json(&result))
-                    .map_err(|_| warp::reject::not_found())
+                    let data = db.$list().await.map_err(reject)?;
+                    Ok(warp::reply::json(&data))
                 } else {
                     Err(warp::reject::not_found())
                 }
             }
 
-            #[instrument]
+            fn reject<E: Into<RepoError>>(e: E) -> Rejection {
+                warp::reject::custom::<RepoError>(e.into())
+            }
+
             pub async fn item<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E> + Debug, E: std::error::Error + Into<RepoError>
+            where D: LiplRepo<Error = E>, E: std::error::Error + Into<RepoError>
             {
-                let uuid = id.parse::<Uuid>().map_err(|e| warp::reject::custom::<RepoError>(e.into()))?;
-                tracing::info!("Uuid: {uuid}");
-                let data = db.$item(uuid).await.map_err(|e| warp::reject::custom::<RepoError>(e.into()))?;
+                let uuid = id.parse::<Uuid>().map_err(reject)?;
+                let data = db.$item(uuid).await.map_err(reject)?;
                 Ok(warp::reply::json(&data))
             }
 
@@ -49,29 +47,29 @@ macro_rules! create_handler {
             where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
                 let o: $posted_type = (None, json).into();
-                let data = db.$update(o).await.map_err(|e| warp::reject::custom::<RepoError>(e.into()))?;
+                let data = db.$update(o).await.map_err(reject)?;
                 Ok(with_status(warp::reply::json(&data), StatusCode::CREATED))
             }
 
-            pub async fn delete<D, E>(id: Uuid, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E>, E: std::error::Error
+            pub async fn delete<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
+            where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
-                db.$delete(id).await
-                .map(|_| with_status(warp::reply::reply(), StatusCode::NO_CONTENT))
-                .map_err(|_| warp::reject::not_found())
+                let uuid = id.parse::<Uuid>().map_err(reject)?;
+                db.$delete(uuid).await.map_err(reject)?;
+                Ok(with_status(warp::reply::reply(), StatusCode::NO_CONTENT))
             }
 
             pub async fn put<D, E>(
-                id: Uuid,
+                id: String,
                 db: D,
                 json: $post_type,
             ) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<Error = E>, E: std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError>
             {
-                let o: $posted_type = (Some(id), json).into();
-                db.$update(o).await
-                .map(|result| warp::reply::json(&result))
-                .map_err(|_| warp::reject::not_found())
+                let uuid = id.parse::<Uuid>().map_err(reject)?;
+                let o: $posted_type = (Some(uuid), json).into();
+                let data = db.$update(o).await.map_err(reject)?;
+                Ok(warp::reply::json(&data))
             }
         }
     };
