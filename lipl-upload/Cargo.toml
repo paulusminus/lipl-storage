@@ -9,16 +9,12 @@ edition = "2021"
 async-trait = "0.1"
 anyhow = "1"
 clap = { version = "3", features = ["derive"] }
-flate2 = { version = "1", default-features = false, features = ["zlib"] }
 futures = "0.3"
-hyper = { version = "0.14", default-features = false, features = ["client", "http2"] }
-hyper-rustls = { version = "0.23", features = ["webpki-roots"] }
 lazy_static = "1"
 lipl-types = { path = "../lipl-types" }
 regex = "1"
 parts = { path = "../parts" }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+rest-api-client = { path = "../rest-api-client" }
 thiserror = "1"
 tokio = { version = "1", features = ["fs", "macros", "rt-multi-thread"] }
 tokio-stream = { version = "0.1", features = ["fs"] }

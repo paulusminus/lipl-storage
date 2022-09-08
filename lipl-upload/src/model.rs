@@ -1,8 +1,7 @@
 use lipl_types::LyricPost;
-use crate::error::UploadError;
 use futures::TryStream;
 use futures::stream::iter;
-use crate::{fs, UploadResult};
+use crate::{fs, UploadResult, error::UploadError};
 use parts::{to_parts};
 
 pub fn lyric_post_from_entry(entry: fs::Entry) -> LyricPost {

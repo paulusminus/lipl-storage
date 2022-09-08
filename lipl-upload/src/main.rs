@@ -1,15 +1,16 @@
 mod api;
 mod args;
-mod client;
 mod error;
 mod fs;
 mod model;
 
 use crate::api::Api;
 use crate::error::UploadError;
+use api::UploadClient;
 use clap::Parser;
 use futures::{Future, TryStreamExt, TryFutureExt};
 use lipl_types::{Summary, Uuid, PlaylistPost};
+use rest_api_client::{ApiClient};
 use std::time::Instant;
 use crate::model::{try_iter};
 
@@ -35,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
     let now = Instant::now();
     let args = args::Args::parse();
 
-    let client = crate::client::UploadClient::new(args.prefix);
+    let client: UploadClient = ApiClient::new(args.prefix).into();
 
     delete_collection(
         client.playlist_summaries(),

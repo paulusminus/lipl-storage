@@ -2,15 +2,15 @@
 
 members = [
     "lipl-repo-http-server",
-#    "lipl-io",
     "lipl-fs-repo",
     "lipl-postgres-repo",
     "lipl-types",
     "lipl-upload",
     "parts",
+    "rest-api-client",
 ]
 
 [profile.release]
-# lto = true
-# strip = true
-# opt-level = "z"
+lto = true
+strip = true
+opt-level = "z"
