@@ -3,8 +3,6 @@ name = "timeit-test"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 timeit = { path = "../timeit" }
 tokio = { version = "1.21.2", features = ["fs", "macros", "rt"] }

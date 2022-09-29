@@ -1,6 +1,6 @@
 [package]
 name = "timeit"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [lib]
@@ -9,3 +9,7 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0", features = ["full"] }
 quote = "1.0"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["fs"] }
+tracing = "0.1"
