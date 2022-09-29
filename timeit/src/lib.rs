@@ -20,7 +20,7 @@
     )
 ))]
 
-//! Attribute Procedural Macro for tracing elapsed time
+//! This crate contains one Attribute Procedural Macro for tracing elapsed time
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, ItemFn};
@@ -40,34 +40,34 @@ fn token_stream_with_error(mut tokens: TokenStream, error: syn::Error) -> TokenS
 /// # Example
 /// 
 /// ```
+/// use futures::executor::block_on;
+/// use futures::future::ready;
 /// use timeit::timeit;
-/// use tokio::fs::read_to_string;
-/// use tokio_test::block_on;
 /// 
 /// #[timeit]
-/// async fn test() -> Result<String, std::io::Error> {
-///     read_to_string("Cargo.toml").await
+/// async fn test() -> &'static str {
+///     ready("Cargo.toml").await
 /// }
 /// 
-/// assert!(block_on(async { test().await }).is_ok());
+/// assert_eq!(block_on(test()), "Cargo.toml");
 /// ```
 /// 
 /// this example is equivalent to the following code
 /// 
 /// ```
+/// use futures::executor::block_on;
+/// use futures::future::ready;
 /// use tracing::{instrument, trace};
-/// use tokio::fs::read_to_string;
-/// use tokio_test::block_on;
 /// 
 /// #[instrument]
-/// async fn test() -> Result<String, std::io::Error> {
+/// async fn test() -> &'static str {
 ///     let now = std::time::Instant::now();
-///     let result = async move { read_to_string("Cargo.toml").await }.await;
-///     trace!("Function execution took {:?}", now.elapsed());
+///     let result = async move { ready("Cargo.toml").await }.await;
+///     trace!("Execution took {:?}", now.elapsed());
 ///     result
 /// }
 /// 
-/// assert!(block_on(async { test().await }).is_ok());
+/// assert_eq!(block_on(test()), "Cargo.toml");
 /// ```
 #[proc_macro_attribute]
 pub fn timeit(_args: TokenStream, input: TokenStream) -> TokenStream {
@@ -92,7 +92,7 @@ pub fn timeit(_args: TokenStream, input: TokenStream) -> TokenStream {
             #vis #sig {
                 let now = ::std::time::Instant::now();
                 let result = async move #block.await;
-                ::tracing::trace!("function execution took {:?}", now.elapsed());
+                ::tracing::trace!("Execution took {:?}", now.elapsed());
                 result
             }
         }

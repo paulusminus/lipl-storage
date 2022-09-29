@@ -17,8 +17,7 @@ quote = "1"
 syn = { version = "1.0", features = ["full"] }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["fs"] }
-tokio-test = "0.4"
+futures = { version = "0.3", features = ["executor"] }
 tracing = "0.1"
 
 [package.metadata.docs.rs]
