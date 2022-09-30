@@ -9,7 +9,6 @@ members = [
     "parts",
     "rest-api-client",
     "timeit",
-    "timeit-test",
 ]
 
 [profile.release]

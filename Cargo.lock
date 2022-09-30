@@ -1510,15 +1510,6 @@ dependencies = [
  "quote",
  "syn",
  "tracing",
-]
-
-[[package]]
-name = "timeit-test"
-version = "0.1.0"
-dependencies = [
- "timeit",
- "tokio",
- "tracing",
  "tracing-subscriber",
 ]
 
