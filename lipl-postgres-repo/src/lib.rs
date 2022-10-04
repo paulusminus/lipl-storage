@@ -16,7 +16,7 @@ mod error;
 pub mod pool;
 mod macros;
 
-type Result<T> = std::result::Result<T, PostgresRepoError>;
+type PostgresResult<T> = std::result::Result<T, PostgresRepoError>;
 
 #[derive(Clone)]
 pub struct PostgresRepo {
@@ -31,7 +31,7 @@ impl Debug for PostgresRepo {
 }
 
 impl PostgresRepo {
-    pub async fn new(connection_string: String, clear: bool) -> Result<PostgresRepo> {
+    pub async fn new(connection_string: String, clear: bool) -> PostgresResult<PostgresRepo> {
         let pool = pool::get(&connection_string, 16)?;
         if clear {
             for sql in db::DROP.iter() {
@@ -158,26 +158,26 @@ impl PostgresRepo {
     );
 }
 
-fn get_id(row: &Row) -> Result<Uuid> {
+fn get_id(row: &Row) -> PostgresResult<Uuid> {
     row.try_get::<&str, uuid::Uuid>("id")
     .map_err(PostgresRepoError::from)
     .map(Uuid::from)
 }
 
 #[allow(clippy::map_identity)]
-fn get_title(row: &Row) -> Result<String> {
+fn get_title(row: &Row) -> PostgresResult<String> {
     row.try_get::<&str, String>("title")
     .map_err(PostgresRepoError::from)
     .map(std::convert::identity)
 }
 
-fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
+fn get_parts(row: &Row) -> PostgresResult<Vec<Vec<String>>> {
     row.try_get::<&str, String>("parts")
     .map_err(PostgresRepoError::from)
     .map(to_parts)
 }
 
-fn get_members(row: &Row) -> Result<Vec<Uuid>> {
+fn get_members(row: &Row) -> PostgresResult<Vec<Uuid>> {
     row.try_get::<&str, Vec<uuid::Uuid>>("members")
     .map_err(PostgresRepoError::from)
     .map(convert_vec(Uuid::from))
@@ -189,13 +189,13 @@ where F: Fn(T) -> U + Copy
     move |v| v.into_iter().map(f).collect()
 }
 
-fn try_convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> Result<Vec<U>>
-where F: Fn(T) -> Result<U> + Copy
+fn try_convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> PostgresResult<Vec<U>>
+where F: Fn(T) -> PostgresResult<U> + Copy
 {
     move |v| v.into_iter().map(f).collect()
 }
 
-fn to_lyric(row: Row) -> Result<Lyric> {
+fn to_lyric(row: Row) -> PostgresResult<Lyric> {
     Ok(
         Lyric {
             id: get_id(&row)?,
@@ -205,7 +205,7 @@ fn to_lyric(row: Row) -> Result<Lyric> {
     )    
 }
 
-fn to_playlist(row: Row) -> Result<Playlist> {
+fn to_playlist(row: Row) -> PostgresResult<Playlist> {
     Ok(
         Playlist {
             id: get_id(&row)?,
@@ -215,7 +215,7 @@ fn to_playlist(row: Row) -> Result<Playlist> {
     )
 }
 
-fn to_summary(row: Row) -> Result<Summary> {
+fn to_summary(row: Row) -> PostgresResult<Summary> {
     Ok(
         Summary {
             id: get_id(&row)?,
@@ -224,7 +224,7 @@ fn to_summary(row: Row) -> Result<Summary> {
     )
 }
 
-fn to_ok<T>(t: T) -> Result<T> {
+fn to_ok<T>(t: T) -> PostgresResult<T> {
     Ok(t)
 }
 
@@ -233,28 +233,28 @@ impl LiplRepo for PostgresRepo {
     type Error = PostgresRepoError;
 
     #[tracing::instrument]
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
         time_it!(
             self.lyrics()
         )
     }
 
     #[tracing::instrument]
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
         time_it!(
             self.lyric_summaries()
         )
     }
 
     #[tracing::instrument]
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric> {
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
         time_it!(
             self.lyric_detail(id.inner())
         )
     }
 
     #[tracing::instrument]
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric> {
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
         time_it!(
             self.upsert_lyric(
                 lyric.id.inner(),
@@ -268,7 +268,7 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn delete_lyric(&self, id: Uuid) -> Result<()> {
+    async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
         time_it!(
             self.lyric_delete(id.inner())
             .map_ok(to_unit)
@@ -276,28 +276,28 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn get_playlists(&self) -> Result<Vec<Playlist>> {
+    async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
         time_it!(
             self.playlists()
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
         time_it!(
             self.playlist_summaries()
         )
     }
 
     #[tracing::instrument]
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist> {
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
         time_it!(
             self.playlist_detail(id.inner())
         )
     }
 
     #[tracing::instrument]
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist> {
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
         time_it!(
             self.upsert_playlist(
                 playlist.id.inner(),
@@ -309,7 +309,7 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn delete_playlist(&self, id: Uuid) -> Result<()> {
+    async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
         time_it!(
             self.playlist_delete(id.inner())
             .map_ok(to_unit)
@@ -317,7 +317,7 @@ impl LiplRepo for PostgresRepo {
     }
 
     #[tracing::instrument]
-    async fn stop(&self) -> Result<()> {
+    async fn stop(&self) -> Result<(), Self::Error> {
         time_it!(
             async {
                 Ok::<(), PostgresRepoError>(())

@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use lipl_postgres_repo::{PostgresRepo};
 use lipl_types::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
 
@@ -9,12 +7,11 @@ const MOLEN: &str = include_str!("./Molen.md");
 const SINTERKLAAS: &str = include_str!("./Sinterklaas.md");
 
 fn create_lyric(text: &str) -> Lyric {
-    Lyric::from(
-        (
-            None,
-            LyricPost::from_str(text).unwrap(),
-        )
+    (
+        None,
+        text.parse::<LyricPost>().unwrap(),
     )
+    .into()
 }
 
 #[tokio::test]

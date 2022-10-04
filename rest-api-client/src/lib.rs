@@ -12,6 +12,6 @@ pub type ApiResult<T> = std::result::Result<T, ApiError>;
 #[async_trait]
 pub trait ApiRequest {
     async fn get<T: DeserializeOwned>(&self, uri: &str) -> ApiResult<T>;
-    async fn insert<T: Serialize + Send, U: DeserializeOwned>(&self, uri: &str, object: T) -> ApiResult<U>;
+    async fn post<T: Serialize + Send + Sync, U: DeserializeOwned>(&self, uri: &str, object: T) -> ApiResult<U>;
     async fn delete(&self, uri: &str) -> ApiResult<()>;
 }

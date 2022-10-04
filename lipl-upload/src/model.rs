@@ -4,18 +4,12 @@ use futures::stream::iter;
 use crate::{fs, UploadResult, error::UploadError};
 use parts::{to_parts};
 
-pub fn lyric_post_from_entry(entry: fs::Entry) -> LyricPost {
-    let title = 
-        entry
-        .path
-        .file_stem()
-        .unwrap()
-        .to_string_lossy()
-        .to_string();
-    let parts = to_parts(entry.contents);
-    LyricPost {
-        title,
-        parts,
+impl From<fs::Entry> for LyricPost {
+    fn from(entry: fs::Entry) -> Self {
+        Self {
+            title: entry.title(),
+            parts: to_parts(entry.contents),
+        }
     }
 }
 

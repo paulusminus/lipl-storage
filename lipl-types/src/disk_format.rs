@@ -64,7 +64,7 @@ impl Display for Lyric {
         };
         let yaml = serde_yaml::to_string(&lyric_meta).unwrap();
         let parts_string: String = self.parts.iter().map(|p| p.join("  \n")).collect::<Vec<_>>().join("\n\n");
-        write!(f, "---\n{}---\n\n{}", yaml, parts_string)
+        write!(f, "{YAML_PREFIX}\n{yaml}{YAML_PREFIX}\n\n{parts_string}")
     }
 }
 

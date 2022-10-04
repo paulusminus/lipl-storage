@@ -7,8 +7,7 @@ use tokio_stream::wrappers::ReadDirStream;
 use tokio::fs::{read_dir, read_to_string, DirEntry};
 use crate::UploadResult;
 use crate::api::{UploadClient, Api};
-use crate::model::lyric_post_from_entry;
-use lipl_types::{Uuid};
+use lipl_types::{Uuid, LyricPost};
 use crate::error::UploadError;
 
 pub struct Entry {
@@ -16,11 +15,24 @@ pub struct Entry {
     pub contents: String,
 }
 
-async fn get_entry<P>(path: P) -> UploadResult<Entry> 
+impl Entry {
+    pub fn title(&self) -> String {
+        self
+        .path
+        .file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string()
+    }
+}
+
+async fn entry_from_file<P>(path: P) -> UploadResult<Entry> 
 where P: AsRef<Path>
 {
-    let contents = read_to_string(path.as_ref()).await?;
-    Ok(Entry { path: path.as_ref().to_path_buf(), contents })
+    read_to_string(path.as_ref())
+    .await
+    .map_err(UploadError::from)
+    .map(|contents| Entry { path: path.as_ref().to_path_buf(), contents })
 }
 
 pub fn extension_filter(extension: &str) -> impl Fn(&PathBuf) -> Ready<bool> + '_
@@ -29,8 +41,10 @@ pub fn extension_filter(extension: &str) -> impl Fn(&PathBuf) -> Ready<bool> + '
 }
 
 async fn get_files_stream<P: AsRef<Path>>(path: P) -> UploadResult<impl Stream<Item=Result<DirEntry, IOError>>> {
-    let entries = read_dir(path.as_ref()).await?;
-    Ok(ReadDirStream::new(entries))
+    read_dir(path.as_ref())
+    .await
+    .map_err(UploadError::from)
+    .map(ReadDirStream::new)
 }
 
 pub async fn post_lyrics<'a, P, F, Fut>(path: P, filter: F, client: &'a UploadClient) -> UploadResult<impl TryStream<Ok=Uuid, Error=UploadError> + 'a>
@@ -45,8 +59,8 @@ where
         s.map_ok(|de| de.path())
         .map_err(UploadError::from)
         .try_filter(filter)
-        .and_then(get_entry)
-        .map_ok(lyric_post_from_entry)
+        .and_then(entry_from_file)
+        .map_ok(LyricPost::from)
         .and_then(|lp| client.lyric_insert(lp))
         .map_ok(|lyric| lyric.id)
     )

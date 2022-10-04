@@ -36,7 +36,7 @@ pub enum ModelError {
     NoPath(std::path::PathBuf),
 
     #[error("Argument error: {0}")]
-    Argument(String),
+    Argument(&'static str),
 
     #[error("Directory does not exist: {0}")]
     NonExistingDirectory(std::path::PathBuf),

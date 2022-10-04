@@ -29,26 +29,38 @@ impl From<ApiClient> for UploadClient {
 #[async_trait]
 impl Api for UploadClient {
     async fn lyric_summaries(&self) -> UploadResult<Vec<Summary>> {
-        self.inner.get("lyric").await.map_err(UploadError::from)
+        self.inner.get("lyric")
+        .await
+        .map_err(UploadError::from)
     }
 
     async fn lyric_delete(&self, id: Uuid) -> UploadResult<()> {
-        self.inner.delete(&format!("lyric/{}", id)).await.map_err(UploadError::from)
+        self.inner.delete(&format!("lyric/{}", id))
+        .await
+        .map_err(UploadError::from)
     }
 
     async fn lyric_insert(&self, lyric_post: LyricPost) -> UploadResult<Lyric> {
-        self.inner.insert("lyric", lyric_post).await.map_err(UploadError::from)
+        self.inner.post("lyric", lyric_post)
+        .await
+        .map_err(UploadError::from)
     }
 
     async fn playlist_summaries(&self) -> UploadResult<Vec<Summary>> {
-        self.inner.get("playlist").await.map_err(UploadError::from)
+        self.inner.get("playlist")
+        .await
+        .map_err(UploadError::from)
     }
 
     async fn playlist_delete(&self, id: Uuid) -> UploadResult<()> {
-        self.inner.delete(&format!("playlist/{}", id)).await.map_err(UploadError::from)
+        self.inner.delete(&format!("playlist/{}", id))
+        .await
+        .map_err(UploadError::from)
     }
 
     async fn playlist_insert(&self, playlist_post: PlaylistPost) -> UploadResult<Playlist> {
-        self.inner.insert("playlist", playlist_post).await.map_err(UploadError::from)
+        self.inner.post("playlist", playlist_post)
+        .await
+        .map_err(UploadError::from)
     }
 }

@@ -94,17 +94,17 @@ impl FromStr for DbType {
                             async move {
                                 PostgresRepo::new(repo_dir, false)
                                 .await
-                                .map_err(|_| ModelError::Argument("Invalid postgres connection string".to_owned()))
+                                .map_err(|_| ModelError::Argument("Invalid postgres connection string"))
                             }
                         )
                     )
                 );
             }
             else {
-                return Err(ModelError::Argument("Unknown prefix for db connection string".to_owned()));
+                return Err(ModelError::Argument("Unknown prefix for db connection string"));
             }
         }
-        Err(ModelError::Argument("Unknown format for db connection string. Use '<PREFIX>:<Connection string>'".to_owned()))
+        Err(ModelError::Argument("Unknown format for db connection string. Use '<PREFIX>:<Connection string>'"))
     }
 }
 

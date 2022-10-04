@@ -7,7 +7,7 @@ pub struct Args {
     pub source_path: String,
     #[clap(short, long, required = true, help = "API Prefix")]
     pub prefix: String,
-    #[clap(short, long, required = true, help = "File with this extension are to be uploaded")]
+    #[clap(short, long, required = true, help = "File with this extension is to be uploaded")]
     pub filter: String,
     #[clap(required = true, help = "Sets the name of the playlist where uploaded lyrics are to be made member of")]
     pub playlist_name: String,
