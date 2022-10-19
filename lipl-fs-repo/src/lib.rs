@@ -217,7 +217,7 @@ impl FileRepo {
                     path: dir,
                     tx,
                 },
-                async move { join_handle.await },
+                join_handle,
             )
         )
     }

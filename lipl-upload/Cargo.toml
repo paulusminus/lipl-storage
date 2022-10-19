@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1"
 anyhow = "1"
-clap = { version = "3", features = ["derive"] }
+clap = { version = "4", features = ["derive"] }
 futures = "0.3"
 lazy_static = "1"
 lipl-types = { path = "../lipl-types" }
