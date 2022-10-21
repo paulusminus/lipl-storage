@@ -14,15 +14,15 @@ mod path_ext;
 mod uuid;
 
 
-#[macro_export]
-macro_rules! time_it {
-    ($process:expr) => {{
-        let now = std::time::Instant::now();
-        let result = $process.await?;
-        tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-        Ok(result)    
-    }};
-}
+// #[macro_export]
+// macro_rules! time_it {
+//     ($process:expr) => {{
+//         let now = std::time::Instant::now();
+//         let result = $process.await?;
+//         tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
+//         Ok(result)    
+//     }};
+// }
 
 pub trait Repo {
     type Repo: LiplRepo<Error = Self::Error>;

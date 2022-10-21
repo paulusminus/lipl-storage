@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
 use futures_util::TryFutureExt;
-use lipl_types::{time_it, Lyric, LiplRepo, Playlist, Summary, Uuid};
+use lipl_types::{timeit, Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
 
@@ -232,97 +232,77 @@ fn to_ok<T>(t: T) -> PostgresResult<T> {
 impl LiplRepo for PostgresRepo {
     type Error = PostgresRepoError;
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
-        time_it!(
-            self.lyrics()
-        )
+        self.lyrics().await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
-        time_it!(
-            self.lyric_summaries()
-        )
+        self.lyric_summaries().await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
-        time_it!(
-            self.lyric_detail(id.inner())
-        )
+        self.lyric_detail(id.inner()).await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
-        time_it!(
-            self.upsert_lyric(
-                lyric.id.inner(),
-                &lyric.title,
-                &to_text(&lyric.parts[..])
-            )
-            .and_then(
-                |_| self.lyric_detail(lyric.id.inner())
-            )
+        self.upsert_lyric(
+            lyric.id.inner(),
+            &lyric.title,
+            &to_text(&lyric.parts[..])
         )
+        .and_then(
+            |_| self.lyric_detail(lyric.id.inner())
+        )
+        .await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
-        time_it!(
-            self.lyric_delete(id.inner())
-            .map_ok(to_unit)
-        )
+        self.lyric_delete(id.inner())
+        .map_ok(to_unit)
+        .await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
-        time_it!(
-            self.playlists()
-        )
+        self.playlists().await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
-        time_it!(
-            self.playlist_summaries()
-        )
+        self.playlist_summaries().await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
-        time_it!(
-            self.playlist_detail(id.inner())
-        )
+        self.playlist_detail(id.inner()).await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
-        time_it!(
-            self.upsert_playlist(
-                playlist.id.inner(),
-                &playlist.title,
-                playlist.members.into_iter().map(|uuid| uuid.inner()).collect()
-            )
-            .and_then(|_| self.get_playlist(playlist.id))
+        self.upsert_playlist(
+            playlist.id.inner(),
+            &playlist.title,
+            playlist.members.into_iter().map(|uuid| uuid.inner()).collect()
         )
+        .and_then(|_| self.get_playlist(playlist.id))
+        .await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
-        time_it!(
-            self.playlist_delete(id.inner())
-            .map_ok(to_unit)
-        )
+        self.playlist_delete(id.inner())
+        .map_ok(to_unit)
+        .await
     }
 
-    #[tracing::instrument]
+    #[timeit(level = "info")]
     async fn stop(&self) -> Result<(), Self::Error> {
-        time_it!(
-            async {
-                Ok::<(), PostgresRepoError>(())
-            }
-        )
+        Ok::<(), PostgresRepoError>(())
     }
 }
 
