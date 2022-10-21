@@ -16,8 +16,8 @@ pub enum FileRepoError {
     #[error("Cannot find directory {0:?}")]
     CannotFindDirectory(Option<String>),
 
-    #[error("Send failed for {0}")]
-    SendFailed(String),
+    #[error("Send failed")]
+    SendFailed,
 
     #[error("Canceled")]
     Canceled(#[from] Canceled),

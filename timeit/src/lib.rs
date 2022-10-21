@@ -29,7 +29,7 @@ use syn::{parse_macro_input, ItemFn, AttributeArgs};
 
 /// Marks async function to report the time it took to execute by means of tracing.
 /// 
-/// # Example
+/// # Async Example
 /// 
 /// ```
 /// use futures::executor::block_on;
@@ -60,6 +60,35 @@ use syn::{parse_macro_input, ItemFn, AttributeArgs};
 /// }
 /// 
 /// assert_eq!(block_on(test()), "Cargo.toml");
+/// ```
+/// 
+/// # None async example
+/// 
+/// ```
+/// use timeit::timeit;
+/// 
+/// #[timeit(level = "info")]
+/// fn test() -> &'static str {
+///     "Cargo.toml"
+/// }
+/// 
+/// assert_eq!(test(), "Cargo.toml");
+/// ```
+/// 
+/// this example is equivalent to the following code
+/// 
+/// ```
+/// use tracing::{event, instrument, Level};
+/// 
+/// #[instrument]
+/// fn test() -> &'static str {
+///     let now = std::time::Instant::now();
+///     let result = { "Cargo.toml" };
+///     event!(Level::INFO, elapsed_microseconds = now.elapsed().as_micros());
+///     result
+/// }
+/// 
+/// assert_eq!(test(), "Cargo.toml");
 /// ```
 #[proc_macro_attribute]
 pub fn timeit(args: TokenStream, input: TokenStream) -> TokenStream {

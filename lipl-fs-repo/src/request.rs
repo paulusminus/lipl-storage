@@ -5,6 +5,7 @@ use crate::error::FileRepoError;
 type Result<T> = std::result::Result<T, FileRepoError>;
 type ResultSender<T> = oneshot::Sender<Result<T>>;
 
+#[derive(Debug)]
 pub enum Request {
     LyricSummaries(ResultSender<Vec<Summary>>),
     LyricList(ResultSender<Vec<Lyric>>),
@@ -21,24 +22,24 @@ pub enum Request {
 
 pub async fn select<T>(tx: &mut mpsc::Sender<Request>, f: impl Fn(ResultSender<T>) -> Request) -> Result<T> {
     let (oneshot_tx, oneshot_rx) = oneshot::channel::<Result<T>>();
-    tx.try_send(f(oneshot_tx)).map_err(|_| FileRepoError::SendFailed("".to_owned()))?;
+    tx.try_send(f(oneshot_tx)).map_err(|_| FileRepoError::SendFailed)?;
     oneshot_rx.await?
 }
 
 pub async fn select_by_id<T>(tx: &mut mpsc::Sender<Request>, uuid: Uuid, f: impl Fn(Uuid, ResultSender<T>) -> Request) -> Result<T> {
     let (oneshot_tx, oneshot_rx) = oneshot::channel::<Result<T>>();
-    tx.try_send(f(uuid, oneshot_tx)).map_err(|_| FileRepoError::SendFailed("".to_owned()))?;
+    tx.try_send(f(uuid, oneshot_tx)).map_err(|_| FileRepoError::SendFailed)?;
     oneshot_rx.await?
 }
 
 pub async fn delete_by_id(tx: &mut mpsc::Sender<Request>, uuid: Uuid, f: impl Fn(Uuid, ResultSender<()>) -> Request) -> Result<()> {
     let (oneshot_tx, oneshot_rx) = oneshot::channel::<Result<()>>();
-    tx.try_send(f(uuid, oneshot_tx)).map_err(|_| FileRepoError::SendFailed("".to_owned()))?;
+    tx.try_send(f(uuid, oneshot_tx)).map_err(|_| FileRepoError::SendFailed)?;
     oneshot_rx.await?
 }
 
 pub async fn post<T>(tx: &mut mpsc::Sender<Request>, t: T, f: impl Fn(T, ResultSender<T>) -> Request) -> Result<T> {
     let (oneshot_tx, oneshot_rx) = oneshot::channel::<Result<T>>();
-    tx.try_send(f(t, oneshot_tx)).map_err(|_| FileRepoError::SendFailed("".to_owned()))?;
+    tx.try_send(f(t, oneshot_tx)).map_err(|_| FileRepoError::SendFailed)?;
     oneshot_rx.await?
 }

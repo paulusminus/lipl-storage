@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
 pub use path_ext::{PathExt};
 pub use error::ModelError;
+pub use timeit::timeit;
 
 mod disk_format;
 pub mod error;
@@ -162,7 +163,7 @@ impl From<Playlist> for PlaylistPost {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Summary {
     pub id: Uuid,
     pub title: String,

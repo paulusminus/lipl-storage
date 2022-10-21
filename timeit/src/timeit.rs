@@ -12,12 +12,12 @@ fn error() -> TokenStream { quote!{ ::tracing::Level::ERROR } }
 
 pub(crate) fn expand(args: AttributeArgs, input: ItemFn) -> Result<TokenStream, Error> {
     // Return with error is annotated function is not async
-    input.sig.asyncness.ok_or(
-        Error::new_spanned(
-            input.clone().sig,
-            "keyword `async` missing"
-        )
-    )?;
+    // input.sig.asyncness.ok_or(
+    //     Error::new_spanned(
+    //         input.clone().sig,
+    //         "keyword `async` missing"
+    //     )
+    // )?;
 
     // Default level = 1
     let mut level = info();
@@ -63,15 +63,20 @@ fn create_level(level: &LitStr) -> Result<TokenStream, syn::Error> {
 }
 
 fn create_timeit(func: ItemFn, level: TokenStream) -> TokenStream {
+    let block = func.block;
     let visibility = func.vis.clone();
     let signature = func.sig.clone();
-    let block = func.block;
+
+    let result_block = match func.sig.asyncness {
+        Some(_) => quote! { let result = async move #block.await; },
+        None => quote! { let result = #block; }
+    };
     
     quote! {
         #[::tracing::instrument]
         #visibility #signature {
             let now = ::std::time::Instant::now();
-            let result = async move #block.await;
+            #result_block
             ::tracing::event!(#level, elapsed_microseconds = now.elapsed().as_micros());
             result
         }
