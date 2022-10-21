@@ -11,15 +11,7 @@ fn warn()  -> TokenStream { quote!{ ::tracing::Level::WARN } }
 fn error() -> TokenStream { quote!{ ::tracing::Level::ERROR } }
 
 pub(crate) fn expand(args: AttributeArgs, input: ItemFn) -> Result<TokenStream, Error> {
-    // Return with error is annotated function is not async
-    // input.sig.asyncness.ok_or(
-    //     Error::new_spanned(
-    //         input.clone().sig,
-    //         "keyword `async` missing"
-    //     )
-    // )?;
-
-    // Default level = 1
+    // Default level = tracing::Level::INFO
     let mut level = info();
 
     for arg in args {
