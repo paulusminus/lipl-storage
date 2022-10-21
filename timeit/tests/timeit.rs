@@ -1,6 +1,6 @@
 use timeit::timeit;
 
-#[timeit("info")]
+#[timeit(level = "trace")]
 async fn get_str() -> &'static str {
     futures::future::ready("Cargo.toml").await
 }

@@ -58,12 +58,6 @@ pub enum DbType {
     Postgres(String, Pin<Box<dyn Future<Output = ModelResult<PostgresRepo>>>>),
 }
 
-#[derive(Clone)]
-pub enum DbType2 {
-    File(String),
-    Postgres(String),
-}
-
 impl Debug for DbType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", match self {
@@ -103,35 +97,6 @@ impl FromStr for DbType {
                                 .map_err(|_| ModelError::Argument("Invalid postgres connection string"))
                             }
                         )
-                    )
-                );
-            }
-            else {
-                return Err(ModelError::Argument("Unknown prefix for db connection string"));
-            }
-        }
-        Err(ModelError::Argument("Unknown format for db connection string. Use '<PREFIX>:<Connection string>'"))
-    }
-}
-
-
-impl FromStr for DbType2 {
-    type Err = ModelError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let splitted = s.split(':').collect::<Vec<&str>>();
-        if splitted.len() == 2 {
-            let repo_dir = splitted[1].to_owned();
-            if splitted[0] == "file" {
-                return Ok(
-                    DbType2::File(
-                        repo_dir,
-                    )
-                );
-            }
-            else if splitted[0] == "postgres" {
-                return Ok(
-                    DbType2::Postgres(
-                        repo_dir,
                     )
                 );
             }

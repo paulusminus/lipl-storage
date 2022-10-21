@@ -23,6 +23,12 @@ macro_rules! time_it {
     }};
 }
 
+pub trait Repo {
+    type Repo: LiplRepo<Error = Self::Error>;
+    type Error: std::error::Error + Debug + Display;
+
+    fn new(&self) -> Result<Self::Repo, Self::Error>;
+}
 
 #[async_trait]
 pub trait LiplRepo: Clone + Send + Sync {
