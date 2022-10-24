@@ -1,0 +1,20 @@
+[package]
+name = "lipl-axum"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.5"
+bb8 = "0.8"
+bb8-postgres = "0.8"
+futures-util = "0.3.25"
+lipl-types = { path = "../lipl-types" }
+parts = { path = "../parts" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "1.0.37"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
+tower-http = { version = "0.3", features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+uuid = "1.2.1"

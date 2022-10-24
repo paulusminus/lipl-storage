@@ -8,7 +8,7 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt, Future};
 use lipl_types::{
-    timeit, LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
+    LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
@@ -30,7 +30,7 @@ pub struct FileRepo {
 
 impl Debug for FileRepo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "FileRepo: {}", self.path)
+        write!(f, "FileRepo:{}", self.path)
     }
 }
 
@@ -228,60 +228,58 @@ impl FileRepo {
 impl LiplRepo for FileRepo {
     type Error = FileRepoError;
 
-    #[timeit(level = "info")]
     async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
-        select(&mut self.tx.clone(), Request::LyricList).await
+        select(self.tx.clone(), Request::LyricList)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
-        select(&mut self.tx.clone(), Request::LyricSummaries).await
+        select(self.tx.clone(), Request::LyricSummaries)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
-        select_by_id(&mut self.tx.clone(), id, Request::LyricItem).await
+        select_by_id(self.tx.clone(), id, Request::LyricItem)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
-        post(&mut self.tx.clone(), lyric, Request::LyricPost).await
+        post(self.tx.clone(), lyric, Request::LyricPost)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
-        delete_by_id(&mut self.tx.clone(), id, Request::LyricDelete).await
+        delete_by_id(self.tx.clone(), id, Request::LyricDelete)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
-        select(&mut self.tx.clone(), Request::PlaylistList).await
+        select(self.tx.clone(), Request::PlaylistList)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
-        select(&mut self.tx.clone(), Request::PlaylistSummaries).await
+        select(self.tx.clone(), Request::PlaylistSummaries)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
-        select_by_id(&mut self.tx.clone(), id, Request::PlaylistItem).await
+        select_by_id(self.tx.clone(), id, Request::PlaylistItem)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
-        post(&mut self.tx.clone(), playlist, Request::PlaylistPost).await
+        post(self.tx.clone(), playlist, Request::PlaylistPost)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
-        delete_by_id(&mut self.tx.clone(), id, Request::PlaylistDelete).await
+        delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
+        .await
     }
 
-    #[timeit(level = "info")]
     async fn stop(&self) -> Result<(), Self::Error> {
-        select(&mut self.tx.clone(), Request::Stop).await?;
-        Ok::<(), FileRepoError>(())
+        select(self.tx.clone(), Request::Stop).await
     }
 }
 

@@ -1,9 +1,10 @@
 use std::fmt::Debug;
+use std::future::ready;
 
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
-use futures_util::TryFutureExt;
-use lipl_types::{timeit, Lyric, LiplRepo, Playlist, Summary, Uuid};
+use futures_util::{TryFutureExt};
+use lipl_types::{Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
 
@@ -65,8 +66,8 @@ impl PostgresRepo {
         crud::UPSERT_LYRIC_TYPES,
         to_ok,
         id: uuid::Uuid,
-        title: &str,
-        text: &str,
+        title: String,
+        text: String,
     );
 
     query! (
@@ -77,7 +78,7 @@ impl PostgresRepo {
         crud::UPSERT_PLAYLIST_TYPES,
         to_ok,
         id: uuid::Uuid,
-        title: &str,
+        title: String,
         members: Vec<uuid::Uuid>,
     );
 
@@ -232,77 +233,68 @@ fn to_ok<T>(t: T) -> PostgresResult<T> {
 impl LiplRepo for PostgresRepo {
     type Error = PostgresRepoError;
 
-    #[timeit(level = "info")]
     async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
         self.lyrics().await
     }
 
-    #[timeit(level = "info")]
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
         self.lyric_summaries().await
     }
 
-    #[timeit(level = "info")]
     async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
         self.lyric_detail(id.inner()).await
     }
 
-    #[timeit(level = "info")]
     async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
         self.upsert_lyric(
             lyric.id.inner(),
-            &lyric.title,
-            &to_text(&lyric.parts[..])
+            lyric.title,
+            to_text(&lyric.parts[..])
         )
         .and_then(
-            |_| self.lyric_detail(lyric.id.inner())
+            move |_| self.lyric_detail(lyric.id.inner())
         )
         .await
     }
 
-    #[timeit(level = "info")]
     async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
         self.lyric_delete(id.inner())
         .map_ok(to_unit)
         .await
     }
 
-    #[timeit(level = "info")]
     async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
         self.playlists().await
     }
 
-    #[timeit(level = "info")]
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
         self.playlist_summaries().await
     }
 
-    #[timeit(level = "info")]
     async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
         self.playlist_detail(id.inner()).await
     }
 
-    #[timeit(level = "info")]
     async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
+        let title = playlist.title.clone();
         self.upsert_playlist(
             playlist.id.inner(),
-            &playlist.title,
-            playlist.members.into_iter().map(|uuid| uuid.inner()).collect()
+            title,
+            playlist.members.iter().map(|uuid| uuid.inner()).collect()
         )
-        .and_then(|_| self.get_playlist(playlist.id))
+        .map_ok(|_| {})
+        .and_then(move |_| self.get_playlist(playlist.clone().id))
         .await
     }
 
-    #[timeit(level = "info")]
     async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
         self.playlist_delete(id.inner())
         .map_ok(to_unit)
         .await
     }
 
-    #[timeit(level = "info")]
     async fn stop(&self) -> Result<(), Self::Error> {
-        Ok::<(), PostgresRepoError>(())
+        ready(Ok::<(), PostgresRepoError>(())).await
     }
 }
 

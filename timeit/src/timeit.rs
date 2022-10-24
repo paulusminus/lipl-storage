@@ -49,8 +49,8 @@ fn create_level(level: &LitStr) -> Result<TokenStream, syn::Error> {
     ])
     .get(level.value().to_lowercase().as_str())
     .cloned()
-    .ok_or(
-        syn::Error::new(level.span(), "Invalid level")
+    .ok_or_else(
+        || syn::Error::new_spanned(level, "Invalid level")
     )
 }
 
@@ -73,5 +73,4 @@ fn create_timeit(func: ItemFn, level: TokenStream) -> TokenStream {
             result
         }
     }
-    .into()        
 }

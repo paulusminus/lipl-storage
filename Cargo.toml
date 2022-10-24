@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "lipl-axum",
     "lipl-repo-http-server",
     "lipl-fs-repo",
     "lipl-postgres-repo",

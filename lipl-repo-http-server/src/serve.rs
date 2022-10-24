@@ -16,6 +16,10 @@ where
     R: LiplRepo<Error = E> + 'static + std::fmt::Debug,
     E: std::error::Error + 'static + Into<RepoError>,
 {
+    // Cache warmup
+    let _lyrics = repo.get_lyrics().await;
+    let _playlists = repo.get_playlists().await;
+
     let routes = 
         get_lyric_routes(repo.clone(), constant::LYRIC)
         .or(
@@ -46,12 +50,11 @@ where
 pub async fn serve(param: param::Serve) -> Result<()> {
     match param.source {
         DbType::File(_, f) => {
-            run(f.await?, param.port).await?;
+            run(f.await?, param.port).await
 
         },
         DbType::Postgres(_, f) => {
-            run(f.await?, param.port).await?;
+            run(f.await?, param.port).await
         }
     }
-    Ok(())
 }
