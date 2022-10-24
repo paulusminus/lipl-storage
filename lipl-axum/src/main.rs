@@ -4,7 +4,7 @@ use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::{NoTls};
 use tower_http::trace::TraceLayer;
 
-use std::{error::Error, net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc};
 
 mod constant;
 mod error;
@@ -19,7 +19,7 @@ async fn exit_on_signal_int() {
 }
 
 #[tokio::main]
-pub async fn main() -> Result<(), Box<dyn Error>> {
+pub async fn main() -> Result<(), error::Error> {
     
     let filter = std::env::var(constant::RUST_LOG).unwrap_or_else(|_| constant::DEFAULT_LOG_FILTER.to_owned());
     

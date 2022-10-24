@@ -72,10 +72,10 @@ async fn delete(connection: PooledConnection<'_, PostgresConnectionManager<NoTls
 }
 
 async fn post(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, playlist_post: PlaylistPost) -> Result<Vec<Row>, error::Error> {
-    let uuid = Uuid::default().inner();
+    let id = Uuid::default().inner();
     let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
     connection
-    .query("SELECT fn_upsert_playlist($1, $2, $3);", &[&uuid, &playlist_post.title, &members.as_slice()])
+    .query("SELECT fn_upsert_playlist($1, $2, $3);", &[&id, &playlist_post.title, &members.as_slice()])
     .map_err(error::Error::from)
     .await
 }
