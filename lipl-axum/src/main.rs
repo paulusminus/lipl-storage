@@ -1,6 +1,4 @@
-use axum::{
-    extract::{Extension},
-};
+use axum::extract::Extension;
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::{NoTls};
@@ -11,6 +9,7 @@ use std::{error::Error, net::SocketAddr, sync::Arc};
 mod constant;
 mod error;
 mod lyric;
+mod playlist;
 
 async fn exit_on_signal_int() {
     match tokio::signal::ctrl_c().await {
@@ -36,11 +35,12 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
     let service =
         lyric::lyric_router()
+        .merge(playlist::playlist_router())
         .layer(Extension(shared_pool.clone()))
         .layer(TraceLayer::new_for_http())
         .into_make_service();
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from((constant::HOST, constant::PORT));
     
     match
         axum::Server::bind(&addr)
