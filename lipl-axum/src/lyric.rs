@@ -56,7 +56,7 @@ async fn lyric_delete(
     .get()
     .map_err(error::Error::from)
     .and_then(|connection| async move { db::delete(connection, id.inner()).await })
-    .map_ok(|_| StatusCode::OK)
+    .map_ok(crate::to_status_ok)
     .await
 }
 

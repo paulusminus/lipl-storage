@@ -29,7 +29,7 @@ async fn playlist_item(
     pool
     .get()
     .map_err(error::Error::from)
-    .and_then(|connection| async move { db::item(connection, id.inner()).await })
+    .and_then(|connection| async move { db::item(connection, id).await })
     .map_ok(crate::to_json_response(StatusCode::OK))
     .await
 }
@@ -56,7 +56,7 @@ async fn playlist_delete(
     .get()
     .map_err(error::Error::from)
     .and_then(|connection| async move { db::delete(connection, id.inner()).await })
-    .map_ok(|_| StatusCode::OK )
+    .map_ok(crate::to_status_ok)
     .await
 }
 
@@ -92,17 +92,17 @@ mod db {
         .await
     }
     
-    pub async fn item(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: uuid::Uuid) -> Result<Playlist, Error> {
+    pub async fn item(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: Uuid) -> Result<Playlist, Error> {
         let title = 
             connection
-            .query_one(sql::playlist::ITEM_TITLE, &[&id])
+            .query_one(sql::playlist::ITEM_TITLE, &[&id.inner()])
             .map_err(Error::from)
             .await?
             .get::<&str, String>(sql::playlist::column::TITLE);
     
         let members = 
             connection
-            .query(sql::playlist::ITEM_MEMBERS, &[&id])
+            .query(sql::playlist::ITEM_MEMBERS, &[&id.inner()])
             .map_err(Error::from)
             .await?
             .into_iter()
@@ -111,7 +111,7 @@ mod db {
     
         Ok(
             Playlist {
-                id: Uuid::from(id),
+                id,
                 title,
                 members
             }

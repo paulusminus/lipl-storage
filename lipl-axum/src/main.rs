@@ -19,6 +19,10 @@ pub(crate) fn to_json_response<T>(status_code: StatusCode) -> impl Fn(T) -> (Sta
     move |t| (status_code, Json(t))
 }
 
+pub(crate) fn to_status_ok<T>(t: T) -> StatusCode {
+    StatusCode::OK
+}
+
 async fn exit_on_signal_int() {
     match tokio::signal::ctrl_c().await {
         Ok(_) => { message::exit_on_signal_int(); },
