@@ -1,16 +1,15 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::{sync::Arc};
 
-use axum::{extract::Extension, Json, Router, routing::IntoMakeService};
+use axum::{extract::Extension, Json, Router};
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
-use futures_util::TryFutureExt;
-use hyper::StatusCode;
+use hyper::{StatusCode};
 use tokio_postgres::{NoTls};
 use tower_http::trace::TraceLayer;
 
-use crate::error::Error;
+pub use crate::error::Error;
 
-mod constant;
+pub mod constant;
 mod error;
 mod lyric;
 mod message;
@@ -27,14 +26,14 @@ pub(crate) fn to_status_ok<T>(_: T) -> StatusCode {
 }
 
 #[inline]
-async fn exit_on_signal_int() {
+pub async fn exit_on_signal_int() {
     match tokio::signal::ctrl_c().await {
         Ok(_) => { message::exit_on_signal_int(); },
         Err(error) => { message::error_on_receiving_signal(error); }
     };
 }
 
-pub async fn create_service() -> Result<IntoMakeService<Router>, Error> {
+pub async fn create_service() -> Result<Router, Error> {
     let manager = 
         PostgresConnectionManager::new_from_stringlike(constant::PG_CONNECTION, NoTls)?;
 
@@ -50,32 +49,10 @@ pub async fn create_service() -> Result<IntoMakeService<Router>, Error> {
             .nest("/playlist", playlist::router())
         )
         .layer(Extension(shared_pool.clone()))
-        .layer(TraceLayer::new_for_http())
-        .into_make_service();
+        .layer(TraceLayer::new_for_http());
+        // .into_make_service();
     
     Ok(service)
 }
 
-#[tokio::main]
-pub async fn main() -> Result<(), Error> {
-    
-    let filter =
-        std::env::var(constant::RUST_LOG)
-        .unwrap_or_else(|_| constant::DEFAULT_LOG_FILTER.to_owned());
-    
-    tracing_subscriber::fmt()
-    .with_env_filter(filter)
-    .init();
-
-    create_service()
-    .and_then(|service| async move {
-        let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
-        axum::Server::bind(&addr)
-        .serve(service)
-        .with_graceful_shutdown(exit_on_signal_int())
-        .await
-        .map_err(Error::from)    
-    })
-    .await
-}
 
