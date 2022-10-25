@@ -3,14 +3,14 @@ use futures_util::{TryFutureExt};
 use lipl_types::{Lyric, LyricPost, Summary};
 use crate::{error, PoolState};
 
-pub fn lyric_router() -> Router {
+pub fn router() -> Router {
     Router::new()
-    .route("/api/v1/lyric", get(lyric_list).post(lyric_post))
-    .route("/api/v1/lyric/:id", get(lyric_item).delete(lyric_delete).put(lyric_put))
+    .route("/", get(list).post(post))
+    .route("/:id", get(item).delete(delete).put(put))
 }
 
 /// Handler for getting all lyrics
-async fn lyric_list(
+async fn list(
     pool: PoolState,
 ) -> Result<(StatusCode, Json<Vec<Summary>>), error::Error> {
     pool
@@ -22,7 +22,7 @@ async fn lyric_list(
 }
 
 /// Handler for getting a specific lyric
-async fn lyric_item(
+async fn item(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>
 ) -> Result<(StatusCode, Json<Lyric>), error::Error> {
@@ -35,7 +35,7 @@ async fn lyric_item(
 }
 
 /// Handler for posting a new lyric
-async fn lyric_post(
+async fn post(
     pool: PoolState,
     Json(lyric_post): Json<LyricPost>
 ) -> Result<(StatusCode, Json<Lyric>), error::Error> {
@@ -48,7 +48,7 @@ async fn lyric_post(
 }
 
 /// Handler for deleting a specific lyric
-async fn lyric_delete(
+async fn delete(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>,
 ) -> Result<StatusCode, error::Error> {
@@ -61,7 +61,7 @@ async fn lyric_delete(
 }
 
 /// Handler for changing a specific lyric
-async fn lyric_put(
+async fn put(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>,
     Json(lyric_post): Json<LyricPost>
@@ -116,13 +116,7 @@ mod db {
         .map_err(Error::from)
         .await?;
     
-        let lyric = Lyric {
-            id,
-            title: lyric_post.title,
-            parts: lyric_post.parts,
-        };
-    
-        Ok(lyric)
+        item(connection, id.inner()).await
     }
     
     pub async fn put(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: Uuid, lyric_post: LyricPost) -> Result<Lyric, Error> {
@@ -131,13 +125,7 @@ mod db {
         .map_err(Error::from)
         .await?;
 
-        let lyric = Lyric {
-            id,
-            title: lyric_post.title,
-            parts: lyric_post.parts,
-        };
-
-        Ok(lyric)
+        item(connection, id.inner()).await
     }
 
     mod convert {
