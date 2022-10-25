@@ -7,6 +7,7 @@ use futures_util::{TryFutureExt};
 use lipl_types::{Summary, Uuid, Playlist, PlaylistPost};
 use tokio_postgres::{NoTls, Row};
 use crate::error;
+use crate::constant::sql;
 
 pub fn playlist_router() -> Router {
     Router::new()
@@ -16,8 +17,8 @@ pub fn playlist_router() -> Router {
 
 fn to_summary(row: Row) -> Summary {
     Summary {
-        id: row.get::<&str, uuid::Uuid>("id").into(),
-        title: row.get::<&str, String>("title"),
+        id: row.get::<&str, uuid::Uuid>(sql::playlist::column::ID).into(),
+        title: row.get::<&str, String>(sql::playlist::column::TITLE),
     }
 }
 
@@ -33,7 +34,7 @@ fn to_response<T>(t: T) -> (StatusCode, Json<T>) {
 
 async fn list(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>) -> Result<Vec<Row>, error::Error> {
     connection
-    .query("SELECT * FROM playlist ORDER BY title;", &[])
+    .query(sql::playlist::LIST, &[])
     .map_err(error::Error::from)
     .await
 }
@@ -41,18 +42,18 @@ async fn list(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>
 async fn item(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: uuid::Uuid) -> Result<Playlist, error::Error> {
     let title = 
         connection
-        .query_one("SELECT title FROM playlist WHERE id = $1;", &[&id])
+        .query_one(sql::playlist::ITEM_TITLE, &[&id])
         .map_err(error::Error::from)
         .await?
-        .get::<&str, String>("title");
+        .get::<&str, String>(sql::playlist::column::TITLE);
 
     let members = 
         connection
-        .query("SELECT lyric_id FROM membership WHERE playlist_id = $1 ORDER BY ordering;", &[&id])
+        .query(sql::playlist::ITEM_MEMBERS, &[&id])
         .map_err(error::Error::from)
         .await?
         .into_iter()
-        .map(|row| Uuid::from(row.get::<&str, uuid::Uuid>("lyric_id")))
+        .map(|row| Uuid::from(row.get::<&str, uuid::Uuid>(sql::playlist::column::LYRIC_ID)))
         .collect::<Vec<_>>();
 
     Ok(
@@ -66,24 +67,33 @@ async fn item(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>
 
 async fn delete(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: uuid::Uuid) -> Result<u64, error::Error> {
     connection
-    .execute("DELETE FROM playlist WHERE id = $1;", &[&id])
+    .execute(sql::playlist::DELETE, &[&id])
     .map_err(error::Error::from)
     .await
 }
 
-async fn post(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, playlist_post: PlaylistPost) -> Result<Vec<Row>, error::Error> {
-    let id = Uuid::default().inner();
+async fn post(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, playlist_post: PlaylistPost) -> Result<Playlist, error::Error> {
+    let id = Uuid::default();
     let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
-    connection
-    .query("SELECT fn_upsert_playlist($1, $2, $3);", &[&id, &playlist_post.title, &members.as_slice()])
+
+    let posted_members = connection
+    .query_one(sql::playlist::UPSERT, &[&id.inner(), &playlist_post.title, &members.as_slice()])
     .map_err(error::Error::from)
-    .await
+    .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
+    .await?;
+
+    let playlist = Playlist {
+        id,
+        title: playlist_post.title,
+        members: posted_members.into_iter().map(Uuid::from).collect(),
+    };
+    Ok(playlist)
 }
 
 async fn put(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: uuid::Uuid, playlist_post: PlaylistPost) -> Result<Vec<Row>, error::Error> {
     let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
     connection
-    .query("SELECT fn_upsert_playlist($1, $2, $3);", &[&id, &playlist_post.title, &members.as_slice()])
+    .query(sql::playlist::UPSERT, &[&id, &playlist_post.title, &members.as_slice()])
     .map_err(error::Error::from)
     .await
 }
@@ -100,11 +110,14 @@ async fn playlist_list(state: Extension<Arc<Pool<PostgresConnectionManager<NoTls
 }
 
 /// Handler for posting a new playlist
-async fn playlist_post(state: Extension<Arc<Pool<PostgresConnectionManager<NoTls>>>>, Json(playlist_post): Json<PlaylistPost>) -> Result<StatusCode, error::Error> {
+async fn playlist_post(
+    state: Extension<Arc<Pool<PostgresConnectionManager<NoTls>>>>,
+    Json(playlist_post): Json<PlaylistPost>,
+) -> Result<(StatusCode, Json<Playlist>), error::Error> {
     state.get()
     .map_err(error::Error::from)
     .and_then(|connection| async move { post(connection, playlist_post).await })
-    .map_ok(|_| StatusCode::CREATED)
+    .map_ok(|playlist| (StatusCode::CREATED, Json(playlist)))
     .await
 }
 

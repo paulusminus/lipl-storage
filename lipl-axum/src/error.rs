@@ -24,6 +24,9 @@ pub enum Error {
 
     #[error("Postgres: {0}")]
     Postgres(#[from] PgError),
+
+    #[error("Hyper: {0}")]
+    Hyper(#[from] hyper::Error),
 }
 
 impl IntoResponse for Error {

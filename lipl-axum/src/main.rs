@@ -9,12 +9,13 @@ use std::{net::SocketAddr, sync::Arc};
 mod constant;
 mod error;
 mod lyric;
+mod message;
 mod playlist;
 
 async fn exit_on_signal_int() {
     match tokio::signal::ctrl_c().await {
-        Ok(_) => { tracing::info!("Exiting because of signal INT")},
-        Err(error) => { tracing::error!("Error receiving signal: {}", error); }
+        Ok(_) => { message::exit_on_signal_int(); },
+        Err(error) => { message::error_on_receiving_signal(error); }
     };
 }
 
@@ -40,18 +41,12 @@ pub async fn main() -> Result<(), error::Error> {
         .layer(TraceLayer::new_for_http())
         .into_make_service();
 
-    let addr = SocketAddr::from((constant::HOST, constant::PORT));
+    let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
     
-    match
-        axum::Server::bind(&addr)
-        .serve(service)
-        .with_graceful_shutdown(exit_on_signal_int())
-        .await 
-    {
-        Ok(_) => { tracing::info!("listening on {}", addr); }
-        Err(error) => { tracing::error!("Error listening on {}: {}", addr, error); }
-    }
-    
-    Ok(())
+    axum::Server::bind(&addr)
+    .serve(service)
+    .with_graceful_shutdown(exit_on_signal_int())
+    .await
+    .map_err(error::Error::from)
 }
 

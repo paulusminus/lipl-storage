@@ -3,6 +3,7 @@ use std::io::{BufRead, Read};
 use std::pin::Pin;
 use async_trait::async_trait;
 use flate2::bufread::GzDecoder;
+use hyper::header::CONTENT_TYPE;
 use hyper::{client::{Client, HttpConnector}, Response, Body, body::{aggregate, Buf}, Method, header::{CONTENT_ENCODING, ACCEPT, ACCEPT_ENCODING, USER_AGENT}, Request};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use serde::{de::DeserializeOwned, Serialize};
@@ -68,7 +69,7 @@ impl ApiRequest for ApiClient {
         api_request(
             self.uri(uri),
             Method::GET,
-            Body::empty()
+            None
         )
         .and_then(|r| self.send(r))
         .map_ok(to_object)
@@ -84,7 +85,7 @@ impl ApiRequest for ApiClient {
         api_request(
             self.uri(uri),
             Method::POST,
-            object.to_json().into()
+            Some(object.to_json().into())
         )
         .and_then(|r| self.send(r))
         .map_ok(to_object)
@@ -96,7 +97,7 @@ impl ApiRequest for ApiClient {
         api_request(
             self.uri(uri),
             Method::DELETE,
-            Body::empty()
+            None
         )
         .and_then(|r| self.send(r))
         .map_ok(|_| {})
@@ -104,17 +105,30 @@ impl ApiRequest for ApiClient {
     }
 }
 
-fn api_request(uri: String, method: Method, body: Body) -> Pin<Box<dyn Future<Output = ApiResult<Request<Body>>> + Send>>
+fn api_request(uri: String, method: Method, body: Option<Body>) -> Pin<Box<dyn Future<Output = ApiResult<Request<Body>>> + Send>>
 {
     ready(
-        Request::builder()
-        .uri(uri)
-        .method(method)
-        .header(ACCEPT, "application/json")
-        .header(ACCEPT_ENCODING, "gzip")
-        .header(USER_AGENT, "Rust hyper")
-        .body(body)
-        .map_err(crate::error::ApiError::from)
+        match body {
+            Some(body) =>
+                Request::builder()
+                .uri(uri)
+                .method(method)
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "gzip")
+                .header(CONTENT_TYPE, "application/json")
+                .header(USER_AGENT, "Rust hyper")
+                .body(body)
+                .map_err(crate::error::ApiError::from),
+            None =>
+                Request::builder()
+                .uri(uri)
+                .method(method)
+                .header(ACCEPT, "application/json")
+                .header(ACCEPT_ENCODING, "gzip")
+                .header(USER_AGENT, "Rust hyper")
+                .body(Body::empty())
+                .map_err(crate::error::ApiError::from),
+}
     )
     .boxed()
 }
