@@ -7,7 +7,7 @@ edition = "2021"
 axum = "0.6.0-rc.2"
 bb8 = "0.8"
 bb8-postgres = "0.8"
-clap = { version = "4", features = ["derive"] }
+# clap = { version = "4", features = ["derive"] }
 futures-util = "0.3.25"
 hyper = "0.14"
 lipl-types = { path = "../lipl-types" }

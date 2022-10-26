@@ -8,6 +8,8 @@ use super::convert;
 use super::sql;
 use crate::error::Error;
 
+use convert::VecExt;
+
 pub async fn list(
     connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>,
 ) -> Result<Vec<Summary>, Error> {
@@ -25,16 +27,14 @@ pub async fn item(
     let title = connection
         .query_one(sql::ITEM_TITLE, &[&id.inner()])
         .map_err(Error::from)
-        .await?
-        .get::<&str, String>(sql::column::TITLE);
+        .map_ok(convert::to_title)
+        .await?;
 
     let members = connection
         .query(sql::ITEM_MEMBERS, &[&id.inner()])
         .map_err(Error::from)
-        .await?
-        .into_iter()
-        .map(|row| Uuid::from(row.get::<&str, uuid::Uuid>(sql::column::LYRIC_ID)))
-        .collect::<Vec<_>>();
+        .map_ok(convert::to_list(convert::to_uuid))
+        .await?;
 
     Ok(Playlist { id, title, members })
 }
@@ -56,9 +56,7 @@ pub async fn post(
     let id = Uuid::default();
     let members = playlist_post
         .members
-        .into_iter()
-        .map(|uuid| uuid.inner())
-        .collect::<Vec<_>>();
+        .map(convert::to_inner);
 
     connection
         .query_one(
@@ -79,9 +77,7 @@ pub async fn put(
 ) -> Result<Playlist, Error> {
     let members = playlist_post
         .members
-        .into_iter()
-        .map(|uuid| uuid.inner())
-        .collect::<Vec<_>>();
+        .map(convert::to_inner);
 
     connection
         .query_one(
@@ -89,7 +85,6 @@ pub async fn put(
             &[&id.inner(), &playlist_post.title, &members.as_slice()],
         )
         .map_err(Error::from)
-        // .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
         .await?;
 
     item(connection, id).await

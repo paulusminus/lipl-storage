@@ -33,10 +33,11 @@ pub async fn item(
 pub async fn delete(
     connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>,
     id: uuid::Uuid,
-) -> Result<u64, Error> {
+) -> Result<(), Error> {
     connection
         .execute(sql::DELETE, &[&id])
         .map_err(Error::from)
+        .map_ok(convert::to_unit)
         .await
 }
 
@@ -44,17 +45,17 @@ pub async fn post(
     connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>,
     lyric_post: LyricPost,
 ) -> Result<Lyric, Error> {
-    let id = lipl_types::Uuid::default();
+    let id = lipl_types::Uuid::default().inner();
 
     connection
         .execute(
             sql::INSERT,
-            &[&id.inner(), &lyric_post.title, &to_text(&lyric_post.parts)],
+            &[&id, &lyric_post.title, &to_text(&lyric_post.parts)],
         )
         .map_err(Error::from)
         .await?;
 
-    item(connection, id.inner()).await
+    item(connection, id).await
 }
 
 pub async fn put(

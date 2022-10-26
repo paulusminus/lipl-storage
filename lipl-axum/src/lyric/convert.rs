@@ -24,3 +24,5 @@ pub fn to_summary(row: Row) -> Summary {
         title: row.get::<&str, String>(sql::column::TITLE),
     }
 }
+
+pub fn to_unit<T>(_: T) {}
