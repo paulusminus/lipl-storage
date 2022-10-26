@@ -5,6 +5,7 @@ use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
 use hyper::StatusCode;
 use tokio_postgres::NoTls;
+use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
 pub use crate::error::Error;
@@ -50,5 +51,6 @@ pub async fn create_service() -> Result<Router, Error> {
                 .nest("/playlist", playlist::router()),
         )
         .layer(Extension(shared_pool.clone()))
-        .layer(TraceLayer::new_for_http()))
+        .layer(TraceLayer::new_for_http())
+        .layer(CompressionLayer::new().br(true).gzip(true)))
 }
