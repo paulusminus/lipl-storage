@@ -36,23 +36,19 @@ pub async fn exit_on_signal_int() {
 pub async fn create_service() -> Result<Router, Error> {
     let manager = 
         PostgresConnectionManager::new_from_stringlike(constant::PG_CONNECTION, NoTls)?;
-
     let pool = Pool::builder().build(manager).await?;
-
     let shared_pool = Arc::new(pool);
 
-    let service =
+    Ok(
         Router::new().nest(
-            "/api/v1",
+            constant::PREFIX,
             Router::new()
             .nest("/lyric", lyric::router())
             .nest("/playlist", playlist::router())
         )
         .layer(Extension(shared_pool.clone()))
-        .layer(TraceLayer::new_for_http());
-        // .into_make_service();
-    
-    Ok(service)
+        .layer(TraceLayer::new_for_http())
+    )
 }
 
 

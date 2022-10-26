@@ -154,7 +154,7 @@ impl From<Playlist> for PlaylistPost {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Summary {
     pub id: Uuid,
     pub title: String,

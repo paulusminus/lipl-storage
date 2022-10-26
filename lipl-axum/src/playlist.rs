@@ -138,9 +138,12 @@ mod db {
         let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
     
         connection
-        .query_one(sql::playlist::UPSERT, &[&id.inner(), &playlist_post.title, &members.as_slice()])
+        .query_one(
+            sql::playlist::UPSERT,
+            &[&id.inner(), &playlist_post.title, &members.as_slice()]
+        )
         .map_err(Error::from)
-        .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
+        // .inspect_ok(|row| { println!("Row: {:#?}", row.get::<&str, Option<Vec<uuid::Uuid>>>("fn_upsert_playlist")); })
         .await?;
     
         item(connection, id).await
@@ -150,9 +153,12 @@ mod db {
         let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
 
         connection
-        .query_one(sql::playlist::UPSERT, &[&id.inner(), &playlist_post.title, &members.as_slice()])
+        .query_one(
+            sql::playlist::UPSERT,
+            &[&id.inner(), &playlist_post.title, &members.as_slice()]
+        )
         .map_err(Error::from)
-        .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
+        // .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
         .await?;
 
         item(connection, id).await
@@ -164,14 +170,17 @@ mod db {
         use crate::constant::sql;
 
         pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Vec<T> 
-        where F: Fn(Row) -> T + Copy
+        where
+            F: Fn(Row) -> T + Copy,
         {
             move |rows| rows.into_iter().map(f).collect::<Vec<_>>()
         }
         
         pub fn to_summary(row: Row) -> Summary {
             Summary {
-                id: row.get::<&str, uuid::Uuid>(sql::playlist::column::ID).into(),
+                id: row
+                    .get::<&str, uuid::Uuid>(sql::playlist::column::ID)
+                    .into(),
                 title: row.get::<&str, String>(sql::playlist::column::TITLE),
             }
         }               
