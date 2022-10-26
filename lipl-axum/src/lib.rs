@@ -16,7 +16,7 @@ mod lyric;
 mod message;
 mod playlist;
 
-pub(crate) type PoolState = Extension<Arc<Pool<PostgresConnectionManager<NoTls>>>>;
+pub(crate) type ConnectionPool = Extension<Arc<Pool<PostgresConnectionManager<NoTls>>>>;
 
 pub(crate) fn to_json_response<T>(status_code: StatusCode) -> impl Fn(T) -> (StatusCode, Json<T>) {
     move |t| (status_code, Json(t))
