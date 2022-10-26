@@ -1,10 +1,10 @@
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use axum::{extract::Extension, Json, Router};
 use bb8::Pool;
 use bb8_postgres::PostgresConnectionManager;
-use hyper::{StatusCode};
-use tokio_postgres::{NoTls};
+use hyper::StatusCode;
+use tokio_postgres::NoTls;
 use tower_http::trace::TraceLayer;
 
 pub use crate::error::Error;
@@ -28,23 +28,26 @@ pub(crate) fn to_status_ok<T>(_: T) -> StatusCode {
 #[inline]
 pub async fn exit_on_signal_int() {
     match tokio::signal::ctrl_c().await {
-        Ok(_) => { message::exit_on_signal_int(); },
-        Err(error) => { message::error_on_receiving_signal(error); }
+        Ok(_) => { 
+            message::exit_on_signal_int();
+        }
+        Err(error) => {
+            message::error_on_receiving_signal(error);
+        }
     };
 }
 
 pub async fn create_service() -> Result<Router, Error> {
-    let manager = 
-        PostgresConnectionManager::new_from_stringlike(constant::PG_CONNECTION, NoTls)?;
+    let manager = PostgresConnectionManager::new_from_stringlike(constant::PG_CONNECTION, NoTls)?;
     let pool = Pool::builder().build(manager).await?;
     let shared_pool = Arc::new(pool);
 
-    Ok(
-        Router::new().nest(
+    Ok(Router::new()
+        .nest(
             constant::PREFIX,
             Router::new()
-            .nest("/lyric", lyric::router())
-            .nest("/playlist", playlist::router())
+                .nest("/lyric", lyric::router())
+                .nest("/playlist", playlist::router()),
         )
         .layer(Extension(shared_pool.clone()))
         .layer(TraceLayer::new_for_http())

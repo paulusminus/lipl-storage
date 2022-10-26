@@ -1,7 +1,7 @@
-use axum::{Router, routing::get, http::StatusCode, Json, extract::Path};
-use futures_util::{TryFutureExt};
-use lipl_types::{Lyric, LyricPost, Summary};
 use crate::{error, PoolState};
+use axum::{extract::Path, http::StatusCode, routing::get, Router, Json};
+use futures_util::TryFutureExt;
+use lipl_types::{Lyric, LyricPost, Summary};
 
 pub fn router() -> Router {
     Router::new()
@@ -24,14 +24,13 @@ async fn list(
 /// Handler for getting a specific lyric
 async fn item(
     pool: PoolState,
-    Path(id): Path<lipl_types::Uuid>
+    Path(id): Path<lipl_types::Uuid>,
 ) -> Result<(StatusCode, Json<Lyric>), error::Error> {
-    pool
-    .get()
-    .map_err(error::Error::from)
-    .and_then(|connection| async move { db::item(connection, id.inner()).await })
-    .map_ok(crate::to_json_response(StatusCode::OK))
-    .await
+    pool.get()
+        .map_err(error::Error::from)
+        .and_then(|connection| async move { db::item(connection, id.inner()).await })
+        .map_ok(crate::to_json_response(StatusCode::OK))
+        .await
 }
 
 /// Handler for posting a new lyric
@@ -39,12 +38,11 @@ async fn post(
     pool: PoolState,
     Json(lyric_post): Json<LyricPost>
 ) -> Result<(StatusCode, Json<Lyric>), error::Error> {
-    pool
-    .get()
-    .map_err(error::Error::from)
-    .and_then(|connection| async move { db::post(connection, lyric_post).await })
-    .map_ok(crate::to_json_response(StatusCode::CREATED))
-    .await
+    pool.get()
+        .map_err(error::Error::from)
+        .and_then(|connection| async move { db::post(connection, lyric_post).await })
+        .map_ok(crate::to_json_response(StatusCode::CREATED))
+        .await
 }
 
 /// Handler for deleting a specific lyric
@@ -52,26 +50,24 @@ async fn delete(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>,
 ) -> Result<StatusCode, error::Error> {
-    pool
-    .get()
-    .map_err(error::Error::from)
-    .and_then(|connection| async move { db::delete(connection, id.inner()).await })
-    .map_ok(crate::to_status_ok)
-    .await
+    pool.get()
+        .map_err(error::Error::from)
+        .and_then(|connection| async move { db::delete(connection, id.inner()).await })
+        .map_ok(crate::to_status_ok)
+        .await
 }
 
 /// Handler for changing a specific lyric
 async fn put(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>,
-    Json(lyric_post): Json<LyricPost>
+    Json(lyric_post): Json<LyricPost>,
 ) -> Result<(StatusCode, Json<Lyric>), error::Error> {
-    pool
-    .get()
-    .map_err(error::Error::from)
-    .and_then(|connection| async move { db::put(connection, id, lyric_post).await })
-    .map_ok(crate::to_json_response(StatusCode::OK))
-    .await
+    pool.get()
+        .map_err(error::Error::from)
+        .and_then(|connection| async move { db::put(connection, id, lyric_post).await })
+        .map_ok(crate::to_json_response(StatusCode::OK))
+        .await
 }
 
 mod db {

@@ -102,6 +102,76 @@ async fn lyric_post() {
 }
 
 #[tokio::test]
+async fn lyric_post_change() {
+    let app = create_service().await.unwrap();
+
+    let lyric_post = LyricPost {
+        title: "Daar bij die molen".to_owned(),
+        parts: vec![
+            vec![
+                "Daar bij die molen, die mooie molen".to_owned(),
+                "Daar woont het meiseje waar ik zo veel van hou".to_owned(),
+                "Daar bij die molen, die mooie molen".to_owned(),
+                "Daar bij die molen, die mooie molen".to_owned(),
+            ]
+        ],
+    };
+    let body = serde_json::to_string(&lyric_post).unwrap();
+    let response =
+        app
+        .clone()
+        .oneshot(
+            Request::post("/api/v1/lyric")
+            .header("Content-Type", "application/json")
+            .body(body.into())
+            .unwrap()
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::CREATED);
+
+    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body: Lyric = serde_json::from_slice(&body).unwrap();
+    let id = body.id.to_string();
+    assert_eq!(body.title, "Daar bij die molen".to_owned());
+    assert_eq!(body.parts[0].len(), 4);
+
+    let mut lyric_post_put: LyricPost = body.into();
+    lyric_post_put.title = "Daar bij dat molengedrag".to_owned();
+    let body_put = serde_json::to_string(&lyric_post_put).unwrap();
+    let response_put =
+        app
+        .clone()
+        .oneshot(
+            Request::put(format!("/api/v1/lyric/{}", id))
+            .header("Content-Type", "application/json")
+            .body(body_put.into())
+            .unwrap()
+        )
+        .await
+        .unwrap();
+    
+    assert_eq!(response_put.status(), StatusCode::OK);
+    let response_body_put = hyper::body::to_bytes(response_put.into_body()).await.unwrap();
+    let response_body_put: Lyric = serde_json::from_slice(&response_body_put).unwrap();
+    assert_eq!(response_body_put.title, "Daar bij dat molengedrag".to_owned());
+
+    let response_delete =
+        app
+        .clone()
+        .oneshot(
+            Request::delete(format!("/api/v1/lyric/{}", id))
+            .body(Body::empty())
+            .unwrap()
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response_delete.status(), StatusCode::OK);
+}
+
+#[tokio::test]
 async fn playlist_post() {
     let app = create_service().await.unwrap();
 

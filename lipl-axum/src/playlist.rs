@@ -13,12 +13,11 @@ pub fn router() -> Router {
 async fn list(
     pool: PoolState,
 ) -> Result<(StatusCode, Json<Vec<Summary>>), Error> {
-    pool
-    .get()
-    .map_err(Error::from)
-    .and_then(db::list)
-    .map_ok(to_json_response(StatusCode::OK))
-    .await
+    pool.get()
+        .map_err(Error::from)
+        .and_then(db::list)
+        .map_ok(to_json_response(StatusCode::OK))
+        .await
 }
 
 /// Handler for getting a specific playlist
@@ -26,14 +25,13 @@ async fn item(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>,
 ) -> Result<(StatusCode, Json<Playlist>), Error> {
-    pool
-    .get()
-    .map_err(Error::from)
-    .and_then(|connection| 
-        async move { db::item(connection, id).await }
-    )
-    .map_ok(to_json_response(StatusCode::OK))
-    .await
+    pool.get()
+        .map_err(Error::from)
+        .and_then(|connection| 
+            async move { db::item(connection, id).await }
+        )
+        .map_ok(to_json_response(StatusCode::OK))
+        .await
 }
 
 /// Handler for posting a new playlist
@@ -41,14 +39,13 @@ async fn post(
     pool: PoolState,
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Result<(StatusCode, Json<Playlist>), Error> {
-    pool
-    .get()
-    .map_err(Error::from)
-    .and_then(|connection| 
-        async move { db::post(connection, playlist_post).await }
-    )
-    .map_ok(to_json_response(StatusCode::CREATED))
-    .await
+    pool.get()
+        .map_err(Error::from)
+        .and_then(|connection| 
+            async move { db::post(connection, playlist_post).await }
+        )
+        .map_ok(to_json_response(StatusCode::CREATED))
+        .await
 }
 
 /// Handler for deleting a specific playlist
@@ -56,14 +53,13 @@ async fn delete(
     pool: PoolState,
     Path(id): Path<lipl_types::Uuid>,
 ) -> Result<StatusCode, Error> {
-    pool
-    .get()
-    .map_err(Error::from)
-    .and_then(|connection| 
-        async move { db::delete(connection, id.inner()).await }
-    )
-    .map_ok(to_status_ok)
-    .await
+    pool.get()
+        .map_err(Error::from)
+        .and_then(|connection| 
+            async move { db::delete(connection, id.inner()).await }
+        )
+        .map_ok(to_status_ok)
+        .await
 }
 
 /// Handler for changing a specific playlist
@@ -72,14 +68,13 @@ async fn put(
     Path(id): Path<lipl_types::Uuid>,
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Result<(StatusCode, Json<Playlist>), Error> {
-    pool
-    .get()
-    .map_err(Error::from)
-    .and_then(|connection| 
-        async move { db::put(connection, id, playlist_post).await }
-    )
-    .map_ok(to_json_response(StatusCode::OK))
-    .await
+    pool.get()
+        .map_err(Error::from)
+        .and_then(|connection| 
+            async move { db::put(connection, id, playlist_post).await }
+        )
+        .map_ok(to_json_response(StatusCode::OK))
+        .await
 }
 
 mod db {
@@ -92,30 +87,32 @@ mod db {
     use crate::constant::sql;
     use crate::error::Error;
 
-    pub async fn list(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>) -> Result<Vec<Summary>, Error> {
+    pub async fn list(
+        connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>
+    ) -> Result<Vec<Summary>, Error> {
         connection
-        .query(sql::playlist::LIST, &[])
-        .map_err(Error::from)
-        .map_ok(convert::to_list(convert::to_summary))
-        .await
+            .query(sql::playlist::LIST, &[])
+            .map_err(Error::from)
+            .map_ok(convert::to_list(convert::to_summary))
+            .await
     }
     
     pub async fn item(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: Uuid) -> Result<Playlist, Error> {
         let title = 
             connection
-            .query_one(sql::playlist::ITEM_TITLE, &[&id.inner()])
-            .map_err(Error::from)
-            .await?
-            .get::<&str, String>(sql::playlist::column::TITLE);
+                .query_one(sql::playlist::ITEM_TITLE, &[&id.inner()])
+                .map_err(Error::from)
+                .await?
+                .get::<&str, String>(sql::playlist::column::TITLE);
     
         let members = 
             connection
-            .query(sql::playlist::ITEM_MEMBERS, &[&id.inner()])
-            .map_err(Error::from)
-            .await?
-            .into_iter()
-            .map(|row| Uuid::from(row.get::<&str, uuid::Uuid>(sql::playlist::column::LYRIC_ID)))
-            .collect::<Vec<_>>();
+                .query(sql::playlist::ITEM_MEMBERS, &[&id.inner()])
+                .map_err(Error::from)
+                .await?
+                .into_iter()
+                .map(|row| Uuid::from(row.get::<&str, uuid::Uuid>(sql::playlist::column::LYRIC_ID)))
+                .collect::<Vec<_>>();
     
         Ok(
             Playlist {
@@ -128,9 +125,9 @@ mod db {
     
     pub async fn delete(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, id: uuid::Uuid) -> Result<u64, Error> {
         connection
-        .execute(sql::playlist::DELETE, &[&id])
-        .map_err(Error::from)
-        .await
+            .execute(sql::playlist::DELETE, &[&id])
+            .map_err(Error::from)
+            .await
     }
     
     pub async fn post(connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>, playlist_post: PlaylistPost) -> Result<Playlist, Error> {
@@ -138,13 +135,13 @@ mod db {
         let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
     
         connection
-        .query_one(
-            sql::playlist::UPSERT,
-            &[&id.inner(), &playlist_post.title, &members.as_slice()]
-        )
-        .map_err(Error::from)
-        // .inspect_ok(|row| { println!("Row: {:#?}", row.get::<&str, Option<Vec<uuid::Uuid>>>("fn_upsert_playlist")); })
-        .await?;
+            .query_one(
+                sql::playlist::UPSERT,
+                &[&id.inner(), &playlist_post.title, &members.as_slice()]
+            )
+            .map_err(Error::from)
+            // .inspect_ok(|row| { println!("Row: {:#?}", row.get::<&str, Option<Vec<uuid::Uuid>>>("fn_upsert_playlist")); })
+            .await?;
     
         item(connection, id).await
     }
@@ -153,13 +150,13 @@ mod db {
         let members = playlist_post.members.into_iter().map(|uuid| uuid.inner()).collect::<Vec<_>>();
 
         connection
-        .query_one(
-            sql::playlist::UPSERT,
-            &[&id.inner(), &playlist_post.title, &members.as_slice()]
-        )
-        .map_err(Error::from)
-        // .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
-        .await?;
+            .query_one(
+                sql::playlist::UPSERT,
+                &[&id.inner(), &playlist_post.title, &members.as_slice()]
+            )
+            .map_err(Error::from)
+            // .map_ok(|row| row.get::<usize, Vec<uuid::Uuid>>(0))
+            .await?;
 
         item(connection, id).await
     }

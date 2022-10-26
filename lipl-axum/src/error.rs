@@ -1,4 +1,8 @@
-use axum::{response::{IntoResponse, Response}, http::StatusCode, Json};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
 use bb8::RunError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -33,10 +37,8 @@ impl IntoResponse for Error {
     fn into_response(self) -> Response {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(
-                ErrorReport::from(self)
-            ),
+            Json(ErrorReport::from(self)),
         )
-        .into_response()
+            .into_response()
     }
 }
