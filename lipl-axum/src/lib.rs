@@ -13,6 +13,7 @@ pub use crate::error::Error;
 
 pub mod constant;
 mod error;
+mod ext;
 mod lyric;
 mod message;
 mod playlist;

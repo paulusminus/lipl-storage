@@ -1,13 +1,14 @@
 use lipl_types::{Lyric, Summary};
 use tokio_postgres::Row;
 
+use crate::ext::VecExt;
 use super::sql;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Vec<T>
 where
     F: Fn(Row) -> T + Copy,
 {
-    move |rows| rows.into_iter().map(f).collect::<Vec<_>>()
+    move |rows| rows.map(f)
 }
 
 pub fn to_lyric(row: Row) -> Lyric {

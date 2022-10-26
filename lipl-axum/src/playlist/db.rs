@@ -7,8 +7,7 @@ use tokio_postgres::NoTls;
 use super::convert;
 use super::sql;
 use crate::error::Error;
-
-use convert::VecExt;
+use crate::ext::VecExt;
 
 pub async fn list(
     connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>,
