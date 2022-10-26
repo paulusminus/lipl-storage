@@ -4,9 +4,9 @@ use futures_util::TryFutureExt;
 use lipl_types::{Playlist, PlaylistPost, Summary, Uuid};
 use tokio_postgres::NoTls;
 
+use super::convert;
 use super::sql;
 use crate::error::Error;
-use super::convert;
 
 pub async fn list(
     connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>,

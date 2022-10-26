@@ -1,11 +1,13 @@
+use super::db;
 use crate::{error::Error, to_json_response, to_status_ok, DatabaseConnection};
 use axum::{extract::Path, http::StatusCode, Json};
 use futures_util::TryFutureExt;
 use lipl_types::{Playlist, PlaylistPost, Summary};
-use super::db;
 
 /// Handler for getting all playlists
-pub async fn list(DatabaseConnection(connection): DatabaseConnection) -> Result<(StatusCode, Json<Vec<Summary>>), Error> {
+pub async fn list(
+    DatabaseConnection(connection): DatabaseConnection,
+) -> Result<(StatusCode, Json<Vec<Summary>>), Error> {
     db::list(connection)
         .map_ok(to_json_response(StatusCode::OK))
         .await
@@ -34,7 +36,7 @@ pub async fn post(
 /// Handler for deleting a specific playlist
 pub async fn delete(
     DatabaseConnection(connection): DatabaseConnection,
-    Path(id): Path<lipl_types::Uuid>
+    Path(id): Path<lipl_types::Uuid>,
 ) -> Result<StatusCode, Error> {
     db::delete(connection, id.inner())
         .map_ok(to_status_ok)

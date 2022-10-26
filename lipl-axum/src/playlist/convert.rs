@@ -11,9 +11,7 @@ where
 
 pub fn to_summary(row: Row) -> Summary {
     Summary {
-        id: row
-            .get::<&str, uuid::Uuid>(sql::column::ID)
-            .into(),
+        id: row.get::<&str, uuid::Uuid>(sql::column::ID).into(),
         title: row.get::<&str, String>(sql::column::TITLE),
     }
 }

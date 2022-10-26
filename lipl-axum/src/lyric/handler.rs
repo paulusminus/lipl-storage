@@ -1,11 +1,13 @@
+use super::db;
 use crate::{error, DatabaseConnection};
 use axum::{extract::Path, http::StatusCode, Json};
 use futures_util::TryFutureExt;
 use lipl_types::{Lyric, LyricPost, Summary};
-use super::db;
 
 /// Handler for getting all lyrics
-pub async fn list(DatabaseConnection(connection): DatabaseConnection) -> Result<(StatusCode, Json<Vec<Summary>>), error::Error> {
+pub async fn list(
+    DatabaseConnection(connection): DatabaseConnection,
+) -> Result<(StatusCode, Json<Vec<Summary>>), error::Error> {
     super::db::list(connection)
         .map_ok(crate::to_json_response(StatusCode::OK))
         .await

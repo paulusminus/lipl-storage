@@ -5,9 +5,9 @@ use lipl_types::{Lyric, LyricPost, Summary, Uuid};
 use parts::to_text;
 use tokio_postgres::NoTls;
 
-use crate::error::Error;
 use super::convert;
 use super::sql;
+use crate::error::Error;
 
 pub async fn list(
     connection: PooledConnection<'_, PostgresConnectionManager<NoTls>>,
