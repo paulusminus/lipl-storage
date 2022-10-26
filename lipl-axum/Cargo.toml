@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.5"
+axum = "0.6.0-rc.2"
 bb8 = "0.8"
 bb8-postgres = "0.8"
 clap = { version = "4", features = ["derive"] }
