@@ -28,7 +28,7 @@ pub(crate) fn to_status_ok<T>(_: T) -> StatusCode {
 #[inline]
 pub async fn exit_on_signal_int() {
     match tokio::signal::ctrl_c().await {
-        Ok(_) => { 
+        Ok(_) => {
             message::exit_on_signal_int();
         }
         Err(error) => {
@@ -50,8 +50,5 @@ pub async fn create_service() -> Result<Router, Error> {
                 .nest("/playlist", playlist::router()),
         )
         .layer(Extension(shared_pool.clone()))
-        .layer(TraceLayer::new_for_http())
-    )
+        .layer(TraceLayer::new_for_http()))
 }
-
-
