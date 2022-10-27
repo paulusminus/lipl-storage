@@ -1,6 +1,6 @@
 use axum::routing::get;
-use axum::{Router};
-use lipl_axum_postgres::{ConnectionPool, connection_pool};
+use axum::Router;
+use lipl_axum_postgres::{connection_pool, ConnectionPool};
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
@@ -26,26 +26,30 @@ pub async fn exit_on_signal_int() {
     };
 }
 
+fn prefixed(path: &'static str) -> String {
+    format!("{}/{}", constant::PREFIX, path)
+}
+
 pub async fn create_service() -> lipl_axum_postgres::Result<Router<ConnectionPool>> {
     let pool = connection_pool(constant::PG_CONNECTION).await?;
 
     Ok(Router::with_state(pool)
         .route(
-            "/api/v1/lyric",
+            &prefixed("lyric"),
             get(handler::lyric::list).post(handler::lyric::post),
         )
         .route(
-            "/api/v1/lyric/:id",
+            &prefixed("lyric/:id"),
             get(handler::lyric::item)
                 .delete(handler::lyric::delete)
                 .put(handler::lyric::put),
         )
         .route(
-            "/api/v1/playlist",
+            &prefixed("playlist"),
             get(handler::playlist::list).post(handler::playlist::post),
         )
         .route(
-            "/api/v1/playlist/:id",
+            &prefixed("playlist/:id"),
             get(handler::playlist::item)
                 .delete(handler::playlist::delete)
                 .put(handler::playlist::put),

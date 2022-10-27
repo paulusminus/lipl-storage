@@ -3,26 +3,29 @@ use futures_util::TryFutureExt;
 use lipl_types::{Playlist, PlaylistDb, PlaylistPost, Summary, Uuid};
 
 use super::convert;
-use crate::{error::Error, ext::VecExt, Result, PostgresConnection};
+use crate::{error::Error, ext::VecExt, PostgresConnection};
 
 #[async_trait]
 impl<'a> PlaylistDb for PostgresConnection<'a> {
     type Error = Error;
-    async fn playlist_list(&self) -> Result<Vec<Summary>> {
-        self.inner.query(sql::LIST, &[])
+    async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error> {
+        self.inner
+            .query(sql::LIST, &[])
             .map_err(Error::from)
             .map_ok(convert::to_list(convert::to_summary))
             .await
     }
 
-    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist> {
-        let title = self.inner
+    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
+        let title = self
+            .inner
             .query_one(sql::ITEM_TITLE, &[&uuid.inner()])
             .map_err(Error::from)
             .map_ok(convert::to_title)
             .await?;
 
-        let members = self.inner
+        let members = self
+            .inner
             .query(sql::ITEM_MEMBERS, &[&uuid.inner()])
             .map_err(Error::from)
             .map_ok(convert::to_list(convert::to_uuid))
@@ -35,25 +38,27 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
         })
     }
 
-    async fn playlist_delete(&self, uuid: Uuid) -> Result<()> {
-        self.inner.execute(sql::DELETE, &[&uuid.inner()])
+    async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
+        self.inner
+            .execute(sql::DELETE, &[&uuid.inner()])
             .map_err(Error::from)
             .map_ok(|_| {})
             .await
     }
 
-    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist> {
+    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error> {
         let id = Uuid::default();
         let members = playlist_post.members.map(convert::to_inner);
-    
-        self.inner.query_one(
-            sql::UPSERT,
-            &[&id.inner(), &playlist_post.title, &members.as_slice()],
-        )
-        .map_err(Error::from)
-        // .inspect_ok(|row| { println!("Row: {:#?}", row.get::<&str, Option<Vec<uuid::Uuid>>>("fn_upsert_playlist")); })
-        .await?;
-    
+
+        self.inner
+            .query_one(
+                sql::UPSERT,
+                &[&id.inner(), &playlist_post.title, &members.as_slice()],
+            )
+            .map_err(Error::from)
+            // .inspect_ok(|row| { println!("Row: {:#?}", row.get::<&str, Option<Vec<uuid::Uuid>>>("fn_upsert_playlist")); })
+            .await?;
+
         self.playlist_item(id).await
     }
 
@@ -61,15 +66,16 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
         &self,
         uuid: Uuid,
         playlist_post: PlaylistPost,
-    ) -> Result<Playlist> {
+    ) -> Result<Playlist, Self::Error> {
         let members = playlist_post.members.map(convert::to_inner);
 
-        self.inner.query_one(
-            sql::UPSERT,
-            &[&uuid.inner(), &playlist_post.title, &members.as_slice()],
-        )
-        .map_err(Error::from)
-        .await?;
+        self.inner
+            .query_one(
+                sql::UPSERT,
+                &[&uuid.inner(), &playlist_post.title, &members.as_slice()],
+            )
+            .map_err(Error::from)
+            .await?;
 
         self.playlist_item(uuid).await
     }

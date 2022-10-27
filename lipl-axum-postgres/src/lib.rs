@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use axum_core::{extract::{FromRequestParts, FromRef}};
+use axum_core::extract::{FromRef, FromRequestParts};
 use bb8::{Pool, PooledConnection};
 use bb8_postgres::PostgresConnectionManager;
 use http::request::Parts;
@@ -17,14 +17,12 @@ pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub struct PostgresConnection<'a> {
-    inner: PooledConnection<'a, PostgresConnectionManager<NoTls>>
+    inner: PooledConnection<'a, PostgresConnectionManager<NoTls>>,
 }
 
 impl<'a> PostgresConnection<'a> {
     pub fn new(pool: PooledConnection<'a, PostgresConnectionManager<NoTls>>) -> Self {
-        Self {
-            inner: pool
-        }
+        Self { inner: pool }
     }
 }
 
@@ -42,7 +40,10 @@ where
 {
     type Rejection = Error;
 
-    async fn from_request_parts(_parts: &mut Parts, state: &S) -> std::result::Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        _parts: &mut Parts,
+        state: &S,
+    ) -> std::result::Result<Self, Self::Rejection> {
         ConnectionPool::from_ref(state)
             .get_owned()
             .await

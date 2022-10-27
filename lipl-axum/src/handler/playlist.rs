@@ -1,13 +1,11 @@
 use super::{to_json_response, to_status_ok};
-use lipl_axum_postgres::{PostgresConnection, Result};
 use axum::{extract::Path, http::StatusCode, Json};
 use futures_util::TryFutureExt;
+use lipl_axum_postgres::{PostgresConnection, Result};
 use lipl_types::{Playlist, PlaylistDb, PlaylistPost, Summary};
 
 /// Handler for getting all playlists
-pub async fn list(
-    connection: PostgresConnection<'_>,
-) -> Result<(StatusCode, Json<Vec<Summary>>)> {
+pub async fn list(connection: PostgresConnection<'_>) -> Result<(StatusCode, Json<Vec<Summary>>)> {
     connection
         .playlist_list()
         .map_ok(to_json_response(StatusCode::OK))

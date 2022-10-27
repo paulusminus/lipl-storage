@@ -25,7 +25,7 @@ pub enum Error {
     Hyper(#[from] hyper::Error),
 
     #[error("Postgres: {0}")]
-    Postgres(#[from] lipl_axum_postgres::Error)
+    Postgres(#[from] lipl_axum_postgres::Error),
 }
 
 impl IntoResponse for Error {
