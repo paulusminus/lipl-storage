@@ -11,6 +11,25 @@ pub mod error;
 mod path_ext;
 mod uuid;
 
+#[async_trait]
+pub trait LyricDb {
+    type Error;
+    async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error>;
+    async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error>;
+    async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric, Self::Error>;
+    async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error>;
+    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric, Self::Error>;
+}
+
+#[async_trait]
+pub trait PlaylistDb {
+    type Error;
+    async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error>;
+    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error>;
+    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
+    async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error>;
+    async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
+}
 
 // #[macro_export]
 // macro_rules! time_it {

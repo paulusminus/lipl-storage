@@ -1,11 +1,6 @@
-use axum::extract::{FromRef, FromRequestParts};
-use axum::http::request::Parts;
 use axum::routing::get;
-use axum::{async_trait, Json, Router};
-use bb8::{Pool, PooledConnection};
-use bb8_postgres::PostgresConnectionManager;
-use hyper::StatusCode;
-use tokio_postgres::NoTls;
+use axum::{Router};
+use lipl_axum_postgres::{ConnectionPool, connection_pool};
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
@@ -14,38 +9,10 @@ pub use crate::error::Error;
 pub mod constant;
 mod error;
 mod ext;
-mod lyric;
+mod handler;
 mod message;
-mod playlist;
 
-pub(crate) type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
-
-pub struct DatabaseConnection(PooledConnection<'static, PostgresConnectionManager<NoTls>>);
-
-#[async_trait]
-impl<S> FromRequestParts<S> for DatabaseConnection
-where
-    ConnectionPool: FromRef<S>,
-    S: Send + Sync,
-{
-    type Rejection = Error;
-
-    async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        ConnectionPool::from_ref(state)
-            .get_owned()
-            .await
-            .map_err(Error::from)
-            .map(Self)
-    }
-}
-
-pub(crate) fn to_json_response<T>(status_code: StatusCode) -> impl Fn(T) -> (StatusCode, Json<T>) {
-    move |t| (status_code, Json(t))
-}
-
-pub(crate) fn to_status_ok<T>(_: T) -> StatusCode {
-    StatusCode::OK
-}
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[inline]
 pub async fn exit_on_signal_int() {
@@ -59,23 +26,29 @@ pub async fn exit_on_signal_int() {
     };
 }
 
-pub async fn create_service() -> Result<Router<Pool<PostgresConnectionManager<NoTls>>>, Error> {
-    let manager = PostgresConnectionManager::new_from_stringlike(constant::PG_CONNECTION, NoTls)?;
-    let pool = Pool::builder().build(manager).await?;
-    // let shared_pool = Arc::new(pool);
+pub async fn create_service() -> lipl_axum_postgres::Result<Router<ConnectionPool>> {
+    let pool = connection_pool(constant::PG_CONNECTION).await?;
 
     Ok(Router::with_state(pool)
-        .route("/api/v1/lyric", get(lyric::list).post(lyric::post))
+        .route(
+            "/api/v1/lyric",
+            get(handler::lyric::list).post(handler::lyric::post),
+        )
         .route(
             "/api/v1/lyric/:id",
-            get(lyric::item).delete(lyric::delete).put(lyric::put),
+            get(handler::lyric::item)
+                .delete(handler::lyric::delete)
+                .put(handler::lyric::put),
         )
-        .route("/api/v1/playlist", get(playlist::list).post(playlist::post))
+        .route(
+            "/api/v1/playlist",
+            get(handler::playlist::list).post(handler::playlist::post),
+        )
         .route(
             "/api/v1/playlist/:id",
-            get(playlist::item)
-                .delete(playlist::delete)
-                .put(playlist::put),
+            get(handler::playlist::item)
+                .delete(handler::playlist::delete)
+                .put(handler::playlist::put),
         )
         // .layer(Extension(shared_pool.clone()))
         .layer(TraceLayer::new_for_http())

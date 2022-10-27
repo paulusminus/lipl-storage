@@ -5,17 +5,13 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.0-rc.2"
-bb8 = "0.8"
-bb8-postgres = "0.8"
-# clap = { version = "4", features = ["derive"] }
 futures-util = "0.3.25"
 hyper = "0.14"
+lipl-axum-postgres = { path = "../lipl-axum-postgres" }
 lipl-types = { path = "../lipl-types" }
-parts = { path = "../parts" }
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
-tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
 tower-http = { version = "0.3", features = ["compression-br", "compression-gzip", "trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
