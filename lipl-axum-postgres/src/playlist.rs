@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use futures_util::TryFutureExt;
-use lipl_types::{Playlist, PlaylistDb, PlaylistPost, Summary, Uuid};
+use lipl_types::{ext::VecExt, Playlist, PlaylistDb, PlaylistPost, Summary, Uuid};
 
 use super::convert;
-use crate::{error::Error, ext::VecExt, PostgresConnection};
+use crate::{error::Error, PostgresConnection};
 
 #[async_trait]
 impl<'a> PlaylistDb for PostgresConnection<'a> {

@@ -1,7 +1,5 @@
-use lipl_types::{Lyric, Summary, Uuid};
+use lipl_types::{ext::VecExt, Lyric, Summary, Uuid};
 use tokio_postgres::Row;
-
-use crate::ext::VecExt;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Vec<T>
 where

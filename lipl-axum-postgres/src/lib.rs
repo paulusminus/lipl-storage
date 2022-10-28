@@ -9,7 +9,6 @@ pub use crate::error::Error;
 
 mod convert;
 mod error;
-mod ext;
 mod lyric;
 mod playlist;
 

@@ -8,6 +8,7 @@ pub use error::ModelError;
 
 mod disk_format;
 pub mod error;
+pub mod ext;
 mod path_ext;
 mod uuid;
 

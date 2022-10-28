@@ -8,7 +8,6 @@ pub use crate::error::Error;
 
 pub mod constant;
 mod error;
-mod ext;
 mod handler;
 mod message;
 
