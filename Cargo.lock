@@ -948,6 +948,7 @@ dependencies = [
  "serde",
  "thiserror",
  "tokio-postgres",
+ "tracing",
  "uuid",
 ]
 

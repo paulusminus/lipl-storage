@@ -15,6 +15,8 @@ mod playlist;
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
 pub type Result<T> = std::result::Result<T, Error>;
 
+pub const CREATE_DB: &str = include_str!("create_db.sql");
+
 pub struct PostgresConnection<'a> {
     inner: PooledConnection<'a, PostgresConnectionManager<NoTls>>,
 }
@@ -28,6 +30,11 @@ impl<'a> PostgresConnection<'a> {
 pub async fn connection_pool(connection: &'static str) -> Result<ConnectionPool> {
     let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls)?;
     let pool = Pool::builder().build(manager).await?;
+    
+    tracing::info!("About to execute database creation script");
+    pool.get_owned().await?.batch_execute(CREATE_DB).await?;
+    tracing::info!("Finished executing database creation script");
+
     Ok(pool)
 }
 
