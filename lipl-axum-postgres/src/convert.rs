@@ -20,7 +20,7 @@ pub fn to_playlist(row: Row) -> Playlist {
     Playlist {
         id: row.get::<&str, uuid::Uuid>(sql::column::ID).into(),
         title: row.get::<&str, String>(sql::column::TITLE),
-        members: row.get::<&str, Vec<uuid::Uuid>>(sql::column::MEMBERS).map(Uuid::from),
+        members: row.get::<&str, Option<Vec<uuid::Uuid>>>(sql::column::MEMBERS).unwrap_or_default().map(Uuid::from),
     }
 }
 

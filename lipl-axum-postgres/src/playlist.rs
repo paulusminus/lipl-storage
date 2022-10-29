@@ -33,19 +33,18 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
     }
 
     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error> {
-        let id = Uuid::default();
-        let members = playlist_post.members.map(convert::to_inner);
-
         self.inner
             .query_one(
                 sql::UPSERT,
-                &[&id.inner(), &playlist_post.title, &members.as_slice()],
+                &[
+                    &Uuid::default().inner(),
+                    &playlist_post.title.clone(),
+                    &playlist_post.members.map(convert::to_inner).as_slice()
+                ],
             )
             .map_err(Error::from)
-            // .inspect_ok(|row| { println!("Row: {:#?}", row.get::<&str, Option<Vec<uuid::Uuid>>>("fn_upsert_playlist")); })
-            .await?;
-
-        self.playlist_item(id).await
+            .map_ok(convert::to_playlist)
+            .await
     }
 
     async fn playlist_put(
@@ -53,17 +52,18 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
         uuid: Uuid,
         playlist_post: PlaylistPost,
     ) -> Result<Playlist, Self::Error> {
-        let members = playlist_post.members.map(convert::to_inner);
-
         self.inner
             .query_one(
                 sql::UPSERT,
-                &[&uuid.inner(), &playlist_post.title, &members.as_slice()],
+                &[
+                    &uuid.inner(),
+                    &playlist_post.title.clone(),
+                    &playlist_post.members.map(convert::to_inner).as_slice()
+                ],
             )
             .map_err(Error::from)
-            .await?;
-
-        self.playlist_item(uuid).await
+            .map_ok(convert::to_playlist)
+            .await
     }
 }
 
@@ -72,5 +72,5 @@ mod sql {
     pub const _LIST_FULL: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
     pub const ITEM: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1";
     pub const DELETE: &str = "DELETE FROM playlist WHERE id = $1;";
-    pub const UPSERT: &str = "SELECT fn_upsert_playlist($1, $2, $3);";
+    pub const UPSERT: &str = "SELECT * from fn_upsert_playlist($1, $2, $3);";
 }

@@ -21,66 +21,46 @@ CREATE INDEX IF NOT EXISTS member_lyric_id ON member (lyric_id);
 
 CREATE INDEX IF NOT EXISTS member_playlist_id ON member (playlist_id);
 
-CREATE OR REPLACE view membership AS
-    SELECT l.id AS lyric_id, l.title AS lyric_title, p.id AS playlist_id, p.title AS playlist_title, m.ordering as ordering FROM lyric l 
-    INNER JOIN member m ON l.id = m.lyric_id 
-    INNER JOIN playlist p ON p.id = m.playlist_id;
-
-CREATE OR REPLACE FUNCTION set_members(p_id uuid, l_ids uuid[], out created_ids uuid[]) AS $$
-DECLARE
-    counter integer := 0;
-    l_id uuid;
-BEGIN
-    RAISE NOTICE 'Start deleting members';
-    DELETE FROM member WHERE playlist_id = p_id;
-    RAISE NOTICE 'Finished deleting members';
-    FOREACH l_id IN ARRAY l_ids
-    LOOP
-        counter := counter + 1;
-        RAISE NOTICE 'Adding lyric with id %', l_id;
-        RAISE NOTICE 'Counter = %', counter;
-        BEGIN
-            INSERT INTO MEMBER (playlist_id, lyric_id, ordering) VALUES (p_id, l_id, counter);
-            created_ids := created_ids || l_id;
-        EXCEPTION WHEN SQLSTATE '23503' THEN -- Do nothing and continue with next l_id
-        END;
-    END LOOP;
-
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION fn_upsert_playlist(new_id uuid, new_title text, new_members uuid[], out created_ids uuid[]) AS $$
+CREATE OR REPLACE FUNCTION fn_upsert_playlist(new_id uuid, new_title text, new_members uuid[]) 
+RETURNS TABLE (
+    id uuid,
+    title text,
+    members uuid[]
+) AS $$
 DECLARE
     l_id uuid;
     counter integer := 0;
+    members uuid[];
 BEGIN
-    RAISE NOTICE 'Update id and title on playlist';
     counter := 0;
     INSERT INTO playlist (id, title)
     VALUES(new_id, new_title)
-    ON CONFLICT (id)
+    ON CONFLICT ON CONSTRAINT playlist_pkey
     DO
     UPDATE SET title = new_title;
 
-    RAISE NOTICE 'Start deleting members';
     DELETE FROM member WHERE playlist_id = new_id;
-    RAISE NOTICE 'Finished deleting members';
+    RAISE NOTICE 'Members deleted';
     FOREACH l_id IN ARRAY new_members
     LOOP
         counter := counter + 1;
-        RAISE NOTICE 'Adding lyric with id %', l_id;
-        RAISE NOTICE 'Counter = %', counter;
         BEGIN
             INSERT INTO MEMBER (playlist_id, lyric_id, ordering) VALUES (new_id, l_id, counter);
-            created_ids := created_ids || l_id;
-        EXCEPTION WHEN SQLSTATE '23503' THEN -- Do nothing and continue with next l_id
+            members := members || l_id;
         END;
+        RAISE NOTICE 'Lyric with id % added', l_id;
     END LOOP;
 
+    RETURN QUERY SELECT new_id AS id, new_title AS title, members AS members;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION fn_playlist_item(selected_id uuid, out id uuid, out title text, out members uuid[]) AS $$
+CREATE OR REPLACE FUNCTION fn_playlist_item(selected_id uuid)
+RETURNS TABLE (
+    id uuid,
+    title text,
+    members uuid[]
+) AS $$
 DECLARE
     l_id uuid;
 BEGIN
@@ -88,10 +68,7 @@ BEGIN
     id := select_id;
 
     RAISE NOTICE 'Select title from playlist';
-    SELECT title INTO title FROM playlist WHERE id = selected_id;
-
+    SELECT title INTO title FROM playlist WHERE playlist.id = selected_id;
     SELECT lyric_id INTO members FROM member WHERE playlist_id = selected_id ORDER BY ordering;
-
-
 END;
 $$ LANGUAGE plpgsql;
