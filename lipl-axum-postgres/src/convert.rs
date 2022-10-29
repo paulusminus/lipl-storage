@@ -1,4 +1,4 @@
-use lipl_types::{ext::VecExt, Lyric, Summary, Uuid, Playlist};
+use lipl_types::{ext::VecExt, Lyric, LyricPost, Summary, Uuid, Playlist};
 use tokio_postgres::Row;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Vec<T>
@@ -6,6 +6,15 @@ where
     F: Fn(Row) -> T + Copy,
 {
     move |rows| rows.map(f)
+}
+
+pub fn to_lyric_from_uuid(uuid: Uuid) -> impl Fn(LyricPost) -> Lyric
+{
+    move |lyric_post| Lyric {
+        id: uuid,
+        title: lyric_post.title,
+        parts: lyric_post.parts,
+    }
 }
 
 pub fn to_lyric(row: Row) -> Lyric {

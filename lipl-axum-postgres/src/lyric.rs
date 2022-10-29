@@ -32,12 +32,11 @@ impl<'a> LyricDb for PostgresConnection<'a> {
         self.inner
             .execute(
                 sql::INSERT,
-                &[&id.inner(), &lyric_post.title, &to_text(&lyric_post.parts)],
+                &[&id.inner(), &lyric_post.title.clone(), &to_text(&lyric_post.parts)],
             )
             .map_err(Error::from)
-            .await?;
-
-        self.lyric_item(id).await
+            .map_ok(|_| convert::to_lyric_from_uuid(id)(lyric_post))
+            .await
     }
 
     async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
@@ -53,15 +52,14 @@ impl<'a> LyricDb for PostgresConnection<'a> {
             .execute(
                 sql::UPDATE,
                 &[
-                    &lyric_post.title,
+                    &lyric_post.title.clone(),
                     &to_text(&lyric_post.parts),
                     &uuid.inner(),
                 ],
             )
             .map_err(Error::from)
-            .await?;
-
-        self.lyric_item(uuid).await
+            .map_ok(|_| convert::to_lyric_from_uuid(uuid)(lyric_post))
+            .await
     }
 }
 
