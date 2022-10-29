@@ -17,25 +17,11 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
     }
 
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
-        let title = self
-            .inner
-            .query_one(sql::ITEM_TITLE, &[&uuid.inner()])
+        self.inner
+            .query_one(sql::ITEM, &[&uuid.inner()])
             .map_err(Error::from)
-            .map_ok(convert::to_title)
-            .await?;
-
-        let members = self
-            .inner
-            .query(sql::ITEM_MEMBERS, &[&uuid.inner()])
-            .map_err(Error::from)
-            .map_ok(convert::to_list(convert::to_uuid))
-            .await?;
-
-        Ok(Playlist {
-            id: uuid,
-            title,
-            members,
-        })
+            .map_ok(convert::to_playlist)
+            .await
     }
 
     async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
@@ -83,9 +69,8 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
 
 mod sql {
     pub const LIST: &str = "SELECT * FROM playlist ORDER BY title;";
-    pub const ITEM_TITLE: &str = "SELECT title FROM playlist WHERE id = $1;";
-    pub const ITEM_MEMBERS: &str =
-        "SELECT lyric_id FROM membership WHERE playlist_id = $1 ORDER BY ordering;";
+    pub const _LIST_FULL: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
+    pub const ITEM: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1";
     pub const DELETE: &str = "DELETE FROM playlist WHERE id = $1;";
     pub const UPSERT: &str = "SELECT fn_upsert_playlist($1, $2, $3);";
 }

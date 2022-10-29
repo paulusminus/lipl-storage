@@ -79,3 +79,19 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_playlist_item(selected_id uuid, out id uuid, out title text, out members uuid[]) AS $$
+DECLARE
+    l_id uuid;
+BEGIN
+    RAISE NOTICE 'Assisgn select_id to id';
+    id := select_id;
+
+    RAISE NOTICE 'Select title from playlist';
+    SELECT title INTO title FROM playlist WHERE id = selected_id;
+
+    SELECT lyric_id INTO members FROM member WHERE playlist_id = selected_id ORDER BY ordering;
+
+
+END;
+$$ LANGUAGE plpgsql;
