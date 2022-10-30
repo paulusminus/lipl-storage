@@ -12,16 +12,16 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
         self.inner
             .query(sql::LIST, &[])
             .map_err(Error::from)
-            .map_ok(convert::to_list(convert::to_summary))
             .await
+            .and_then(convert::to_list(convert::to_summary))
     }
 
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
         self.inner
             .query_one(sql::ITEM, &[&uuid.inner()])
             .map_err(Error::from)
-            .map_ok(convert::to_playlist)
             .await
+            .and_then(convert::to_playlist)
     }
 
     async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
@@ -43,8 +43,8 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
                 ],
             )
             .map_err(Error::from)
-            .map_ok(convert::to_playlist)
             .await
+            .and_then(convert::to_playlist)
     }
 
     async fn playlist_put(
@@ -62,8 +62,8 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
                 ],
             )
             .map_err(Error::from)
-            .map_ok(convert::to_playlist)
             .await
+            .and_then(convert::to_playlist)
     }
 }
 

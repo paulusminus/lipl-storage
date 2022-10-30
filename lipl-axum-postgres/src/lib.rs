@@ -49,7 +49,7 @@ where
     async fn from_request_parts(
         _parts: &mut Parts,
         state: &S,
-    ) -> std::result::Result<Self, Self::Rejection> {
+    ) -> Result<Self> {
         ConnectionPool::from_ref(state)
             .get_owned()
             .await

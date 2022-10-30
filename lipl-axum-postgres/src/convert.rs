@@ -1,43 +1,36 @@
-use lipl_types::{ext::VecExt, Lyric, LyricPost, Summary, Uuid, Playlist};
+use lipl_types::{ext::VecExt, Lyric, Summary, Uuid, Playlist};
 use tokio_postgres::Row;
 
-pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Vec<T>
+use crate::Result;
+
+pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Result<Vec<T>>
 where
-    F: Fn(Row) -> T + Copy,
+    F: Fn(Row) -> Result<T> + Copy,
 {
-    move |rows| rows.map(f)
+    move |rows| rows.into_iter().map(f).collect::<Result<Vec<T>>>()
 }
 
-pub fn to_lyric_from_uuid(uuid: Uuid) -> impl Fn(LyricPost) -> Lyric
-{
-    move |lyric_post| Lyric {
-        id: uuid,
-        title: lyric_post.title,
-        parts: lyric_post.parts,
-    }
+pub fn to_lyric(row: Row) -> Result<Lyric> {
+    Ok(Lyric {
+        id: row.try_get::<&str, uuid::Uuid>(sql::column::ID)?.into(),
+        title: row.try_get::<&str, String>(sql::column::TITLE)?,
+        parts: parts::to_parts(row.try_get::<&str, String>(sql::column::PARTS)?),
+    })
 }
 
-pub fn to_lyric(row: Row) -> Lyric {
-    Lyric {
-        id: row.get::<&str, uuid::Uuid>(sql::column::ID).into(),
-        title: row.get::<&str, String>(sql::column::TITLE),
-        parts: parts::to_parts(row.get::<&str, String>(sql::column::PARTS)),
-    }
+pub fn to_playlist(row: Row) -> Result<Playlist> {
+    Ok(Playlist {
+        id: row.try_get::<&str, uuid::Uuid>(sql::column::ID)?.into(),
+        title: row.try_get::<&str, String>(sql::column::TITLE)?,
+        members: row.try_get::<&str, Option<Vec<uuid::Uuid>>>(sql::column::MEMBERS)?.unwrap_or_default().map(Uuid::from),
+    })
 }
 
-pub fn to_playlist(row: Row) -> Playlist {
-    Playlist {
-        id: row.get::<&str, uuid::Uuid>(sql::column::ID).into(),
-        title: row.get::<&str, String>(sql::column::TITLE),
-        members: row.get::<&str, Option<Vec<uuid::Uuid>>>(sql::column::MEMBERS).unwrap_or_default().map(Uuid::from),
-    }
-}
-
-pub fn to_summary(row: Row) -> Summary {
-    Summary {
-        id: row.get::<&str, uuid::Uuid>(sql::column::ID).into(),
-        title: row.get::<&str, String>(sql::column::TITLE),
-    }
+pub fn to_summary(row: Row) -> Result<Summary> {
+    Ok(Summary {
+        id: row.try_get::<&str, uuid::Uuid>(sql::column::ID)?.into(),
+        title: row.try_get::<&str, String>(sql::column::TITLE)?,
+    })
 }
 
 pub fn to_unit<T>(_: T) {}
