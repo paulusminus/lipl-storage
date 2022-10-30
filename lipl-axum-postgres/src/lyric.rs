@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use futures_util::TryFutureExt;
 use lipl_types::{Lyric, LyricDb, LyricPost, Summary, Uuid};
 use parts::to_text;
+use tokio_postgres::types::Type;
 
 use super::convert;
 use crate::error::Error;
@@ -13,7 +14,9 @@ impl<'a> LyricDb for PostgresConnection<'a> {
 
     async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error> {
         self.inner
-            .query(sql::LIST, &[])
+            .prepare_typed(sql::LIST, &[])
+            .and_then(|statement| async move { self.inner.query(&statement, &[]).await })
+            // .query(sql::LIST, &[])
             .map_err(Error::from)
             .await
             .and_then(convert::to_list(convert::to_summary))
@@ -21,7 +24,11 @@ impl<'a> LyricDb for PostgresConnection<'a> {
 
     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error> {
         self.inner
-            .query_one(sql::ITEM, &[&uuid.inner()])
+            .prepare_typed(sql::ITEM, &[Type::UUID])
+            .and_then(|statement| async move { 
+                self.inner.query_one(&statement, &[&uuid.inner()]).await
+            })
+            // .query_one(sql::ITEM, &[&uuid.inner()])
             .map_err(Error::from)
             .await
             .and_then(convert::to_lyric)
@@ -30,10 +37,19 @@ impl<'a> LyricDb for PostgresConnection<'a> {
     async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric, Self::Error> {
         let id = Uuid::default();
         self.inner
-            .query_one(
-                sql::INSERT,
-                &[&id.inner(), &lyric_post.title.clone(), &to_text(&lyric_post.parts)],
-            )
+            .prepare_typed(sql::INSERT, &[Type::UUID, Type::VARCHAR, Type::VARCHAR])
+            .and_then(|statement| async move { 
+                self.inner.query_one(
+                    &statement, &[&id.inner(),
+                    &lyric_post.title.clone(),
+                    &to_text(&lyric_post.parts)]
+                )
+                .await 
+            })
+            // .query_one(
+            //     sql::INSERT,
+            //     &[&id.inner(), &lyric_post.title.clone(), &to_text(&lyric_post.parts)],
+            // )
             .map_err(Error::from)
             .await
             .and_then(convert::to_lyric)
@@ -41,7 +57,9 @@ impl<'a> LyricDb for PostgresConnection<'a> {
 
     async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
         self.inner
-            .execute(sql::DELETE, &[&uuid.inner()])
+            .prepare_typed(sql::DELETE, &[Type::UUID])
+            .and_then(|statement| async move { self.inner.execute(&statement, &[&uuid.inner()]).await } )
+            // .execute(sql::DELETE, &[&uuid.inner()])
             .map_err(Error::from)
             .map_ok(convert::to_unit)
             .await
@@ -49,14 +67,26 @@ impl<'a> LyricDb for PostgresConnection<'a> {
 
     async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric, Self::Error> {
         self.inner
-            .query_one(
-                sql::UPDATE,
-                &[
-                    &lyric_post.title.clone(),
-                    &to_text(&lyric_post.parts),
-                    &uuid.inner(),
-                ],
-            )
+            .prepare_typed(sql::UPDATE, &[Type::VARCHAR, Type::VARCHAR, Type::UUID])
+            .and_then(|statement| async move {
+                self.inner.query_one(
+                    &statement,
+                    &[
+                        &lyric_post.title.clone(),
+                        &to_text(&lyric_post.parts),
+                        &uuid.inner(),    
+                    ]
+                )
+                .await
+            })
+            // .query_one(
+            //     sql::UPDATE,
+            //     &[
+            //         &lyric_post.title.clone(),
+            //         &to_text(&lyric_post.parts),
+            //         &uuid.inner(),
+            //     ],
+            // )
             .map_err(Error::from)
             .await
             .and_then(convert::to_lyric)
