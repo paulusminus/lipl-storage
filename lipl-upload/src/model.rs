@@ -1,4 +1,4 @@
-use lipl_types::LyricPost;
+use lipl_core::LyricPost;
 use futures::TryStream;
 use futures::stream::iter;
 use crate::{fs, UploadResult, error::UploadError};

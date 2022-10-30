@@ -2,7 +2,7 @@ use std::{str::FromStr, pin::Pin, future::{Future}, fmt::{Debug}};
 use clap::{Parser, Subcommand};
 use lipl_fs_repo::{FileRepo};
 use lipl_postgres_repo::{PostgresRepo};
-use lipl_types::{ModelError, error::ModelResult};
+use lipl_core::{ModelError, error::ModelResult};
 
 #[derive(Parser, Debug)]
 #[clap(about = "Serving the db through http")]

@@ -13,7 +13,7 @@ file = ["dep:lipl-fs-repo"]
 anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "3", features = ["derive"] }
-lipl-types = { path = "../lipl-types" }
+lipl-core = { path = "../lipl-core" }
 lipl-fs-repo = { path = "../lipl-fs-repo", optional = true }
 lipl-postgres-repo = { path = "../lipl-postgres-repo", optional = true }
 serde = "1.0"

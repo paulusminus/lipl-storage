@@ -9,7 +9,7 @@ use crate::error::UploadError;
 use api::UploadClient;
 use clap::Parser;
 use futures::{Future, TryStreamExt, TryFutureExt};
-use lipl_types::{Summary, Uuid, PlaylistPost};
+use lipl_core::{Summary, Uuid, PlaylistPost};
 use rest_api_client::{ApiClient};
 use std::time::Instant;
 use crate::model::{try_iter};

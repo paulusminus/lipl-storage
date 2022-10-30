@@ -3,7 +3,7 @@
 macro_rules! create_handler {
     ($name:ident, $list:ident, $summaries:ident, $item:ident, $delete:ident, $update:ident, $post_type:path, $posted_type:path) => {
         pub mod $name {
-            use lipl_types::{LiplRepo, Uuid};
+            use lipl_core::{LiplRepo, Uuid};
             use warp::{Reply, Rejection};
             use warp::reply::{json, with_status};
             use warp::http::status::StatusCode;
@@ -82,8 +82,8 @@ create_handler! (
     get_lyric,
     delete_lyric,
     post_lyric,
-    lipl_types::LyricPost,
-    lipl_types::Lyric
+    lipl_core::LyricPost,
+    lipl_core::Lyric
 );
 
 create_handler! (
@@ -93,6 +93,6 @@ create_handler! (
     get_playlist,
     delete_playlist,
     post_playlist,
-    lipl_types::PlaylistPost,
-    lipl_types::Playlist
+    lipl_core::PlaylistPost,
+    lipl_core::Playlist
 );

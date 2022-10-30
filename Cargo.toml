@@ -6,7 +6,7 @@ members = [
     "lipl-repo-http-server",
     "lipl-fs-repo",
     "lipl-postgres-repo",
-    "lipl-types",
+    "lipl-core",
     "lipl-upload",
     "parts",
     "rest-api-client",

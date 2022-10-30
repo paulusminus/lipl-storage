@@ -1,4 +1,4 @@
-use lipl_types::{ext::VecExt, Lyric, Summary, Uuid, Playlist};
+use lipl_core::{ext::VecExt, Lyric, Summary, Uuid, Playlist};
 use tokio_postgres::Row;
 
 use crate::Result;

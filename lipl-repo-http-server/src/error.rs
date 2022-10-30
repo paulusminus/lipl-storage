@@ -1,7 +1,7 @@
 use thiserror::Error;
 use lipl_fs_repo::FileRepoError;
 use lipl_postgres_repo::PostgresRepoError;
-use lipl_types::ModelError;
+use lipl_core::ModelError;
 
 use warp::reject::Reject;
 

@@ -8,7 +8,7 @@ axum = "0.6.0-rc.2"
 futures-util = "0.3.25"
 hyper = "0.14"
 lipl-axum-postgres = { path = "../lipl-axum-postgres" }
-lipl-types = { path = "../lipl-types" }
+lipl-core = { path = "../lipl-core" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }

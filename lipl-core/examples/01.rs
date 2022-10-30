@@ -1,4 +1,4 @@
-use lipl_types::{Lyric, Uuid};
+use lipl_core::{Lyric, Uuid};
 
 fn hertog_jan_lyric() -> Lyric {
     Lyric {

@@ -1,6 +1,6 @@
 use crate::param::{ListCommand, CopyCommand, DbType};
 use anyhow::Result;
-use lipl_types::{LiplRepo, RepoDb};
+use lipl_core::{LiplRepo, RepoDb};
 use tracing::{info};
 
 pub async fn list<E: std::error::Error>(repo: impl LiplRepo<Error = E>, yaml: bool) -> std::result::Result<(), E> {

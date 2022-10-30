@@ -4,7 +4,7 @@ use std::future::ready;
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
 use futures_util::{TryFutureExt};
-use lipl_types::{Lyric, LiplRepo, Playlist, Summary, Uuid};
+use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
 

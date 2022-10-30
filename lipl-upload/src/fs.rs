@@ -7,7 +7,7 @@ use tokio_stream::wrappers::ReadDirStream;
 use tokio::fs::{read_dir, read_to_string, DirEntry};
 use crate::UploadResult;
 use crate::api::{UploadClient, Api};
-use lipl_types::{Uuid, LyricPost};
+use lipl_core::{Uuid, LyricPost};
 use crate::error::UploadError;
 
 pub struct Entry {

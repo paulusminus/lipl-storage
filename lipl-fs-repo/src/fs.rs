@@ -10,7 +10,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};
 
 use crate::error::{FileRepoError};
-use lipl_types::{Uuid};
+use lipl_core::{Uuid};
 
 type Result<T> = std::result::Result<T, FileRepoError>;
 

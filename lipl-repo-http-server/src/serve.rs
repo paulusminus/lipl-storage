@@ -1,5 +1,5 @@
 use anyhow::Result;
-use lipl_types::LiplRepo;
+use lipl_core::LiplRepo;
 use tokio::signal;
 use tracing::{info, error};
 use warp::Filter;

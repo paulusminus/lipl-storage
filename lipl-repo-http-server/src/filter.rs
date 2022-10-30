@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use warp::{body, path, Filter};
 use warp::filters::query;
-use lipl_types::{LiplRepo};
+use lipl_core::{LiplRepo};
 use crate::constant::{API, VERSION};
 use crate::error::RepoError;
 use crate::handler::lyric as lyric_handler;

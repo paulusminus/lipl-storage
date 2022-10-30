@@ -11,7 +11,7 @@ anyhow = "1"
 clap = { version = "4", features = ["derive", "cargo"] }
 futures = "0.3"
 lazy_static = "1"
-lipl-types = { path = "../lipl-types" }
+lipl-core = { path = "../lipl-core" }
 regex = "1"
 parts = { path = "../parts" }
 rest-api-client = { path = "../rest-api-client" }

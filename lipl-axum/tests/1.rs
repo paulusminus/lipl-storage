@@ -1,6 +1,6 @@
 use lipl_axum::{create_service};
 use lipl_axum_postgres::ConnectionPool;
-use lipl_types::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
+use lipl_core::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
 use axum::{
     body::{Body},
     http::{Request, StatusCode}, Router,

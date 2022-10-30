@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::path::{Path, PathBuf};
 use futures::{TryFuture, TryStreamExt};
 
-use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid, ModelError};
+use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid, ModelError};
 use crate::fs::IO;
 
 use crate::error::FileRepoError;

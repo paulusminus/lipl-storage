@@ -7,7 +7,7 @@ pub use error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt, Future};
-use lipl_types::{
+use lipl_core::{
     LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
@@ -130,7 +130,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 YAML_EXTENSION,
                 io::get_playlist,
             )
-            .map_ok(lipl_types::summaries)
+            .map_ok(lipl_core::summaries)
             .map(|v| sender.send(v))
             .map_err(|_| ModelError::SendFailed("PlaylistSummaries".to_string()))
             .await
@@ -165,7 +165,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 LYRIC_EXTENSION,
                 io::get_lyric_summary,
             )
-            .map_ok(|summaries| lipl_types::ids(summaries.into_iter()))
+            .map_ok(|summaries| lipl_core::ids(summaries.into_iter()))
             .and_then(|ids| check_members(&playlist, &ids))
             .and_then(
                 |_| io::post_item(

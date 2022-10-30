@@ -2,7 +2,7 @@ use super::{to_json_response, to_status_ok};
 use axum::{extract::Path, http::StatusCode, Json};
 use futures_util::TryFutureExt;
 use lipl_axum_postgres::{PostgresConnection, Result};
-use lipl_types::{Lyric, LyricDb, LyricPost, Summary};
+use lipl_core::{Lyric, LyricDb, LyricPost, Summary};
 
 /// Handler for getting all lyrics
 pub async fn list(connection: PostgresConnection<'_>) -> Result<(StatusCode, Json<Vec<Summary>>)> {
@@ -15,7 +15,7 @@ pub async fn list(connection: PostgresConnection<'_>) -> Result<(StatusCode, Jso
 /// Handler for getting a specific lyric
 pub async fn item(
     connection: PostgresConnection<'_>,
-    Path(id): Path<lipl_types::Uuid>,
+    Path(id): Path<lipl_core::Uuid>,
 ) -> Result<(StatusCode, Json<Lyric>)> {
     connection
         .lyric_item(id)
@@ -37,7 +37,7 @@ pub async fn post(
 /// Handler for deleting a specific lyric
 pub async fn delete(
     connection: PostgresConnection<'_>,
-    Path(id): Path<lipl_types::Uuid>,
+    Path(id): Path<lipl_core::Uuid>,
 ) -> Result<StatusCode> {
     connection.lyric_delete(id).map_ok(to_status_ok).await
 }
@@ -45,7 +45,7 @@ pub async fn delete(
 /// Handler for changing a specific lyric
 pub async fn put(
     connection: PostgresConnection<'_>,
-    Path(id): Path<lipl_types::Uuid>,
+    Path(id): Path<lipl_core::Uuid>,
     Json(lyric_post): Json<LyricPost>,
 ) -> Result<(StatusCode, Json<Lyric>)> {
     connection

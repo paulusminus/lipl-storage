@@ -1,5 +1,5 @@
 use lipl_postgres_repo::{PostgresRepo};
-use lipl_types::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
+use lipl_core::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
 
 const CONNECTION: &str = "host=/var/run/postgresql/ user=paul dbname=test";
 const ROODKAPJE: &str = include_str!("./Roodkapje.md");

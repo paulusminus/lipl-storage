@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use lipl_types::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
+use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
 use rest_api_client::{ApiClient, ApiRequest};
 
 use crate::{error::UploadError, UploadResult};
