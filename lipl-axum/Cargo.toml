@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.6.0-rc.2"
+axum = "0.6.0-rc.3"
 futures-util = "0.3.25"
 hyper = "0.14"
 lipl-axum-postgres = { path = "../lipl-axum-postgres" }

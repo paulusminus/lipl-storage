@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use lipl_axum::{constant::{self}, create_service, exit_on_signal_int, Error};
+use lipl_axum::{constant, create_service, exit_on_signal_int, Error};
 use futures_util::TryFutureExt;
 
 #[tokio::main]

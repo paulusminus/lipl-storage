@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1"
-axum-core = "0.3.0-rc.2"
+axum-core = "0.3.0-rc.3"
 bb8 = "0.8"
 bb8-postgres = "0.8"
 futures-util = "0.3"
