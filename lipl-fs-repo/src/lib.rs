@@ -1,19 +1,22 @@
 use std::fmt::Debug;
+use std::marker::PhantomData;
+use futures::future::{Ready};
 use std::path::PathBuf;
+use std::sync::Arc;
+use futures::future::ready;
+use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
 
 pub use error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
-use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt, Future};
+use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, error::{ModelError, ModelResult}, Summary, Uuid, Without,
+    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, Without,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
-
-use tokio::task::{JoinError};
 
 mod constant;
 mod error;
@@ -22,10 +25,27 @@ mod io;
 mod request;
 
 #[derive(Clone)]
+pub struct FileRepoConfig<E: std::error::Error> {
+    pub path: String,
+    phantom: PhantomData<E>,
+}
+
+impl std::future::IntoFuture for FileRepoConfig<FileRepoError> {
+    type Output = Result<FileRepo, FileRepoError>;
+    type IntoFuture = Ready<Self::Output>;
+
+    fn into_future(self) -> Self::IntoFuture {
+        ready(FileRepo::new(self.path))
+    }
+}
+
+
+#[derive(Clone)]
 pub struct FileRepo {
     // join_handle: Arc<Pin<Box<dyn Future<Output = bool>>>>,
     tx: mpsc::Sender<Request>,
     path: String,
+    _join_handle: Arc<JoinHandle<bool>>,
 }
 
 impl Debug for FileRepo {
@@ -187,8 +207,8 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
 impl FileRepo {
     pub fn new(
         source_dir: String,
-    ) -> ModelResult<(FileRepo, impl Future<Output = Result<bool, JoinError>>)> {
-        source_dir.is_dir().map_err(|_| ModelError::NoPath(source_dir.clone().into()))?;
+    ) -> Result<FileRepo, FileRepoError> {
+        source_dir.is_dir().map_err(|_| FileRepoError::NoPath(source_dir.clone().into()))?;
         let dir = source_dir.clone();
 
         let (tx, rx) = mpsc::channel::<Request>(10);
@@ -212,73 +232,70 @@ impl FileRepo {
         });
 
         Ok(
-            (
-                FileRepo {
-                    path: dir,
-                    tx,
-                },
-                join_handle,
-            )
+            FileRepo {
+                path: dir,
+                tx,
+                _join_handle: Arc::new(join_handle)
+            },
         )
     }
 
 }
 
 #[async_trait]
-impl LiplRepo for FileRepo {
-    type Error = FileRepoError;
+impl LiplRepo<FileRepoError> for FileRepo {
 
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>, FileRepoError> {
         select(self.tx.clone(), Request::LyricList)
         .await
     }
 
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, FileRepoError> {
         select(self.tx.clone(), Request::LyricSummaries)
         .await
     }
 
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, FileRepoError> {
         select_by_id(self.tx.clone(), id, Request::LyricItem)
         .await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, FileRepoError> {
         post(self.tx.clone(), lyric, Request::LyricPost)
         .await
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
+    async fn delete_lyric(&self, id: Uuid) -> Result<(), FileRepoError> {
         delete_by_id(self.tx.clone(), id, Request::LyricDelete)
         .await
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
+    async fn get_playlists(&self) -> Result<Vec<Playlist>, FileRepoError> {
         select(self.tx.clone(), Request::PlaylistList)
         .await
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, FileRepoError> {
         select(self.tx.clone(), Request::PlaylistSummaries)
         .await
     }
 
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, FileRepoError> {
         select_by_id(self.tx.clone(), id, Request::PlaylistItem)
         .await
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, FileRepoError> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
         .await
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
+    async fn delete_playlist(&self, id: Uuid) -> Result<(), FileRepoError> {
         delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
         .await
     }
 
-    async fn stop(&self) -> Result<(), Self::Error> {
+    async fn stop(&self) -> Result<(), FileRepoError> {
         select(self.tx.clone(), Request::Stop).await
     }
 }
@@ -290,6 +307,6 @@ mod test {
 
     #[test]
     fn file_repo_is_sized() {
-        assert_eq!(size_of::<super::FileRepo>(), 48);
+        assert_eq!(size_of::<super::FileRepo>(), 56);
     }
 }

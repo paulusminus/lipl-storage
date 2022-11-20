@@ -12,6 +12,7 @@ lipl-core = { path = "../lipl-core" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tower = "0.4"
 tower-http = { version = "0.3", features = ["compression-br", "compression-gzip", "trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

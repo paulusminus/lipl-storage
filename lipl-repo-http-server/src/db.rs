@@ -3,7 +3,7 @@ use anyhow::Result;
 use lipl_core::{LiplRepo, RepoDb};
 use tracing::{info};
 
-pub async fn list<E: std::error::Error>(repo: impl LiplRepo<Error = E>, yaml: bool) -> std::result::Result<(), E> {
+pub async fn list<E: std::error::Error>(repo: impl LiplRepo<E>, yaml: bool) -> std::result::Result<(), E> {
 
     let db = RepoDb {
         lyrics: repo.get_lyrics().await?,
@@ -28,7 +28,7 @@ pub async fn repo_list(args: ListCommand) -> Result<()> {
     Ok(())
 }
 
-pub async fn copy<E, F>(source: impl LiplRepo<Error = E>, target: impl LiplRepo<Error = F>) -> anyhow::Result<()> 
+pub async fn copy<E, F>(source: impl LiplRepo<E>, target: impl LiplRepo<F>) -> anyhow::Result<()> 
 where 
     E: std::error::Error + Send + Sync + 'static, 
     F: std::error::Error + Send + Sync + 'static, 

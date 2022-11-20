@@ -1,6 +1,7 @@
 use axum::routing::get;
-use axum::Router;
-use lipl_axum_postgres::{connection_pool, ConnectionPool};
+use axum::{Router, RouterService};
+use lipl_axum_postgres::{connection_pool};
+use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
@@ -29,10 +30,10 @@ fn prefixed(path: &'static str) -> String {
     format!("{}/{}", constant::PREFIX, path)
 }
 
-pub async fn create_service() -> lipl_axum_postgres::Result<Router<ConnectionPool>> {
+pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
     let pool = connection_pool(constant::PG_CONNECTION).await?;
 
-    Ok(Router::with_state(pool)
+    Ok(Router::new()
         .route(
             &prefixed("lyric"),
             get(handler::lyric::list).post(handler::lyric::post),
@@ -54,6 +55,12 @@ pub async fn create_service() -> lipl_axum_postgres::Result<Router<ConnectionPoo
                 .put(handler::playlist::put),
         )
         // .layer(Extension(shared_pool.clone()))
-        .layer(TraceLayer::new_for_http())
-        .layer(CompressionLayer::new().br(true).gzip(true)))
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .layer(CompressionLayer::new().br(true).gzip(true))
+        )
+        .with_state(pool)
+    )
+        
 }

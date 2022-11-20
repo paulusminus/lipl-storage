@@ -16,7 +16,6 @@ impl<'a> LyricDb for PostgresConnection<'a> {
         self.inner
             .prepare_typed(sql::LIST, &[])
             .and_then(|statement| async move { self.inner.query(&statement, &[]).await })
-            // .query(sql::LIST, &[])
             .map_err(Error::from)
             .await
             .and_then(convert::to_list(convert::to_summary))
@@ -28,7 +27,6 @@ impl<'a> LyricDb for PostgresConnection<'a> {
             .and_then(|statement| async move { 
                 self.inner.query_one(&statement, &[&uuid.inner()]).await
             })
-            // .query_one(sql::ITEM, &[&uuid.inner()])
             .map_err(Error::from)
             .await
             .and_then(convert::to_lyric)
@@ -40,16 +38,15 @@ impl<'a> LyricDb for PostgresConnection<'a> {
             .prepare_typed(sql::INSERT, &[Type::UUID, Type::VARCHAR, Type::VARCHAR])
             .and_then(|statement| async move { 
                 self.inner.query_one(
-                    &statement, &[&id.inner(),
-                    &lyric_post.title.clone(),
-                    &to_text(&lyric_post.parts)]
+                    &statement,
+                    &[
+                        &id.inner(),
+                        &lyric_post.title.clone(),
+                        &to_text(&lyric_post.parts)
+                    ],
                 )
                 .await 
             })
-            // .query_one(
-            //     sql::INSERT,
-            //     &[&id.inner(), &lyric_post.title.clone(), &to_text(&lyric_post.parts)],
-            // )
             .map_err(Error::from)
             .await
             .and_then(convert::to_lyric)
@@ -59,7 +56,6 @@ impl<'a> LyricDb for PostgresConnection<'a> {
         self.inner
             .prepare_typed(sql::DELETE, &[Type::UUID])
             .and_then(|statement| async move { self.inner.execute(&statement, &[&uuid.inner()]).await } )
-            // .execute(sql::DELETE, &[&uuid.inner()])
             .map_err(Error::from)
             .map_ok(convert::to_unit)
             .await
@@ -79,14 +75,6 @@ impl<'a> LyricDb for PostgresConnection<'a> {
                 )
                 .await
             })
-            // .query_one(
-            //     sql::UPDATE,
-            //     &[
-            //         &lyric_post.title.clone(),
-            //         &to_text(&lyric_post.parts),
-            //         &uuid.inner(),
-            //     ],
-            // )
             .map_err(Error::from)
             .await
             .and_then(convert::to_lyric)

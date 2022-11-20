@@ -1,7 +1,17 @@
 use std::net::SocketAddr;
 
+use axum::RouterService;
 use lipl_axum::{constant, create_service, exit_on_signal_int, Error};
 use futures_util::TryFutureExt;
+
+async fn run(service: RouterService) -> Result<(), Error> {
+    let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
+    axum::Server::bind(&addr)
+    .serve(service.into_make_service())
+    .with_graceful_shutdown(exit_on_signal_int())
+    .await
+    .map_err(Error::from)
+}
 
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
@@ -15,13 +25,6 @@ pub async fn main() -> Result<(), Error> {
 
     create_service()
     .map_err(Error::from)
-    .and_then(|service| async move {
-        let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
-        axum::Server::bind(&addr)
-        .serve(service.into_make_service())
-        .with_graceful_shutdown(exit_on_signal_int())
-        .await
-        .map_err(Error::from)    
-    })
+    .and_then(run)
     .await
 }

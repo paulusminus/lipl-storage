@@ -27,6 +27,9 @@ pub enum FileRepoError {
 
     #[error("Join error for {0}")]
     Join(#[from] JoinError),
+
+    #[error("No Path: {0}")]
+    NoPath(String),
 }
 
 impl Default for FileRepoError {

@@ -7,13 +7,6 @@ use axum::{
 use serde::{Serialize, de::DeserializeOwned};
 use tower::{ServiceExt};
 
-async fn service() -> RouterService {
-    create_service()
-    .await
-    .unwrap()
-    .into_service()
-}
-
 fn daar_bij_die_molen() -> LyricPost {
     LyricPost {
         title: "Daar bij die molen".to_owned(),
@@ -30,7 +23,7 @@ fn daar_bij_die_molen() -> LyricPost {
 
 #[tokio::test(flavor = "current_thread")]
 async fn playlist_list() {
-    let service = service().await;
+    let service = create_service().await.unwrap();
 
     let playlists: Vec<Summary> = list(&service, "playlist".to_owned()).await; 
     assert_eq!(
@@ -41,7 +34,7 @@ async fn playlist_list() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_list() {
-    let service = service().await;
+    let service = create_service().await.unwrap();
 
     let lyrics: Vec<Summary> = list(&service, "lyric".to_owned()).await;
     assert_eq!(
@@ -56,7 +49,7 @@ async fn lyric_list() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_post() {
-    let service = service().await;
+    let service = create_service().await.unwrap();
 
     let lyric_post = LyricPost {
         title: "Er is er één jarig".to_owned(),
@@ -73,7 +66,7 @@ async fn lyric_post() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_post_change() {
-    let service = service().await;
+    let service = create_service().await.unwrap();
 
     let mut lyric_post = daar_bij_die_molen();
 
@@ -91,7 +84,7 @@ async fn lyric_post_change() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn playlist_post() {
-    let service = service().await;
+    let service = create_service().await.unwrap();
 
     let playlist_post = PlaylistPost {
         title: "Alle 13 goed".to_owned(),
