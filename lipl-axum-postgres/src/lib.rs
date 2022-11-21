@@ -2,8 +2,10 @@ use async_trait::async_trait;
 use axum_core::extract::{FromRef, FromRequestParts};
 use bb8::{Pool, PooledConnection};
 use bb8_postgres::PostgresConnectionManager;
+use futures_util::{TryFutureExt, Future};
 use http::request::Parts;
-use tokio_postgres::NoTls;
+use serde::Serialize;
+use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
 pub use crate::error::Error;
 
@@ -22,8 +24,63 @@ pub struct PostgresConnection<'a> {
 }
 
 impl<'a> PostgresConnection<'a> {
-    pub fn new(pool: PooledConnection<'a, PostgresConnectionManager<NoTls>>) -> Self {
+    fn new(pool: PooledConnection<'a, PostgresConnectionManager<NoTls>>) -> Self {
         Self { inner: pool }
+    }
+
+    fn execute(
+        &'a self,
+        sql: &'static str,
+        types: &'a [Type],
+        params: &'a[&(dyn ToSql + Sync)]
+    ) -> impl Future<Output = Result<()>> + 'a
+    {
+        async move {
+            self.inner
+                .prepare_typed(sql, types)
+                .and_then(|statement| async move { self.inner.execute(&statement, params).await })
+                .map_err(Error::from)
+                .await
+                .map(|_| ())
+        }
+    }
+
+    fn query<F, T>(
+        &'a self,
+        sql: &'static str,
+        types: &'a [Type],
+        convert: F,
+        params: &'a[&(dyn ToSql + Sync)]
+    ) -> impl Future<Output = Result<Vec<T>>> + 'a
+    where F: Fn(Row) -> Result<T> + Copy + 'a, T: Serialize,
+    {
+        async move {
+            self.inner
+                .prepare_typed(sql, types)
+                .and_then(|statement| async move { self.inner.query(&statement, params).await })
+                .map_err(Error::from)
+                .await
+                .and_then(convert::to_list(convert))
+        }
+    }
+
+    fn query_one<F, T>(
+        &'a self,
+        sql: &'static str,
+        types: &'a [Type],
+        convert: F,
+        params: &'a[&(dyn ToSql + Sync)]
+    ) -> impl Future<Output = Result<T>> + 'a
+    where F: Fn(Row) -> Result<T> + Copy + 'a, T: Serialize,
+    {
+        async move {
+            self.inner
+                .prepare_typed(sql, types)
+                .and_then(|statement| async move { self.inner.query_one(&statement, params).await })
+                .map_err(Error::from)
+                .await
+                .and_then(convert)
+        }
     }
 }
 

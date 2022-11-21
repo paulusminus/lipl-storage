@@ -33,7 +33,9 @@ pub fn to_summary(row: Row) -> Result<Summary> {
     })
 }
 
-pub fn to_unit<T>(_: T) {}
+// pub fn to_unit<T>(_: T) -> Result<()> {
+//     Ok(())
+// }
 
 pub fn to_inner(uuid: Uuid) -> uuid::Uuid {
     uuid.inner()

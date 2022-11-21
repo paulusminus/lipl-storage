@@ -31,9 +31,9 @@ fn prefixed(path: &'static str) -> String {
 }
 
 pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
-    let pool = connection_pool(constant::PG_CONNECTION).await?;
-
-    Ok(Router::new()
+    connection_pool(constant::PG_CONNECTION)
+    .await
+    .map(|pool| Router::new()
         .route(
             &prefixed("lyric"),
             get(handler::lyric::list).post(handler::lyric::post),
@@ -54,13 +54,11 @@ pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
                 .delete(handler::playlist::delete)
                 .put(handler::playlist::put),
         )
-        // .layer(Extension(shared_pool.clone()))
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())
                 .layer(CompressionLayer::new().br(true).gzip(true))
         )
         .with_state(pool)
-    )
-        
+    )      
 }
