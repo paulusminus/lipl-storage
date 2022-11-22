@@ -1,6 +1,6 @@
-use axum_core::response::{IntoResponse, Response};
+// use axum_core::response::{IntoResponse, Response};
 use bb8::RunError;
-use http::StatusCode;
+// use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -26,12 +26,12 @@ pub enum Error {
     Connection(#[from] RunError<tokio_postgres::Error>),
 }
 
-impl IntoResponse for Error {
-    fn into_response(self) -> Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("{:#?}", ErrorReport::from(self)),
-        )
-            .into_response()
-    }
-}
+// impl IntoResponse for Error {
+//     fn into_response(self) -> Response {
+//         (
+//             StatusCode::INTERNAL_SERVER_ERROR,
+//             format!("{:#?}", ErrorReport::from(self)),
+//         )
+//             .into_response()
+//     }
+// }

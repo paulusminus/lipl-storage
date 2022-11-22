@@ -1,55 +1,66 @@
-use super::{to_json_response, to_status_ok};
-use axum::{extract::Path, http::StatusCode, Json};
+use std::sync::Arc;
+
+use super::{to_error_response, to_json_response, to_status_ok};
+use axum::{extract::{Path, State}, http::StatusCode, Json, response::Response};
 use futures_util::TryFutureExt;
-use lipl_axum_postgres::{PostgresConnection, Result};
-use lipl_core::{Playlist, PlaylistDb, PlaylistPost, Summary};
+use lipl_axum_postgres::{PostgresConnection};
+use lipl_core::{PlaylistDb, PlaylistPost};
 
 /// Handler for getting all playlists
-pub async fn list(connection: PostgresConnection<'_>) -> Result<(StatusCode, Json<Vec<Summary>>)> {
+pub async fn list(
+    State(connection): State<Arc<PostgresConnection>>
+) -> Response {
     connection
         .playlist_list()
         .map_ok(to_json_response(StatusCode::OK))
         .await
+        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for getting a specific playlist
 pub async fn item(
-    connection: PostgresConnection<'_>,
+    State(connection): State<Arc<PostgresConnection>>,
     Path(id): Path<lipl_core::Uuid>,
-) -> Result<(StatusCode, Json<Playlist>)> {
+) -> Response {
     connection
         .playlist_item(id)
         .map_ok(to_json_response(StatusCode::OK))
         .await
+        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for posting a new playlist
 pub async fn post(
-    connection: PostgresConnection<'_>,
+    State(connection): State<Arc<PostgresConnection>>,
     Json(playlist_post): Json<PlaylistPost>,
-) -> Result<(StatusCode, Json<Playlist>)> {
+) -> Response {
     connection
         .playlist_post(playlist_post)
         .map_ok(to_json_response(StatusCode::CREATED))
         .await
+        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for deleting a specific playlist
 pub async fn delete(
-    connection: PostgresConnection<'_>,
+    State(connection): State<Arc<PostgresConnection>>,
     Path(id): Path<lipl_core::Uuid>,
-) -> Result<StatusCode> {
-    connection.playlist_delete(id).map_ok(to_status_ok).await
+) -> Response {
+    connection.playlist_delete(id)
+        .map_ok(to_status_ok)
+        .await
+        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for changing a specific playlist
 pub async fn put(
-    connection: PostgresConnection<'_>,
+    State(connection): State<Arc<PostgresConnection>>,
     Path(id): Path<lipl_core::Uuid>,
     Json(playlist_post): Json<PlaylistPost>,
-) -> Result<(StatusCode, Json<Playlist>)> {
+) -> Response {
     connection
         .playlist_put(id, playlist_post)
         .map_ok(to_json_response(StatusCode::OK))
         .await
+        .unwrap_or_else(to_error_response)
 }

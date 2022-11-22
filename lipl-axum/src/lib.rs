@@ -1,7 +1,9 @@
-use axum::routing::get;
+use std::sync::Arc;
+
+use axum::routing::{get};
 use axum::{Router, RouterService};
-use lipl_axum_postgres::{connection_pool};
-use tower::ServiceBuilder;
+use lipl_axum_postgres::{connection_pool, PostgresConnection};
+use tower::{ServiceBuilder};
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
@@ -56,9 +58,11 @@ pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
         )
         .layer(
             ServiceBuilder::new()
+                // .layer(Extension(Arc::new(PostgresConnection::new(pool))))
                 .layer(TraceLayer::new_for_http())
                 .layer(CompressionLayer::new().br(true).gzip(true))
+                .into_inner()
         )
-        .with_state(pool)
+        .with_state(Arc::new(PostgresConnection::new(pool)))
     )      
 }

@@ -939,11 +939,9 @@ name = "lipl-axum-postgres"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "axum-core",
  "bb8",
  "bb8-postgres",
  "futures-util",
- "http",
  "lipl-core",
  "parts",
  "serde",

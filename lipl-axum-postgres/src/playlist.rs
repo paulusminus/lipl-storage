@@ -7,42 +7,18 @@ use super::convert;
 use crate::{error::Error, PostgresConnection};
 
 #[async_trait]
-impl<'a> PlaylistDb for PostgresConnection<'a> {
+impl PlaylistDb for PostgresConnection {
     type Error = Error;
     async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error> {
         self.query(sql::LIST, &[], convert::to_summary, &[]).await
-        // self.inner
-        //     .prepare_typed(sql::LIST, &[])
-        //     .and_then(|statement| async move {
-        //         self.inner.query(&statement, &[]).await
-        //     })
-        //     .map_err(Error::from)
-        //     .await
-        //     .and_then(convert::to_list(convert::to_summary))
     }
 
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
         self.query_one(sql::ITEM, &[Type::UUID], convert::to_playlist, &[&uuid.inner()]).await
-        // self.inner
-        //     .prepare_typed(sql::ITEM, &[Type::UUID])
-        //     .and_then(|statement| async move {
-        //         self.inner.query_one(&statement, &[&uuid.inner()]).await
-        //     })
-        //     .map_err(Error::from)
-        //     .await
-        //     .and_then(convert::to_playlist)
     }
 
     async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
         self.execute(sql::DELETE, &[Type::UUID], &[&uuid.inner()]).await
-        // self.inner
-        //     .prepare_typed(sql::DELETE, &[Type::UUID])
-        //     .and_then(|statement| async move {
-        //         self.inner.execute(&statement, &[&uuid.inner()]).await
-        //     })
-        //     .map_err(Error::from)
-        //     .await
-        //     .and_then(convert::to_unit)
     }
 
     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error> {
@@ -56,22 +32,6 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
                 &playlist_post.members.map(convert::to_inner).as_slice()
             ])
             .await
-        // self.inner
-        //     .prepare_typed(sql::UPSERT, &[Type::UUID, Type::VARCHAR, Type::UUID_ARRAY])
-        //     .and_then(|statement| async move {
-        //         self.inner.query_one(
-        //             &statement,
-        //             &[
-        //                 &Uuid::default().inner(),
-        //                 &playlist_post.title.clone(),
-        //                 &playlist_post.members.map(convert::to_inner).as_slice()
-        //             ],    
-        //         )
-        //         .await
-        //     })
-        //     .map_err(Error::from)
-        //     .await
-        //     .and_then(convert::to_playlist)
     }
 
     async fn playlist_put(
@@ -86,22 +46,6 @@ impl<'a> PlaylistDb for PostgresConnection<'a> {
             &[&uuid.inner(), &playlist_post.title.clone(), &playlist_post.members.map(convert::to_inner).as_slice()]
         )
         .await
-        // self.inner
-        //     .prepare_typed(sql::UPSERT, &[Type::UUID, Type::VARCHAR, Type::UUID_ARRAY])
-        //     .and_then(|statement| async move {
-        //         self.inner.query_one(
-        //             &statement,
-        //             &[
-        //                 &uuid.inner(),
-        //                 &playlist_post.title.clone(),
-        //                 &playlist_post.members.map(convert::to_inner).as_slice()
-        //             ],
-        //         )
-        //         .await
-        //     })
-        //     .map_err(Error::from)
-        //     .await
-        //     .and_then(convert::to_playlist)
     }
 }
 
