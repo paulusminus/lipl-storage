@@ -1,9 +1,6 @@
-// use async_trait::async_trait;
-// use axum_core::extract::{FromRef, FromRequestParts};
 use bb8::{Pool};
 use bb8_postgres::PostgresConnectionManager;
 use futures_util::{TryFutureExt, Future};
-// use http::request::Parts;
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
@@ -99,23 +96,3 @@ pub async fn connection_pool(connection: &'static str) -> Result<ConnectionPool>
 
     Ok(pool)
 }
-
-// #[async_trait]
-// impl<'a, S> FromRequestParts<S> for PostgresConnection<'a>
-// where
-//     ConnectionPool: FromRef<S>,
-//     S: Send + Sync,
-// {
-//     type Rejection = Error;
-
-//     async fn from_request_parts(
-//         _parts: &mut Parts,
-//         state: &S,
-//     ) -> Result<Self> {
-//         ConnectionPool::from_ref(state)
-//             .get_owned()
-//             .await
-//             .map_err(Error::from)
-//             .map(Self::new)
-//     }
-// }

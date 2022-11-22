@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-// use futures_util::TryFutureExt;
 use lipl_core::{Lyric, LyricDb, LyricPost, Summary, Uuid};
 use parts::to_text;
 use tokio_postgres::types::Type;
