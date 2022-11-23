@@ -941,14 +941,12 @@ dependencies = [
  "async-trait",
  "bb8",
  "bb8-postgres",
- "futures-util",
  "lipl-core",
  "parts",
  "serde",
  "thiserror",
  "tokio-postgres",
  "tracing",
- "uuid",
 ]
 
 [[package]]

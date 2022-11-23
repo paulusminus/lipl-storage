@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Deserialize, Serialize)]
-struct ErrorReport {
+pub struct ErrorReport {
     error: String,
 }
 

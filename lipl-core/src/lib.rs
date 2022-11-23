@@ -32,16 +32,6 @@ pub trait PlaylistDb {
     async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
 }
 
-// #[macro_export]
-// macro_rules! time_it {
-//     ($process:expr) => {{
-//         let now = std::time::Instant::now();
-//         let result = $process.await?;
-//         tracing::info!(elapsed_microseconds = now.elapsed().as_micros());
-//         Ok(result)    
-//     }};
-// }
-
 #[async_trait]
 pub trait LiplRepo<E>: Clone + Send + Sync where E: std::error::Error {
     async fn get_lyrics(&self) -> Result<Vec<Lyric>, E>;
@@ -316,4 +306,8 @@ mod tests {
         assert_eq!(out[0], "1");
         assert_eq!(out[1], "5");
     }
+}
+
+pub mod reexport {
+    pub use uuid::Uuid;
 }

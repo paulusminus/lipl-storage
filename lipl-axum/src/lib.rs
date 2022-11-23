@@ -2,12 +2,13 @@ use std::sync::Arc;
 
 use axum::routing::{get};
 use axum::{Router, RouterService};
-use lipl_axum_postgres::{connection_pool, PostgresConnection};
+use lipl_axum_postgres::{connection_pool};
 use tower::{ServiceBuilder};
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
 pub use crate::error::Error;
+use crate::handler::{lyric, playlist};
 
 pub mod constant;
 mod error;
@@ -28,41 +29,34 @@ pub async fn exit_on_signal_int() {
     };
 }
 
-fn prefixed(path: &'static str) -> String {
-    format!("{}/{}", constant::PREFIX, path)
-}
-
 pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
     connection_pool(constant::PG_CONNECTION)
     .await
-    .map(|pool| Router::new()
-        .route(
-            &prefixed("lyric"),
-            get(handler::lyric::list).post(handler::lyric::post),
-        )
-        .route(
-            &prefixed("lyric/:id"),
-            get(handler::lyric::item)
-                .delete(handler::lyric::delete)
-                .put(handler::lyric::put),
-        )
-        .route(
-            &prefixed("playlist"),
-            get(handler::playlist::list).post(handler::playlist::post),
-        )
-        .route(
-            &prefixed("playlist/:id"),
-            get(handler::playlist::item)
-                .delete(handler::playlist::delete)
-                .put(handler::playlist::put),
+    .map(|pool| 
+        Router::new().nest(constant::PREFIX, Router::new()
+            .route(
+            "/lyric",
+    get(lyric::list).post(lyric::post),
+            )
+            .route(
+            "/lyric/:id",
+   get(lyric::item).delete(lyric::delete).put(lyric::put),
+            )
+            .route(
+            "/playlist",
+    get(playlist::list).post(playlist::post),
+            )
+            .route(
+            "/playlist/:id",
+  get(playlist::item).delete(playlist::delete).put(playlist::put),
+            )
         )
         .layer(
             ServiceBuilder::new()
-                // .layer(Extension(Arc::new(PostgresConnection::new(pool))))
                 .layer(TraceLayer::new_for_http())
                 .layer(CompressionLayer::new().br(true).gzip(true))
                 .into_inner()
         )
-        .with_state(Arc::new(PostgresConnection::new(pool)))
+        .with_state(Arc::new(pool))
     )      
 }

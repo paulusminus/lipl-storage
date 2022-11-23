@@ -1,4 +1,4 @@
-use lipl_core::{ext::VecExt, Lyric, Summary, Uuid, Playlist};
+use lipl_core::{ext::VecExt, reexport, Lyric, Summary, Uuid, Playlist};
 use tokio_postgres::Row;
 
 use crate::Result;
@@ -12,7 +12,7 @@ where
 
 pub fn to_lyric(row: Row) -> Result<Lyric> {
     Ok(Lyric {
-        id: row.try_get::<&str, uuid::Uuid>(sql::column::ID)?.into(),
+        id: row.try_get::<&str, reexport::Uuid>(sql::column::ID)?.into(),
         title: row.try_get::<&str, String>(sql::column::TITLE)?,
         parts: parts::to_parts(row.try_get::<&str, String>(sql::column::PARTS)?),
     })
@@ -20,24 +20,20 @@ pub fn to_lyric(row: Row) -> Result<Lyric> {
 
 pub fn to_playlist(row: Row) -> Result<Playlist> {
     Ok(Playlist {
-        id: row.try_get::<&str, uuid::Uuid>(sql::column::ID)?.into(),
+        id: row.try_get::<&str, reexport::Uuid>(sql::column::ID)?.into(),
         title: row.try_get::<&str, String>(sql::column::TITLE)?,
-        members: row.try_get::<&str, Option<Vec<uuid::Uuid>>>(sql::column::MEMBERS)?.unwrap_or_default().map(Uuid::from),
+        members: row.try_get::<&str, Option<Vec<reexport::Uuid>>>(sql::column::MEMBERS)?.unwrap_or_default().map(Uuid::from),
     })
 }
 
 pub fn to_summary(row: Row) -> Result<Summary> {
     Ok(Summary {
-        id: row.try_get::<&str, uuid::Uuid>(sql::column::ID)?.into(),
+        id: row.try_get::<&str, reexport::Uuid>(sql::column::ID)?.into(),
         title: row.try_get::<&str, String>(sql::column::TITLE)?,
     })
 }
 
-// pub fn to_unit<T>(_: T) -> Result<()> {
-//     Ok(())
-// }
-
-pub fn to_inner(uuid: Uuid) -> uuid::Uuid {
+pub fn to_inner(uuid: Uuid) -> reexport::Uuid {
     uuid.inner()
 }
 

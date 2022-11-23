@@ -3,12 +3,12 @@ use std::sync::Arc;
 use super::{to_error_response, to_json_response, to_status_ok};
 use axum::{extract::{Path, State}, http::StatusCode, Json, response::Response};
 use futures_util::TryFutureExt;
-use lipl_axum_postgres::{PostgresConnection};
+use lipl_axum_postgres::{PostgresConnectionPool};
 use lipl_core::{PlaylistDb, PlaylistPost};
 
 /// Handler for getting all playlists
 pub async fn list(
-    State(connection): State<Arc<PostgresConnection>>
+    State(connection): State<Arc<PostgresConnectionPool>>
 ) -> Response {
     connection
         .playlist_list()
@@ -19,7 +19,7 @@ pub async fn list(
 
 /// Handler for getting a specific playlist
 pub async fn item(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response {
     connection
@@ -31,7 +31,7 @@ pub async fn item(
 
 /// Handler for posting a new playlist
 pub async fn post(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Response {
     connection
@@ -43,7 +43,7 @@ pub async fn post(
 
 /// Handler for deleting a specific playlist
 pub async fn delete(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response {
     connection.playlist_delete(id)
@@ -54,7 +54,7 @@ pub async fn delete(
 
 /// Handler for changing a specific playlist
 pub async fn put(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Path(id): Path<lipl_core::Uuid>,
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Response {

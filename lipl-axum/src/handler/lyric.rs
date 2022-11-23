@@ -3,12 +3,12 @@ use std::sync::Arc;
 use super::{to_json_response, to_status_ok, to_error_response};
 use axum::{extract::{Path, State}, http::StatusCode, Json, response::{Response}};
 use futures_util::TryFutureExt;
-use lipl_axum_postgres::{PostgresConnection};
+use lipl_axum_postgres::{PostgresConnectionPool};
 use lipl_core::{LyricDb, LyricPost};
 
 /// Handler for getting all lyrics
 pub async fn list(
-    State(connection): State<Arc<PostgresConnection>>
+    State(connection): State<Arc<PostgresConnectionPool>>
 ) -> Response {
     connection
         .lyric_list()
@@ -19,7 +19,7 @@ pub async fn list(
 
 /// Handler for getting a specific lyric
 pub async fn item(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response {
     connection
@@ -31,7 +31,7 @@ pub async fn item(
 
 /// Handler for posting a new lyric
 pub async fn post(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response {
     connection
@@ -43,10 +43,11 @@ pub async fn post(
 
 /// Handler for deleting a specific lyric
 pub async fn delete(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response {
-    connection.lyric_delete(id)
+    connection
+        .lyric_delete(id)
         .map_ok(to_status_ok)
         .await
         .unwrap_or_else(to_error_response)
@@ -54,7 +55,7 @@ pub async fn delete(
 
 /// Handler for changing a specific lyric
 pub async fn put(
-    State(connection): State<Arc<PostgresConnection>>,
+    State(connection): State<Arc<PostgresConnectionPool>>,
     Path(id): Path<lipl_core::Uuid>,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response {
