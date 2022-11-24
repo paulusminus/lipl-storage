@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::routing::{get};
 use axum::{Router, RouterService};
 use lipl_axum_postgres::{connection_pool};
-use tower::{ServiceBuilder};
+use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 
@@ -34,22 +34,10 @@ pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
     .await
     .map(|pool| 
         Router::new().nest(constant::PREFIX, Router::new()
-            .route(
-            "/lyric",
-    get(lyric::list).post(lyric::post),
-            )
-            .route(
-            "/lyric/:id",
-   get(lyric::item).delete(lyric::delete).put(lyric::put),
-            )
-            .route(
-            "/playlist",
-    get(playlist::list).post(playlist::post),
-            )
-            .route(
-            "/playlist/:id",
-  get(playlist::item).delete(playlist::delete).put(playlist::put),
-            )
+            .route("/lyric", get(lyric::list).post(lyric::post))
+            .route("/lyric/:id", get(lyric::item).delete(lyric::delete).put(lyric::put))
+            .route("/playlist", get(playlist::list).post(playlist::post))
+            .route("/playlist/:id", get(playlist::item).delete(playlist::delete).put(playlist::put))
         )
         .layer(
             ServiceBuilder::new()

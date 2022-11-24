@@ -916,7 +916,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-axum"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "futures-util",
@@ -936,7 +936,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-axum-postgres"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "bb8",

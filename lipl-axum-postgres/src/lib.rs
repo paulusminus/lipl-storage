@@ -20,11 +20,15 @@ pub struct PostgresConnectionPool {
     inner: ConnectionPool,
 }
 
-impl PostgresConnectionPool {
-    pub fn new(pool: ConnectionPool) -> Self {
-        Self { inner: pool }
+impl From<ConnectionPool> for PostgresConnectionPool {
+    fn from(pool: ConnectionPool) -> Self {
+        Self {
+            inner: pool,
+        }
     }
+}
 
+impl PostgresConnectionPool {
     fn execute<'a>(
         &'a self,
         sql: &'static str,
@@ -83,5 +87,5 @@ pub async fn connection_pool(connection: &'static str) -> Result<PostgresConnect
     pool.get().await?.batch_execute(CREATE_DB).await?;
     tracing::info!("Finished executing database creation script");
 
-    Ok(PostgresConnectionPool::new(pool))
+    Ok(pool.into())
 }

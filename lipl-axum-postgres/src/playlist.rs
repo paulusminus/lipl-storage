@@ -53,7 +53,7 @@ impl PlaylistDb for PostgresConnectionPool {
 mod sql {
     use tokio_postgres::types::Type;
 
-    pub const LIST: &str = "SELECT * FROM playlist ORDER BY title;";
+    pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
     pub const LIST_TYPES: &[Type] = &[];
 
     pub const _LIST_FULL: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
