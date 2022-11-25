@@ -243,7 +243,8 @@ impl FileRepo {
 }
 
 #[async_trait]
-impl LiplRepo<FileRepoError> for FileRepo {
+impl LiplRepo for FileRepo {
+    type Error = FileRepoError;
 
     async fn get_lyrics(&self) -> Result<Vec<Lyric>, FileRepoError> {
         select(self.tx.clone(), Request::LyricList)

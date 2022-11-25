@@ -11,14 +11,14 @@ macro_rules! create_handler {
             use crate::error::{RepoError};
 
             pub async fn list_summary<D, E>(db: D) -> Result<impl Reply, Rejection> 
-            where D: LiplRepo<E>, E: Into<RepoError> + std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError> + std::error::Error
             {
                 let data = db.$summaries().await.map_err(reject)?;
                 Ok(json(&data))
             }
 
             pub async fn list<D, E>(db: D, query: Query) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<E>, E: Into<RepoError> + std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError> + std::error::Error
             {
                 if query.full {
                     let data = db.$list().await.map_err(reject)?;
@@ -33,7 +33,7 @@ macro_rules! create_handler {
             }
 
             pub async fn item<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<E>, E: Into<RepoError> + std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError> + std::error::Error
             {
                 let uuid = id.parse::<Uuid>().map_err(reject)?;
                 let data = db.$item(uuid).await.map_err(reject)?;
@@ -44,7 +44,7 @@ macro_rules! create_handler {
                 db: D,
                 object: $post_type,
             ) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<E>, E: Into<RepoError> + std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError> + std::error::Error
             {
                 let o: $posted_type = (None, object).into();
                 let data = db.$update(o).await.map_err(reject)?;
@@ -52,7 +52,7 @@ macro_rules! create_handler {
             }
 
             pub async fn delete<D, E>(id: String, db: D) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<E>, E: Into<RepoError> + std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError> + std::error::Error
             {
                 let uuid = id.parse::<Uuid>().map_err(reject)?;
                 db.$delete(uuid).await.map_err(reject)?;
@@ -64,7 +64,7 @@ macro_rules! create_handler {
                 db: D,
                 object: $post_type,
             ) -> Result<impl Reply, Rejection>
-            where D: LiplRepo<E>, E: Into<RepoError> + std::error::Error
+            where D: LiplRepo<Error = E>, E: Into<RepoError> + std::error::Error
             {
                 let uuid = id.parse::<Uuid>().map_err(reject)?;
                 let o: $posted_type = (Some(uuid), object).into();

@@ -248,20 +248,21 @@ fn to_ok<T>(t: T) -> PostgresResult<T> {
 }
 
 #[async_trait]
-impl LiplRepo<PostgresRepoError> for PostgresRepo {
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>, PostgresRepoError> {
+impl LiplRepo for PostgresRepo {
+    type Error = PostgresRepoError;
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
         self.lyrics().await
     }
 
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, PostgresRepoError> {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
         self.lyric_summaries().await
     }
 
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, PostgresRepoError> {
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
         self.lyric_detail(id.inner()).await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, PostgresRepoError> {
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
         self.upsert_lyric(
             lyric.id.inner(),
             lyric.title,
@@ -273,25 +274,25 @@ impl LiplRepo<PostgresRepoError> for PostgresRepo {
         .await
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> Result<(), PostgresRepoError> {
+    async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
         self.lyric_delete(id.inner())
         .map_ok(to_unit)
         .await
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>, PostgresRepoError> {
+    async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
         self.playlists().await
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, PostgresRepoError> {
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
         self.playlist_summaries().await
     }
 
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, PostgresRepoError> {
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
         self.playlist_detail(id.inner()).await
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, PostgresRepoError> {
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
         let title = playlist.title.clone();
         self.upsert_playlist(
             playlist.id.inner(),
@@ -303,13 +304,13 @@ impl LiplRepo<PostgresRepoError> for PostgresRepo {
         .await
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> Result<(), PostgresRepoError> {
+    async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
         self.playlist_delete(id.inner())
         .map_ok(to_unit)
         .await
     }
 
-    async fn stop(&self) -> Result<(), PostgresRepoError> {
+    async fn stop(&self) -> Result<(), Self::Error> {
         ready(Ok::<(), PostgresRepoError>(())).await
     }
 }

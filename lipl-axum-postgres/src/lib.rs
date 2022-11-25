@@ -1,6 +1,7 @@
 use bb8::{Pool};
 use bb8_postgres::PostgresConnectionManager;
 use std::future::Future;
+use lipl_core::{LyricDb, PlaylistDb};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
@@ -44,6 +45,11 @@ impl PostgresConnectionPool {
         }
     }
 
+    async fn batch_execute(&self, sql: &str) -> Result<()> {
+        let connection = self.inner.get().await?;
+        connection.batch_execute(sql).await.map_err(Error::from)
+    }
+
     fn query<'a, F, T>(
         &'a self,
         sql: &'static str,
@@ -83,9 +89,15 @@ pub async fn connection_pool(connection: &'static str) -> Result<PostgresConnect
     let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls)?;
     let pool = Pool::builder().build(manager).await?;
     
+    let postgres_connection_pool = PostgresConnectionPool::from(pool);
     tracing::info!("About to execute database creation script");
-    pool.get().await?.batch_execute(CREATE_DB).await?;
+    postgres_connection_pool.batch_execute(CREATE_DB).await?;
     tracing::info!("Finished executing database creation script");
 
-    Ok(pool.into())
+    tracing::info!("Warm up cache");
+    postgres_connection_pool.lyric_list().await?;
+    postgres_connection_pool.playlist_list().await?;
+    tracing::info!("Warm up cache finished");
+
+    Ok(postgres_connection_pool)
 }

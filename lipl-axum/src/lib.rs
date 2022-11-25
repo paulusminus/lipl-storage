@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::routing::{get};
-use axum::{Router, RouterService};
+use axum::{Router};
 use lipl_axum_postgres::{connection_pool};
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
@@ -29,7 +29,7 @@ pub async fn exit_on_signal_int() {
     };
 }
 
-pub async fn create_service() -> lipl_axum_postgres::Result<RouterService> {
+pub async fn create_service() -> lipl_axum_postgres::Result<Router<()>> {
     connection_pool(constant::PG_CONNECTION)
     .await
     .map(|pool| 

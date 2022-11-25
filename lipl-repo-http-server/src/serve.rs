@@ -13,7 +13,7 @@ use crate::param::DbType;
 
 async fn run<R, E>(repo: R, port: u16) -> Result<()> 
 where
-    R: LiplRepo<E> + 'static + std::fmt::Debug,
+    R: LiplRepo<Error = E> + 'static + std::fmt::Debug,
     E: std::error::Error + 'static + Into<RepoError>,
 {
     // Cache warmup

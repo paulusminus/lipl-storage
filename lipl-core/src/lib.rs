@@ -14,7 +14,7 @@ mod uuid;
 
 #[async_trait]
 pub trait LyricDb {
-    type Error;
+    type Error: std::error::Error;
     async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error>;
     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error>;
     async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric, Self::Error>;
@@ -24,7 +24,7 @@ pub trait LyricDb {
 
 #[async_trait]
 pub trait PlaylistDb {
-    type Error;
+    type Error: std::error::Error;
     async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error>;
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error>;
     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
@@ -33,18 +33,19 @@ pub trait PlaylistDb {
 }
 
 #[async_trait]
-pub trait LiplRepo<E>: Clone + Send + Sync where E: std::error::Error {
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>, E>;
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, E>;
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, E>;
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, E>;
-    async fn delete_lyric(&self, id: Uuid) -> Result<(), E>;
-    async fn get_playlists(&self) -> Result<Vec<Playlist>, E>;
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, E>;
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, E>;
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, E>;
-    async fn delete_playlist(&self, id: Uuid) -> Result<(), E>;
-    async fn stop(&self) -> Result<(), E>;
+pub trait LiplRepo: Clone + Send + Sync {
+    type Error: std::error::Error;
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error>;
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error>;
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error>;
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error>;
+    async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error>;
+    async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error>;
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error>;
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error>;
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error>;
+    async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error>;
+    async fn stop(&self) -> Result<(), Self::Error>;
 }
 
 pub trait HasSummary {

@@ -2,7 +2,7 @@ use lipl_axum::{create_service};
 use lipl_core::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
 use axum::{
     body::{Body},
-    http::{Request, StatusCode}, RouterService,
+    http::{Request, StatusCode}, Router,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use tower::{ServiceExt};
@@ -101,7 +101,7 @@ async fn playlist_post() {
     delete(&service, "playlist".to_owned(), id).await;
 }
 
-async fn list<R: DeserializeOwned>(service: &RouterService, name: String) -> Vec<R> {
+async fn list<R: DeserializeOwned>(service: &Router<()>, name: String) -> Vec<R> {
     let response = service
         .clone()
         .oneshot(
@@ -117,7 +117,7 @@ async fn list<R: DeserializeOwned>(service: &RouterService, name: String) -> Vec
     r
 }
 
-async fn delete(service: &RouterService, name: String, id: String) {
+async fn delete(service: &Router<()>, name: String, id: String) {
     let response = service
     .clone()
     .oneshot(
@@ -131,7 +131,7 @@ async fn delete(service: &RouterService, name: String, id: String) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-async fn post<T: Serialize, R: DeserializeOwned>(service: &RouterService, name: String, t: &T) -> R {
+async fn post<T: Serialize, R: DeserializeOwned>(service: &Router<()>, name: String, t: &T) -> R {
     let body = serde_json::to_string(t).unwrap();
     let response =
         service
@@ -152,7 +152,7 @@ async fn post<T: Serialize, R: DeserializeOwned>(service: &RouterService, name: 
     r
 }
 
-async fn put<T: Serialize, R: DeserializeOwned>(service: &RouterService, name: String, id: String, t: &T) -> R {
+async fn put<T: Serialize, R: DeserializeOwned>(service: &Router<()>, name: String, id: String, t: &T) -> R {
     let body = serde_json::to_string(t).unwrap();
     let response =
         service
