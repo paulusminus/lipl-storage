@@ -12,9 +12,8 @@ pub async fn list(
 ) -> Response {
     connection
         .playlist_list()
-        .map_ok(to_json_response(StatusCode::OK))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for getting a specific playlist
@@ -24,9 +23,8 @@ pub async fn item(
 ) -> Response {
     connection
         .playlist_item(id)
-        .map_ok(to_json_response(StatusCode::OK))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for posting a new playlist
@@ -36,9 +34,8 @@ pub async fn post(
 ) -> Response {
     connection
         .playlist_post(playlist_post)
-        .map_ok(to_json_response(StatusCode::CREATED))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for deleting a specific playlist
@@ -47,9 +44,8 @@ pub async fn delete(
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response {
     connection.playlist_delete(id)
-        .map_ok(to_status_ok)
+        .map_ok_or_else(to_error_response, to_status_ok)
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for changing a specific playlist
@@ -60,7 +56,6 @@ pub async fn put(
 ) -> Response {
     connection
         .playlist_put(id, playlist_post)
-        .map_ok(to_json_response(StatusCode::OK))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
-        .unwrap_or_else(to_error_response)
 }

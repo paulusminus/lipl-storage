@@ -12,9 +12,8 @@ pub async fn list(
 ) -> Response {
     connection
         .lyric_list()
-        .map_ok(to_json_response(StatusCode::OK))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for getting a specific lyric
@@ -24,9 +23,8 @@ pub async fn item(
 ) -> Response {
     connection
         .lyric_item(id)
-        .map_ok(to_json_response(StatusCode::OK))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for posting a new lyric
@@ -36,9 +34,8 @@ pub async fn post(
 ) -> Response {
     connection
         .lyric_post(lyric_post)
-        .map_ok(to_json_response(StatusCode::CREATED))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for deleting a specific lyric
@@ -48,9 +45,8 @@ pub async fn delete(
 ) -> Response {
     connection
         .lyric_delete(id)
-        .map_ok(to_status_ok)
+        .map_ok_or_else(to_error_response, to_status_ok)
         .await
-        .unwrap_or_else(to_error_response)
 }
 
 /// Handler for changing a specific lyric
@@ -61,7 +57,6 @@ pub async fn put(
 ) -> Response {
     connection
         .lyric_put(id, lyric_post)
-        .map_ok(to_json_response(StatusCode::OK))
+        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
-        .unwrap_or_else(to_error_response)
 }
