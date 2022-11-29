@@ -1,19 +1,29 @@
 use super::{to_json_response, to_status_ok, to_error_response};
-use axum::{extract::{Path, State}, http::StatusCode, Json, response::{Response}};
+use axum::{extract::{Path, Query, State}, http::StatusCode, Json, response::{Response}};
 use futures_util::TryFutureExt;
 use lipl_core::{LyricDb, LyricPost};
+use super::ListQuery;
 
 /// Handler for getting all lyrics
 pub async fn list<T>(
     State(connection): State<T>,
+    query: Query<ListQuery>
 ) -> Response 
 where
     T: LyricDb,
 {
-    connection
-        .lyric_list()
-        .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
-        .await
+    if query.full == Some(true) {
+        connection
+            .lyric_list_full()
+            .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
+            .await
+    }
+    else {
+        connection
+            .lyric_list()
+            .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
+            .await
+    }
 }
 
 /// Handler for getting a specific lyric

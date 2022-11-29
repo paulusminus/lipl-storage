@@ -16,6 +16,7 @@ mod uuid;
 pub trait LyricDb {
     type Error: std::error::Error;
     async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error>;
+    async fn lyric_list_full(&self) -> Result<Vec<Lyric>, Self::Error>;
     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error>;
     async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric, Self::Error>;
     async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error>;
@@ -26,6 +27,7 @@ pub trait LyricDb {
 pub trait PlaylistDb {
     type Error: std::error::Error;
     async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error>;
+    async fn playlist_list_full(&self) -> Result<Vec<Playlist>, Self::Error>;
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error>;
     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
     async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error>;

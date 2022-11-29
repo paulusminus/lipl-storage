@@ -29,12 +29,20 @@ fn compare_title(a: &Summary, b: &Summary) -> Ordering {
     a.title.cmp(&b.title)
 }
 
+fn lyric_compare_title(a: &Lyric, b: &Lyric) -> Ordering {
+    a.title.cmp(&b.title)
+}
+
+fn playlist_compare_title(a: &Playlist, b: &Playlist) -> Ordering {
+    a.title.cmp(&b.title)
+}
+
 #[async_trait]
 impl LyricDb for InMemoryDb {
     type Error = Error;
 
     async fn lyric_list(&self) ->  Result<Vec<Summary>, Self::Error> {
-        let mut result = self.db.read().unwrap().iter().filter_map(|(key, record)| {
+        let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
                 if let Record::Lyric(lyric_post) = record {
                     Some(Summary { id: key.clone(), title: lyric_post.title.clone() })
                 }
@@ -44,8 +52,23 @@ impl LyricDb for InMemoryDb {
             })
             .collect::<Vec<_>>();
 
-        result.sort_by(compare_title);
-        Ok(result)
+        summaries.sort_by(compare_title);
+        Ok(summaries)
+    }
+
+    async fn lyric_list_full(&self) ->  Result<Vec<Lyric>, Self::Error> {
+        let mut lyrics = self.db.read().unwrap().iter().filter_map(|(key, record)| {
+                if let Record::Lyric(lyric_post) = record {
+                    Some(Lyric::from((Some(key.clone()), lyric_post.clone())))
+                }
+                else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        lyrics.sort_by(lyric_compare_title);
+        Ok(lyrics)
     }
 
     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error> {
@@ -115,6 +138,19 @@ impl PlaylistDb for InMemoryDb {
         Ok(summaries)
     }
 
+    async fn playlist_list_full(&self) -> Result<Vec<Playlist>, Self::Error> {
+        let mut playlists = self.db.read().unwrap().iter().filter_map(|(key, record)| {
+            match record {
+                Record::Playlist(playlist_post) => Some(Playlist::from((Some(key.clone()), playlist_post.clone()))),
+                _ => None
+            }
+        })
+        .collect::<Vec<_>>();
+
+        playlists.sort_by(playlist_compare_title);
+        Ok(playlists)
+    }
+
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
         self.db.read().unwrap().get(&uuid)
         .and_then(|record| {
@@ -166,5 +202,4 @@ mod tests {
         assert_eq!(playlists[0].title, "Alle 13 goed".to_owned());
         assert_eq!(playlists[0].id, playlist.id);
     }
-
 }

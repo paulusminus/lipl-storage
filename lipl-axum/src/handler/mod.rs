@@ -1,11 +1,16 @@
 use axum::response::{IntoResponse, Json, Response};
 use hyper::StatusCode;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::ErrorReport};
 
 pub mod lyric;
 pub mod playlist;
+
+#[derive(Deserialize)]
+pub struct ListQuery {
+    full: Option<bool>,
+}
 
 pub(crate) fn to_json_response<T>(status_code: StatusCode) -> impl Fn(T) -> Response
 where T: Serialize

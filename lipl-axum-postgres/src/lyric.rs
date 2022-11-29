@@ -14,6 +14,10 @@ impl<'a> LyricDb for PostgresConnectionPool {
         self.query(sql::LIST, sql::LIST_TYPES, convert::to_summary, &[]).await
     }
 
+    async fn lyric_list_full(&self) -> Result<Vec<Lyric>, Self::Error> {
+        self.query(sql::LIST_FULL, sql::LIST_FULL_TYPES, convert::to_lyric, &[]).await
+    }
+
     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error> {
         self.query_one(sql::ITEM, sql::ITEM_TYPES, convert::to_lyric, &[&uuid.inner()]).await
     }
@@ -47,6 +51,9 @@ mod sql {
 
     pub const LIST: &str = "SELECT id, title FROM lyric ORDER BY title;";
     pub const LIST_TYPES: &[Type] = &[];
+
+    pub const LIST_FULL: &str = "SELECT id, title, parts FROM lyric ORDER BY title;";
+    pub const LIST_FULL_TYPES: &[Type] = &[];
 
     pub const ITEM: &str = "SELECT * FROM lyric WHERE id = $1;";
     pub const ITEM_TYPES: &[Type] = &[Type::UUID];

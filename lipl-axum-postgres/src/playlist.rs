@@ -11,6 +11,10 @@ impl PlaylistDb for PostgresConnectionPool {
         self.query(sql::LIST, sql::LIST_TYPES, convert::to_summary, &[]).await
     }
 
+    async fn playlist_list_full(&self) -> Result<Vec<Playlist>, Self::Error> {
+        self.query(sql::LIST_FULL, sql::LIST_FULL_TYPES, convert::to_playlist, &[]).await
+    }
+
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
         self.query_one(sql::ITEM, sql::ITEM_TYPES, convert::to_playlist, &[&uuid.inner()]).await
     }
@@ -56,7 +60,8 @@ mod sql {
     pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
     pub const LIST_TYPES: &[Type] = &[];
 
-    pub const _LIST_FULL: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
+    pub const LIST_FULL: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
+    pub const LIST_FULL_TYPES: &[Type] = &[];
 
     pub const ITEM: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1";
     pub const ITEM_TYPES: &[Type] = &[Type::UUID];
