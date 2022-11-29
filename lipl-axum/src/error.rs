@@ -11,14 +11,6 @@ pub struct ErrorReport {
     error: String,
 }
 
-// impl From<Error> for ErrorReport {
-//     fn from(error: Error) -> Self {
-//         Self {
-//             error: error.to_string(),
-//         }
-//     }
-// }
-
 impl<E: std::error::Error> From<E> for ErrorReport {
     fn from(error: E) -> Self {
         Self {
@@ -32,6 +24,7 @@ pub enum Error {
     #[error("Hyper: {0}")]
     Hyper(#[from] hyper::Error),
 
+    #[cfg(feature = "postgres")]
     #[error("Postgres: {0}")]
     Postgres(#[from] lipl_axum_postgres::Error),
 }

@@ -3,11 +3,17 @@ name = "lipl-axum"
 version = "0.1.1"
 edition = "2021"
 
+[features]
+default = ["memory"]
+postgres = ["dep:lipl-axum-postgres"]
+memory = ["dep:lipl-axum-inmemorydb"]
+
 [dependencies]
 axum = "0.6.0"
 futures-util = "0.3.25"
 hyper = "0.14"
-lipl-axum-postgres = { path = "../lipl-axum-postgres" }
+lipl-axum-postgres = { path = "../lipl-axum-postgres", optional = true }
+lipl-axum-inmemorydb = { path = "../lipl-axum-inmemorydb", optional = true }
 lipl-core = { path = "../lipl-core" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"
@@ -21,4 +27,3 @@ uuid = "1.2.1"
 [dev-dependencies]
 serde_json = "1"
 tower = { version = "0.4", features = ["full"] }
-lipl-axum-inmemorydb = { path = "../lipl-axum-inmemorydb" }

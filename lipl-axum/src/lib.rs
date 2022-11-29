@@ -1,6 +1,5 @@
 use axum::routing::{get};
 use axum::{Router};
-use lipl_axum_postgres::{PostgresConnectionPool};
 use lipl_core::{LyricDb, PlaylistDb};
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
@@ -28,7 +27,13 @@ pub async fn exit_on_signal_int() {
     };
 }
 
-pub async fn create_pool() -> lipl_axum_postgres::Result<PostgresConnectionPool> {
+#[cfg(not(feature = "postgres"))]
+pub async fn create_pool() -> Result<lipl_axum_inmemorydb::InMemoryDb> {
+    Ok(lipl_axum_inmemorydb::InMemoryDb::new())
+} 
+
+#[cfg(feature = "postgres")]
+pub async fn create_pool() -> Result<lipl_axum_postgres::PostgresConnectionPool> {
     let pool = lipl_axum_postgres::connection_pool(crate::constant::PG_CONNECTION).await?;
     Ok(pool)
 }

@@ -1,7 +1,8 @@
-use std::{collections::HashMap, sync::{RwLock, Arc}};
+use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering};
 
 use async_trait::async_trait;
 use lipl_core::{LyricDb, Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid, PlaylistDb, Without};
+use crate::error::Error;
 
 mod error;
 
@@ -24,9 +25,13 @@ impl InMemoryDb {
     }
 }
 
+fn compare_title(a: &Summary, b: &Summary) -> Ordering {
+    a.title.cmp(&b.title)
+}
+
 #[async_trait]
 impl LyricDb for InMemoryDb {
-    type Error = crate::error::Error;
+    type Error = Error;
 
     async fn lyric_list(&self) ->  Result<Vec<Summary>, Self::Error> {
         let mut result = self.db.read().unwrap().iter().filter_map(|(key, record)| {
@@ -39,19 +44,17 @@ impl LyricDb for InMemoryDb {
             })
             .collect::<Vec<_>>();
 
-        result.sort_by(|a, b| a.title.cmp(&b.title));
+        result.sort_by(compare_title);
         Ok(result)
     }
 
     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error> {
         self.db.read().unwrap().get(&uuid)
         .and_then(|record| {
-            if let Record::Lyric(lyric_post) = record { 
-                Some(Lyric::from((Some(uuid.clone()), lyric_post.clone())))
+            match record {
+                Record::Lyric(lyric_post) => Some(Lyric::from((Some(uuid.clone()), lyric_post.clone()))),
+                _ => None
             }
-            else {
-                None
-            }    
         })
         .ok_or(crate::error::Error::NotFound)
     }
@@ -68,24 +71,30 @@ impl LyricDb for InMemoryDb {
 
     async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
         let mut db = self.db.write().unwrap();
-        db.remove(&uuid).ok_or(crate::error::Error::NotFound).map(|_| ())?;
-        db.iter_mut().for_each(|(uuid, record)| {
-            match record {
-                Record::Playlist(playlist_post) => {
-                    *playlist_post = PlaylistPost {
-                        title: playlist_post.title.clone(),
-                        members: playlist_post.members.clone().without(&uuid)
-                    }
-                },
-                _ => {},
-            }
-        });
-        Ok(())
+        if db.remove(&uuid).is_some() {
+            db.iter_mut().for_each(|(_, record)| {
+                match record {
+                    Record::Playlist(playlist_post) => {
+                        *playlist_post = PlaylistPost {
+                            title: playlist_post.title.clone(),
+                            members: playlist_post.members.clone().without(&uuid)
+                        }
+                    },
+                    _ => {},
+                }
+            });
+            Ok(())
+        }
+        else {
+            Err(crate::error::Error::NotFound)
+        }
     }
 
     async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric, Self::Error> {
+        let mut db = self.db.write().unwrap();
         let lyric = Lyric::from((Some(uuid), lyric_post.clone()));
-        self.db.write().unwrap().entry(uuid).and_modify(|v| *v = Record::Lyric(lyric_post));
+        let entry = db.get_mut(&uuid).ok_or(Error::NotFound)?;
+        *entry = Record::Lyric(lyric_post);
         Ok(lyric)
     }
 }
@@ -94,29 +103,25 @@ impl LyricDb for InMemoryDb {
 impl PlaylistDb for InMemoryDb {
     type Error = crate::error::Error;
     async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error> {
-        let mut result = self.db.read().unwrap().iter().filter_map(|(key, record)| {
-            if let Record::Playlist(playlist_post) = record {
-                Some(Summary { id: key.clone(), title: playlist_post.title.clone() })
-            }
-            else {
-                None
+        let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
+            match record {
+                Record::Playlist(playlist_post) => Some(Summary { id: key.clone(), title: playlist_post.title.clone() }),
+                _ => None
             }
         })
         .collect::<Vec<_>>();
 
-        result.sort_by(|a, b| a.title.cmp(&b.title));
-        Ok(result)
+        summaries.sort_by(compare_title);
+        Ok(summaries)
     }
 
     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
         self.db.read().unwrap().get(&uuid)
         .and_then(|record| {
-            if let Record::Playlist(playlist_post) = record { 
-                Some(Playlist::from((Some(uuid.clone()), playlist_post.clone())))
+            match record {
+                Record::Playlist(playlist_post) => Some(Playlist::from((Some(uuid.clone()), playlist_post.clone()))),
+                _ => None,
             }
-            else {
-                None
-            }    
         })
         .ok_or(crate::error::Error::NotFound)
     }
