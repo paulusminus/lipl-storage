@@ -1,3 +1,5 @@
+use std::vec;
+
 use lipl_axum::{create_service};
 use lipl_core::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
 use axum::{
@@ -21,87 +23,131 @@ fn daar_bij_die_molen() -> LyricPost {
     }
 }
 
+fn roodkapje() -> LyricPost {
+    LyricPost { 
+        title: "Roodkapje".to_owned(),
+        parts: vec![
+            vec![
+                "Zeg roodkapje waar ga je hene, zo alleen, zo alleen".to_owned(),
+                "Zeg roodkapje waar ga je hene, zo alleen".to_owned(),
+            ],
+            vec![
+                "'k ga naar grootmoeder koekjes brengen in het bos, in het bos".to_owned(),
+                "'k ga naar grootmoeder koekjes brengen in het bos".to_owned(),
+            ]
+        ]
+    }
+}
+
 #[tokio::test(flavor = "current_thread")]
 async fn playlist_list() {
-    let service = create_service().await.unwrap();
-
-    let playlists: Vec<Summary> = list(&service, "playlist".to_owned()).await; 
-    assert_eq!(
-        playlists[0].title,
-        "Diversen".to_owned()
-    );
-}
-
-#[tokio::test(flavor = "current_thread")]
-async fn lyric_list() {
-    let service = create_service().await.unwrap();
-
-    let lyrics: Vec<Summary> = list(&service, "lyric".to_owned()).await;
-    assert_eq!(
-        lyrics[0].title,
-        "Roodkapje".to_owned(),
-    );
-    assert_eq!(
-        lyrics[1].title,
-        "Sinterklaas".to_owned()
-    );
-}
-
-#[tokio::test(flavor = "current_thread")]
-async fn lyric_post() {
-    let service = create_service().await.unwrap();
-
-    let lyric_post = LyricPost {
-        title: "Er is er één jarig".to_owned(),
-        parts: vec![],
-    };
-
-    let lyric: Lyric = post(&service, "lyric".to_owned(), &lyric_post).await;
-    let id = lyric.id.to_string();
-    assert_eq!(lyric.title, lyric_post.title);
-    assert_eq!(lyric.parts, lyric_post.parts);
-
-    delete(&service, "lyric".to_owned(), id).await;
-}
-
-#[tokio::test(flavor = "current_thread")]
-async fn lyric_post_change() {
-    let service = create_service().await.unwrap();
-
-    let mut lyric_post = daar_bij_die_molen();
-
-    let lyric: Lyric = post(&service, "lyric".to_owned(), &lyric_post).await;
-    let id = lyric.id.to_string();
-    assert_eq!(lyric.title, lyric_post.title);
-    assert_eq!(lyric.parts, lyric_post.parts);
-
-    lyric_post.title = "Daar bij dat molengedrag".to_owned();
-    let lyric_changed: Lyric = put(&service, "lyric".to_owned(), id.clone(), &lyric_post).await;
-    
-    assert_eq!(lyric_changed.title, lyric_post.title);
-    delete(&service, "lyric".to_owned(), id).await;
-}
-
-#[tokio::test(flavor = "current_thread")]
-async fn playlist_post() {
-    let service = create_service().await.unwrap();
+    let pool = lipl_axum_inmemorydb::InMemoryDb::new();
+    let service = create_service(pool);
 
     let playlist_post = PlaylistPost {
         title: "Alle 13 goed".to_owned(),
         members: vec![],
     };
 
-    let playlist: Playlist = post(&service, "playlist".to_owned(), &playlist_post).await;
-    let id = playlist.id.to_string();
+    let _playlist: Playlist = post(&service, "playlist", &playlist_post).await;
+
+    let playlists: Vec<Summary> = list(&service, "playlist").await; 
+    assert_eq!(
+        playlists[0].title,
+        "Alle 13 goed".to_owned()
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn lyric_list() {
+    let pool = lipl_axum_inmemorydb::InMemoryDb::new();
+    let service = create_service(pool);
+
+    let _daar_bij_die_molen: Lyric = post(&service, "lyric", &daar_bij_die_molen()).await;
+    let _roodkapje: Lyric = post(&service, "lyric", &roodkapje()).await;
+
+    let lyrics: Vec<Summary> = list(&service, "lyric").await;
+    assert_eq!(
+        lyrics[0].title,
+        "Daar bij die molen".to_owned(),
+    );
+    assert_eq!(
+        lyrics[1].title,
+        "Roodkapje".to_owned()
+    );
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn lyric_post() {
+    let pool = lipl_axum_inmemorydb::InMemoryDb::new();
+    let service = create_service(pool);
+
+    let lyric_post = LyricPost {
+        title: "Er is er één jarig".to_owned(),
+        parts: vec![],
+    };
+
+    let lyric: Lyric = post(&service, "lyric", &lyric_post).await;
+    assert_eq!(lyric.title, lyric_post.title);
+    assert_eq!(lyric.parts, lyric_post.parts);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn lyric_post_change() {
+    let pool = lipl_axum_inmemorydb::InMemoryDb::new();
+    let service = create_service(pool);
+
+    let mut lyric_post = daar_bij_die_molen();
+
+    let lyric: Lyric = post(&service, "lyric", &lyric_post).await;
+    let id = lyric.id.to_string();
+    assert_eq!(lyric.title, lyric_post.title);
+    assert_eq!(lyric.parts, lyric_post.parts);
+
+    lyric_post.title = "Daar bij dat molengedrag".to_owned();
+    let lyric_changed: Lyric = put(&service, "lyric", id.clone(), &lyric_post).await;
+    
+    assert_eq!(lyric_changed.title, lyric_post.title);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn lyric_delete() {
+    let pool = lipl_axum_inmemorydb::InMemoryDb::new();
+    let service = create_service(pool);
+
+    let list_before_post: Vec<Summary> = list(&service, "lyric").await;
+    assert_eq!(list_before_post.len(), 0);
+
+    let roodkapje: Lyric = post(&service, "lyric", &roodkapje()).await;
+    let daar_bij_die_molen: Lyric = post(&service, "lyric", &daar_bij_die_molen()).await;
+    let list_after_post: Vec<Summary> = list(&service, "lyric").await;
+    assert_eq!(list_after_post.len(), 2);
+
+    delete(&service, "lyric", roodkapje.id.to_string()).await;
+    delete(&service, "lyric", daar_bij_die_molen.id.to_string()).await;
+
+    let list_after_delete: Vec<Summary> = list(&service, "lyric").await;
+    assert_eq!(list_after_delete.len(), 0);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn playlist_post() {
+    let pool = lipl_axum_inmemorydb::InMemoryDb::new();
+    let service = create_service(pool);
+
+    let playlist_post = PlaylistPost {
+        title: "Alle 13 goed".to_owned(),
+        members: vec![],
+    };
+
+    let playlist: Playlist = post(&service, "playlist", &playlist_post).await;
     assert_eq!(playlist.title, "Alle 13 goed".to_owned());
 
     let members: Vec<Uuid> = vec![];
     assert_eq!(playlist.members, members);
-
-    delete(&service, "playlist".to_owned(), id).await;
 }
 
-async fn list<R: DeserializeOwned>(service: &Router<()>, name: String) -> Vec<R> {
+async fn list<R: DeserializeOwned>(service: &Router<()>, name: &'static str) -> Vec<R> {
     let response = service
         .clone()
         .oneshot(
@@ -117,7 +163,7 @@ async fn list<R: DeserializeOwned>(service: &Router<()>, name: String) -> Vec<R>
     r
 }
 
-async fn delete(service: &Router<()>, name: String, id: String) {
+async fn delete(service: &Router<()>, name: &'static str, id: String) {
     let response = service
     .clone()
     .oneshot(
@@ -131,13 +177,13 @@ async fn delete(service: &Router<()>, name: String, id: String) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-async fn post<T: Serialize, R: DeserializeOwned>(service: &Router<()>, name: String, t: &T) -> R {
+async fn post<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, name: &str, t: &T) -> R {
     let body = serde_json::to_string(t).unwrap();
     let response =
         service
         .clone()
         .oneshot(
-            Request::post(format!("/api/v1/{name}"))
+            Request::post(format!("/api/v1/{}", name.to_string()))
             .header("Content-Type", "application/json")
             .body(body.into())
             .unwrap()
@@ -152,7 +198,7 @@ async fn post<T: Serialize, R: DeserializeOwned>(service: &Router<()>, name: Str
     r
 }
 
-async fn put<T: Serialize, R: DeserializeOwned>(service: &Router<()>, name: String, id: String, t: &T) -> R {
+async fn put<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, name: &str, id: String, t: &T) -> R {
     let body = serde_json::to_string(t).unwrap();
     let response =
         service

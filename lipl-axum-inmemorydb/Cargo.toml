@@ -1,0 +1,12 @@
+[package]
+name = "lipl-axum-inmemorydb"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1.59"
+lipl-core = { path = "../lipl-core" }
+thiserror = "1.0.37"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

@@ -66,7 +66,7 @@ pub struct Lyric {
     pub parts: Vec<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct LyricPost {
     pub title: String,
     pub parts: Vec<Vec<String>>,

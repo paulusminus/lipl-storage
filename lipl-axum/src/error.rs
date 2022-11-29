@@ -11,8 +11,16 @@ pub struct ErrorReport {
     error: String,
 }
 
-impl From<Error> for ErrorReport {
-    fn from(error: Error) -> Self {
+// impl From<Error> for ErrorReport {
+//     fn from(error: Error) -> Self {
+//         Self {
+//             error: error.to_string(),
+//         }
+//     }
+// }
+
+impl<E: std::error::Error> From<E> for ErrorReport {
+    fn from(error: E) -> Self {
         Self {
             error: error.to_string(),
         }

@@ -2,6 +2,7 @@
 
 members = [
     "lipl-axum",
+    "lipl-axum-inmemorydb",
     "lipl-axum-postgres",
     "lipl-repo-http-server",
     "lipl-fs-repo",

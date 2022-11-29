@@ -1,8 +1,7 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr};
 
 use axum::Router;
 use lipl_axum::{constant, create_service, exit_on_signal_int, Error};
-use futures_util::TryFutureExt;
 
 async fn run(service: Router<()>) -> Result<(), Error> {
     let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
@@ -23,8 +22,7 @@ pub async fn main() -> Result<(), Error> {
     .with_env_filter(filter)
     .init();
 
-    create_service()
-    .map_err(Error::from)
-    .and_then(run)
-    .await
+    let pool = lipl_axum::create_pool().await?;
+    let service = create_service(pool);
+    run(service).await
 }

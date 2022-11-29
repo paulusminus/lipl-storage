@@ -17,6 +17,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 
+#[derive(Clone)]
 pub struct PostgresConnectionPool {
     inner: ConnectionPool,
 }
