@@ -1,5 +1,5 @@
 // use crate::model::{Summary, Uuid, RepoResult};
-use lipl_types::{Etag, Lyric, LyricMeta, Playlist, PlaylistPost, Summary, Uuid, RepoResult};
+use lipl_core::{Etag, Lyric, LyricMeta, Playlist, PlaylistPost, Summary, Uuid};
 
 pub trait HasId {
     fn id(&self) -> Uuid;
@@ -50,11 +50,11 @@ impl<T: HasSummary> HasSummaries for Vec<T> {
 }
 
 pub trait ToDiskFormat {
-    fn to_disk_format(&self) -> RepoResult<String>;
+    fn to_disk_format(&self) -> crate::Result<String>;
 }
 
 impl ToDiskFormat for Lyric {
-    fn to_disk_format(&self) -> RepoResult<String> {
+    fn to_disk_format(&self) -> crate::Result<String> {
         let front_matter = LyricMeta {
             title: self.title.clone(),
             hash: self.etag(),
@@ -74,7 +74,7 @@ pub fn parts_to_string(parts: &[Vec<String>]) -> String {
 }
 
 impl ToDiskFormat for Playlist {
-    fn to_disk_format(&self) -> RepoResult<String> {
+    fn to_disk_format(&self) -> crate::Result<String> {
         let disk_playlist = PlaylistPost {
             title: self.title.clone(),
             members: self.members.clone()
@@ -85,11 +85,11 @@ impl ToDiskFormat for Playlist {
 }
 
 pub trait TryFromDiskFormat<T>: Sized {
-    fn from_disk_format(value: T) -> RepoResult<Self>;
+    fn from_disk_format(value: T) -> crate::Result<Self>;
 }
 
 impl TryFromDiskFormat<(String, Uuid)> for Playlist {
-    fn from_disk_format(value: (String, Uuid)) -> RepoResult<Playlist> {
+    fn from_disk_format(value: (String, Uuid)) -> crate::Result<Playlist> {
         let pp: PlaylistPost = serde_yaml::from_str(&value.0)?;
         Ok(
             (

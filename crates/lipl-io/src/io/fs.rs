@@ -1,12 +1,12 @@
 use std::fs::{read_dir, File};
 use std::path::{Path, PathBuf};
-use log::{info};
+use tracing::{info};
 
 use crate::model::{Db, YAML, TXT, DataType, HasId, ToDiskFormat};
-use lipl_types::{PathExt, RepoError, RepoResult};
+use lipl_core::{PathExt};
 use crate::io::{lyricpost_from_reader, playlistpost_from_reader};
 
-pub fn fs_read<P, F>(dir_path: P, mut adder: F) -> RepoResult<()>
+pub fn fs_read<P, F>(dir_path: P, mut adder: F) -> crate::Result<()>
 where P: AsRef<Path>,
 F: FnMut(&PathBuf, &mut DataType),
 {
@@ -43,7 +43,7 @@ F: FnMut(&PathBuf, &mut DataType),
     Ok(())
 }
 
-fn write_fs_item<T>(item: T, ext: &str, parent_dir: &Path) -> RepoResult<()> where T: HasId + ToDiskFormat {
+fn write_fs_item<T>(item: T, ext: &str, parent_dir: &Path) -> crate::Result<()> where T: HasId + ToDiskFormat {
     let filename: PathBuf = format!("{}.{}", item.id(), ext).into();
     let full_path: PathBuf = parent_dir.join(filename);
     info!("Writing: {}", &full_path.to_string_lossy());
@@ -54,13 +54,13 @@ fn write_fs_item<T>(item: T, ext: &str, parent_dir: &Path) -> RepoResult<()> whe
 }
 
 
-pub fn fs_write<P>(path: P, db: &Db) -> RepoResult<()> 
+pub fn fs_write<P>(path: P, db: &Db) -> crate::Result<()> 
 where P: AsRef<Path>
 {
     info!("Starting to write to directory {}", path.as_ref().to_string_lossy());
     let dir: PathBuf = path.as_ref().into();
     if !dir.exists() {
-        return Err(RepoError::NonExistingDirectory(dir));
+        return Err(crate::error::Error::NonExistingDirectory(dir));
     }
 
     for lyric in db.get_lyric_list() {

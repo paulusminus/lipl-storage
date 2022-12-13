@@ -1,18 +1,20 @@
 [workspace]
 
-members = [
-    "lipl-axum",
-    "lipl-axum-inmemorydb",
-    "lipl-axum-postgres",
-    "lipl-repo-http-server",
-    "lipl-fs-repo",
-    "lipl-postgres-repo",
-    "lipl-core",
-    "lipl-upload",
-    "parts",
-    "rest-api-client",
-    "timeit",
-]
+# members = [
+#     "lipl-axum",
+#     "lipl-axum-inmemorydb",
+#     "lipl-axum-postgres",
+#     "lipl-repo-http-server",
+#     "lipl-fs-repo",
+#     "lipl-postgres-repo",
+#     "lipl-core",
+#     "lipl-upload",
+#     "parts",
+#     "rest-api-client",
+#     "timeit",
+# ]
+
+members = ["crates/*"]
 
 [profile.release]
 lto = true

@@ -312,5 +312,5 @@ mod tests {
 }
 
 pub mod reexport {
-    pub use uuid::Uuid;
+    pub use {uuid::Uuid, uuid::Error as UUIDError};
 }

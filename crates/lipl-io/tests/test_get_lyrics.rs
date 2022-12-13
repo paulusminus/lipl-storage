@@ -1,5 +1,5 @@
 use lipl_io::model::{Db, Persist};
-use lipl_types::{Lyric};
+use lipl_core::{Lyric};
 
 const DIR_NAME: &str = "./tests/fs/";
 

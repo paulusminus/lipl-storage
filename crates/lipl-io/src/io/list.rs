@@ -1,9 +1,8 @@
 use std::path::{Path};
 use std::time::{Instant};
 use crate::model::{Db, Persist};
-use lipl_types::{RepoResult};
 
-pub fn list<P>(source: P) -> RepoResult<()> 
+pub fn list<P>(source: P) -> crate::Result<()> 
 where P: AsRef<Path>,
 {
     let start = Instant::now();
