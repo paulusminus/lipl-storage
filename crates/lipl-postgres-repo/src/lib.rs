@@ -300,7 +300,7 @@ impl LiplRepo for PostgresRepo {
             playlist.members.iter().map(|uuid| uuid.inner()).collect()
         )
         .map_ok(|_| {})
-        .and_then(move |_| self.get_playlist(playlist.clone().id))
+        .and_then(move |_| self.get_playlist(playlist.id))
         .await
     }
 

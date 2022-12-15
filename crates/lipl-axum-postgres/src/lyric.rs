@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::PostgresConnectionPool;
 
 #[async_trait]
-impl<'a> LyricDb for PostgresConnectionPool {
+impl LyricDb for PostgresConnectionPool {
     type Error = Error;
 
     async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error> {

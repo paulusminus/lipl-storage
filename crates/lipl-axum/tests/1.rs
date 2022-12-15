@@ -11,6 +11,7 @@ use tower::{ServiceExt};
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";
+const PREFIX: &str = "/api/v1/";
 
 fn daar_bij_die_molen() -> LyricPost {
     LyricPost {
@@ -176,7 +177,7 @@ async fn list<R: DeserializeOwned>(service: &Router<()>, name: &'static str) -> 
     let response = service
         .clone()
         .oneshot(
-            Request::get(format!("/api/v1/{name}"))
+            Request::get(format!("{PREFIX}{name}"))
             .body(Body::empty())
             .unwrap()
         )
@@ -192,7 +193,7 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
     let response = service
         .clone()
         .oneshot(
-            Request::get(format!("/api/v1/{name}/{uuid}"))
+            Request::get(format!("{PREFIX}{name}/{uuid}"))
             .body(Body::empty())
             .unwrap()
         )
@@ -208,7 +209,7 @@ async fn delete(service: &Router<()>, name: &'static str, id: String) {
     let response = service
     .clone()
     .oneshot(
-        Request::delete(format!("/api/v1/{name}/{id}"))
+        Request::delete(format!("{PREFIX}{name}/{id}"))
         .body(Body::empty())
         .unwrap()
     )
@@ -224,7 +225,7 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, na
         service
         .clone()
         .oneshot(
-            Request::post(format!("/api/v1/{}", name.to_string()))
+            Request::post(format!("{}{}", PREFIX, name.to_string()))
             .header("Content-Type", "application/json")
             .body(body.into())
             .unwrap()
@@ -245,7 +246,7 @@ async fn put<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, nam
         service
         .clone()
         .oneshot(
-            Request::put(format!("/api/v1/{name}/{id}"))
+            Request::put(format!("{PREFIX}{name}/{id}"))
             .header("Content-Type", "application/json")
             .body(body.into())
             .unwrap()

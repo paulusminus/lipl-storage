@@ -25,6 +25,12 @@ impl InMemoryDb {
     }
 }
 
+impl Default for InMemoryDb {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn compare_title(a: &Summary, b: &Summary) -> Ordering {
     a.title.cmp(&b.title)
 }
@@ -44,7 +50,7 @@ impl LyricDb for InMemoryDb {
     async fn lyric_list(&self) ->  Result<Vec<Summary>, Self::Error> {
         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
                 if let Record::Lyric(lyric_post) = record {
-                    Some(Summary { id: key.clone(), title: lyric_post.title.clone() })
+                    Some(Summary { id: *key, title: lyric_post.title.clone() })
                 }
                 else {
                     None
@@ -59,7 +65,7 @@ impl LyricDb for InMemoryDb {
     async fn lyric_list_full(&self) ->  Result<Vec<Lyric>, Self::Error> {
         let mut lyrics = self.db.read().unwrap().iter().filter_map(|(key, record)| {
                 if let Record::Lyric(lyric_post) = record {
-                    Some(Lyric::from((Some(key.clone()), lyric_post.clone())))
+                    Some(Lyric::from((Some(*key), lyric_post.clone())))
                 }
                 else {
                     None
@@ -75,7 +81,7 @@ impl LyricDb for InMemoryDb {
         self.db.read().unwrap().get(&uuid)
         .and_then(|record| {
             match record {
-                Record::Lyric(lyric_post) => Some(Lyric::from((Some(uuid.clone()), lyric_post.clone()))),
+                Record::Lyric(lyric_post) => Some(Lyric::from((Some(uuid), lyric_post.clone()))),
                 _ => None
             }
         })
@@ -84,7 +90,7 @@ impl LyricDb for InMemoryDb {
 
     async fn lyric_post(&self, lyric_post: LyricPost) ->  Result<Lyric, Self::Error> {
         let uuid = Uuid::default();
-        match self.db.write().unwrap().insert(uuid.clone(), Record::Lyric(lyric_post.clone())) {
+        match self.db.write().unwrap().insert(uuid, Record::Lyric(lyric_post.clone())) {
             Some(_) => Err(crate::error::Error::Occupied),
             None => Ok(
                 Lyric::from((Some(uuid), lyric_post))
@@ -96,14 +102,11 @@ impl LyricDb for InMemoryDb {
         let mut db = self.db.write().unwrap();
         if db.remove(&uuid).is_some() {
             db.iter_mut().for_each(|(_, record)| {
-                match record {
-                    Record::Playlist(playlist_post) => {
-                        *playlist_post = PlaylistPost {
-                            title: playlist_post.title.clone(),
-                            members: playlist_post.members.clone().without(&uuid)
-                        }
-                    },
-                    _ => {},
+                if let Record::Playlist(playlist_post) = record {
+                    *playlist_post = PlaylistPost {
+                        title: playlist_post.title.clone(),
+                        members: playlist_post.members.clone().without(&uuid)
+                    }
                 }
             });
             Ok(())
@@ -128,7 +131,7 @@ impl PlaylistDb for InMemoryDb {
     async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error> {
         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
             match record {
-                Record::Playlist(playlist_post) => Some(Summary { id: key.clone(), title: playlist_post.title.clone() }),
+                Record::Playlist(playlist_post) => Some(Summary { id: *key, title: playlist_post.title.clone() }),
                 _ => None
             }
         })
@@ -141,7 +144,7 @@ impl PlaylistDb for InMemoryDb {
     async fn playlist_list_full(&self) -> Result<Vec<Playlist>, Self::Error> {
         let mut playlists = self.db.read().unwrap().iter().filter_map(|(key, record)| {
             match record {
-                Record::Playlist(playlist_post) => Some(Playlist::from((Some(key.clone()), playlist_post.clone()))),
+                Record::Playlist(playlist_post) => Some(Playlist::from((Some(*key), playlist_post.clone()))),
                 _ => None
             }
         })
@@ -155,7 +158,7 @@ impl PlaylistDb for InMemoryDb {
         self.db.read().unwrap().get(&uuid)
         .and_then(|record| {
             match record {
-                Record::Playlist(playlist_post) => Some(Playlist::from((Some(uuid.clone()), playlist_post.clone()))),
+                Record::Playlist(playlist_post) => Some(Playlist::from((Some(uuid), playlist_post.clone()))),
                 _ => None,
             }
         })
@@ -165,7 +168,7 @@ impl PlaylistDb for InMemoryDb {
     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error> {
         let uuid = Uuid::default();
 
-        match self.db.write().unwrap().insert(uuid.clone(), Record::Playlist(playlist_post.clone())) {
+        match self.db.write().unwrap().insert(uuid, Record::Playlist(playlist_post.clone())) {
             Some(_) => Err(crate::error::Error::Occupied),
             None => Ok(Playlist::from((Some(uuid), playlist_post)))
         }

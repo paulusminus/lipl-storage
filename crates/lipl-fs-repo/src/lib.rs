@@ -208,7 +208,7 @@ impl FileRepo {
     pub fn new(
         source_dir: String,
     ) -> Result<FileRepo, FileRepoError> {
-        source_dir.is_dir().map_err(|_| FileRepoError::NoPath(source_dir.clone().into()))?;
+        source_dir.is_dir().map_err(|_| FileRepoError::NoPath(source_dir.clone()))?;
         let dir = source_dir.clone();
 
         let (tx, rx) = mpsc::channel::<Request>(10);

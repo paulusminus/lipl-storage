@@ -7,13 +7,13 @@ pub trait HasId {
 
 impl HasId for Lyric {
     fn id(&self) -> Uuid {
-        self.id.clone()
+        self.id
     }
 }
 
 impl HasId for Playlist {
     fn id(&self) -> Uuid {
-        self.id.clone()
+        self.id
     }
 }
 
@@ -24,7 +24,7 @@ pub trait HasSummary {
 impl HasSummary for Lyric {
     fn to_summary(&self) -> Summary {
         Summary {
-            id: self.id.clone(),
+            id: self.id,
             title: self.title.clone(),
         }
     }
@@ -33,7 +33,7 @@ impl HasSummary for Lyric {
 impl HasSummary for Playlist {
     fn to_summary(&self) -> Summary {
         Summary {
-            id: self.id.clone(),
+            id: self.id,
             title: self.title.clone(),
         }
     }
