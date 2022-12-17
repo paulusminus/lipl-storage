@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail};
-use clap::{Arg, Command, command, value_parser};
+use clap::{Arg, Command, command, value_parser, ArgAction};
 use lipl_fs_repo::{FileRepo, FileRepoConfig};
 use lipl_postgres_repo::{PostgresRepo, PostgresRepoConfig};
 use lipl_core::{LiplRepo, Summary, Lyric, Uuid, Playlist};
@@ -16,7 +16,6 @@ const TARGET: &str = "target";
 const TARGET_SHORT: char = 't';
 const YAML: &str = "yaml";
 const YAML_SHORT: char = 'y';
-const YAML_DEFAULT: &str = "false";
 
 // #[derive(Clone)]
 // enum RepoConfig {
@@ -132,7 +131,7 @@ pub async fn run() -> anyhow::Result<()> {
                     Arg::new(SOURCE).short(SOURCE_SHORT).long(SOURCE).required(true)
                 )
                 .arg(
-                    Arg::new(YAML).short(YAML_SHORT).long(YAML).value_parser(value_parser!(bool)).default_value(YAML_DEFAULT)
+                    Arg::new(YAML).short(YAML_SHORT).long(YAML).action(ArgAction::SetTrue)
                 )
         )
         .get_matches();

@@ -52,7 +52,7 @@ impl std::future::IntoFuture for PostgresRepoConfig {
     type IntoFuture = Pin<Box<dyn std::future::Future<Output = Self::Output>>>;
 
     fn into_future(self) -> Self::IntoFuture {
-        PostgresRepo::new(self.connection_string, self.clear, self.pool).boxed()
+        PostgresRepo::new(self).boxed()
     }
 }
 
@@ -69,18 +69,20 @@ impl Debug for PostgresRepo {
 }
 
 impl PostgresRepo {
-    pub fn new_2(connection_string: String) -> PostgresResult<PostgresRepo> {
-        let pool = pool::get(&connection_string, 16)?;
-        Ok(PostgresRepo {
-            pool,
-            connection_string,
-        })
+    // pub fn new_2(connection_string: String) -> PostgresResult<PostgresRepo> {
+    //     let pool = pool::get(&connection_string, 16)?;
+    //     Ok(
+    //         PostgresRepo {
+    //             pool,
+    //             connection_string,
+    //         }
+    //     )
 
-    }
-    pub async fn new(connection_string: String, clear: bool, pool: Pool) -> anyhow::Result<PostgresRepo> {
-        if clear {
+    // }
+    pub async fn new(postgres_repo_config: PostgresRepoConfig) -> anyhow::Result<PostgresRepo> {
+        if postgres_repo_config.clear {
             for sql in db::DROP.iter() {
-                pool.get()
+                postgres_repo_config.pool.get()
                 .map_err(PostgresRepoError::from)
                 .and_then(
                     |pool| async move {
@@ -96,11 +98,11 @@ impl PostgresRepo {
         }
 
         for sql in db::CREATE {
-            pool.get().await?.execute(*sql, &[]).await?;
+            postgres_repo_config.pool.get().await?.execute(*sql, &[]).await?;
         };
 
         Ok(
-            Self { pool, connection_string }
+            Self { pool: postgres_repo_config.pool, connection_string: postgres_repo_config.connection_string }
         )
     }
 

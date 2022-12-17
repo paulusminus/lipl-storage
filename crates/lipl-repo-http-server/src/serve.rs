@@ -11,6 +11,14 @@ pub async fn run<R>(repo: R, port: u16) -> anyhow::Result<()>
 where
     R: LiplRepo + 'static,
 {
+    let filter =
+        std::env::var(constant::RUST_LOG)
+        .unwrap_or_else(|_| constant::DEFAULT_LOG_FILTER.to_owned());
+    
+    tracing_subscriber::fmt()
+    .with_env_filter(filter)
+    .init();
+
     // Cache warmup
     let _lyrics = repo.get_lyrics().await;
     let _playlists = repo.get_playlists().await;
