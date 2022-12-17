@@ -31,10 +31,10 @@ enum Repo {
 }
 
 macro_rules! dispatch {
-    ($self: ident, $call:ident $(,$param:expr)*) => {
+    ($self: ident, $method:ident $(,$param:expr)*) => {
         match $self {
-            Repo::File(file) => file.$call($($param),*).await,
-            Repo::Postgres(postgres) => postgres.$call($($param)*).await
+            Repo::File(file) => file.$method($($param),*).await,
+            Repo::Postgres(postgres) => postgres.$method($($param)*).await
         }        
     };
 }
