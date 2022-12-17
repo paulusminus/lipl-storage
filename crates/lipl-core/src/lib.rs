@@ -10,6 +10,7 @@ mod disk_format;
 pub mod error;
 pub mod ext;
 mod path_ext;
+pub mod reexport;
 mod uuid;
 
 pub fn into_boxed_error<E>(error: E) -> Box<dyn std::error::Error + 'static>
@@ -264,7 +265,7 @@ impl<T: Serialize> Etag for T {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct RepoDb {
     pub lyrics: Vec<Lyric>,
     pub playlists: Vec<Playlist>,
@@ -310,6 +311,14 @@ impl std::fmt::Display for RepoDb {
     }
 }
 
+pub trait Yaml {
+    type Error: std::error::Error;
+    fn load<R>(r: R) -> Result<Self, Self::Error> where R: std::io::Read, Self: Sized;
+    fn save<W>(&self, w: W) -> Result<(), Self::Error> where W: std::io::Write;
+}
+
+
+
 #[cfg(test)]
 mod tests {
 
@@ -322,8 +331,4 @@ mod tests {
         assert_eq!(out[0], "1");
         assert_eq!(out[1], "5");
     }
-}
-
-pub mod reexport {
-    pub use {uuid::Uuid, uuid::Error as UUIDError};
 }

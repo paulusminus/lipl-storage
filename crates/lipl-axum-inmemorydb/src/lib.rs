@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering};
 
 use async_trait::async_trait;
-use lipl_core::{LyricDb, Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid, PlaylistDb, Without};
+use lipl_core::{LyricDb, Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid, PlaylistDb, Without, Yaml, RepoDb, reexport::serde_yaml};
 use crate::error::Error;
 
 mod error;
@@ -23,6 +23,47 @@ impl InMemoryDb {
             db: Arc::new(RwLock::new(HashMap::new())),
         }
     }
+
+    fn add_lyric(&self, lyric: Lyric) {
+        self.db.write().unwrap().insert(lyric.id, Record::Lyric(LyricPost { title: lyric.title, parts: lyric.parts }));
+    }
+
+    fn add_playlist(&self, playlist: Playlist) {
+        self.db.write().unwrap().insert(playlist.id, Record::Playlist(PlaylistPost { title: playlist.title, members: playlist.members }));
+    }
+
+    fn lyrics(&self) -> Vec<Lyric> {
+        self.db.read().unwrap().iter().filter_map(|(uuid, record)| {
+            match record {
+                Record::Lyric(lyric_post) => Some(
+                    Lyric {
+                        id: uuid.clone(),
+                        title: lyric_post.title.clone(),
+                        parts: lyric_post.parts.clone(),
+                    }
+                ),
+                _ => None,
+            }
+        })
+        .collect()
+    }
+
+    fn playlists(&self) -> Vec<Playlist> {
+        self.db.read().unwrap().iter().filter_map(|(uuid, record)| {
+            match record {
+                Record::Playlist(playlist_post) => Some(
+                    Playlist {
+                        id: uuid.clone(),
+                        title: playlist_post.title.clone(),
+                        members: playlist_post.members.clone(),
+                    }
+                ),
+                _ => None,
+            }
+        })
+        .collect()
+
+    }
 }
 
 impl Default for InMemoryDb {
@@ -41,6 +82,33 @@ fn lyric_compare_title(a: &Lyric, b: &Lyric) -> Ordering {
 
 fn playlist_compare_title(a: &Playlist, b: &Playlist) -> Ordering {
     a.title.cmp(&b.title)
+}
+
+#[async_trait::async_trait]
+impl Yaml for InMemoryDb {
+    type Error = crate::error::Error;
+    fn load<R>(r: R) -> Result<Self, Self::Error>
+    where 
+        R: std::io::Read,
+        Self: Sized,
+    {
+        let repo_db: RepoDb = serde_yaml::from_reader(r)?;
+        let db = InMemoryDb::new();
+        repo_db.lyrics.into_iter().for_each(|lyric| db.add_lyric(lyric));
+        repo_db.playlists.into_iter().for_each(|playlist| db.add_playlist(playlist));
+        Ok(db)
+    }
+
+    fn save<W>(&self, w: W) -> Result<(), Self::Error>
+    where
+        W: std::io::Write,
+    {
+        let repo_db = RepoDb {
+            lyrics: self.lyrics(),
+            playlists: self.playlists(),
+        };
+        serde_yaml::to_writer(w, &repo_db).map_err(Error::from)
+    }
 }
 
 #[async_trait]

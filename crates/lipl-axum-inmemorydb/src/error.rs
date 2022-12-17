@@ -6,5 +6,8 @@ pub enum Error {
     NotFound,
 
     #[error("Occupied")]
-    Occupied
+    Occupied,
+
+    #[error("Yaml: {0}")]
+    Yaml(#[from] lipl_core::reexport::serde_yaml::Error),
 }
