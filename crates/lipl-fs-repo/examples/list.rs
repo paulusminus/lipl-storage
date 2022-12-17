@@ -9,7 +9,7 @@ where
     println!("{}", d);
 }
 
-pub async fn process() -> anyhow::Result<()> {
+pub async fn process() -> Result<(), Box<dyn std::error::Error>> {
     let repo = FileRepo::new(
         "./data/".to_owned(),
     )?;
@@ -35,7 +35,7 @@ pub async fn process() -> anyhow::Result<()> {
 }
 
 #[tokio::main(flavor = "multi_thread")]
-async fn main() -> anyhow::Result<()>{
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let now = Instant::now();
     process().await?;
     println!("Took {} milliseconds", now.elapsed().as_millis());

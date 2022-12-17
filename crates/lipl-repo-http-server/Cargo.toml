@@ -12,7 +12,8 @@ file = ["dep:lipl-fs-repo"]
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
-clap = { version = "3", features = ["derive"] }
+# clap_03 = { package = "clap", version = "3", features = ["derive"] }
+clap = { version = "4", features = ["cargo", "derive"] }
 lipl-core = { path = "../lipl-core" }
 lipl-fs-repo = { path = "../lipl-fs-repo", optional = true }
 lipl-postgres-repo = { path = "../lipl-postgres-repo", optional = true }

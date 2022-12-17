@@ -1,9 +1,10 @@
-use crate::param::{ListCommand, CopyCommand, DbType};
-use anyhow::Result;
 use lipl_core::{LiplRepo, RepoDb};
 use tracing::{info};
 
-pub async fn list<E: std::error::Error>(repo: impl LiplRepo<Error = E>, yaml: bool) -> std::result::Result<(), E> {
+pub async fn list<R>(repo: R, yaml: bool) -> anyhow::Result<()>
+where
+    R: LiplRepo,
+{
 
     let db = RepoDb {
         lyrics: repo.get_lyrics().await?,
@@ -14,24 +15,10 @@ pub async fn list<E: std::error::Error>(repo: impl LiplRepo<Error = E>, yaml: bo
     Ok(())
 }
 
-pub async fn repo_list(args: ListCommand) -> Result<()> {
-
-    match args.source {
-        DbType::File(_, f) => {
-            list(f.await?, args.yaml).await?;
-        },
-        DbType::Postgres(_, f) => {
-            list(f.await?, args.yaml).await?;
-        }
-    }
-
-    Ok(())
-}
-
-pub async fn copy<E, F>(source: impl LiplRepo<Error = E>, target: impl LiplRepo<Error = F>) -> anyhow::Result<()> 
-where 
-    E: std::error::Error + Send + Sync + 'static, 
-    F: std::error::Error + Send + Sync + 'static, 
+pub async fn copy<RS, RT>(source: RS, target: RT) -> anyhow::Result<()>
+where
+    RS: LiplRepo,
+    RT: LiplRepo,
 {
     for lyric in source.get_lyrics().await? {
         info!("Copying lyric {} with id {}", lyric.title, lyric.id);
@@ -44,42 +31,4 @@ where
     }
 
     Ok(())
-}
-
-
-pub async fn repo_copy(args: CopyCommand) -> Result<()> {
-    info!(
-        "Start copying {:?} to {:?}",
-        &args.source,
-        &args.target,
-    );
-
-    // let source_db_type = args.source.parse::<DbType>()?;
-    // let target_db_type = args.target.parse::<DbType>()?;
-
-    match args.source {
-        DbType::File(_, source_file) => {
-            match args.target {
-                DbType::File(_, target_file) => {
-                    copy(source_file.await?, target_file.await?).await?;
-                },
-                DbType::Postgres(_, target_postgres) => {
-                    copy(source_file.await?, target_postgres.await?).await?;
-                }
-            }
-        },
-        DbType::Postgres(_, source_postgres) => {
-            match args.target {
-                DbType::File(_, target_file) => {
-                    copy(source_postgres.await?, target_file.await?).await?;
-                },
-                DbType::Postgres(_, target_postgres) => {
-                    copy(source_postgres.await?, target_postgres.await?).await?;
-                }
-            }
-        },
-    }
-
-     Ok(())
-
 }

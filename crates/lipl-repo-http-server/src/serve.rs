@@ -1,20 +1,15 @@
-use anyhow::Result;
 use lipl_core::LiplRepo;
 use tokio::signal;
 use tracing::{info, error};
 use warp::Filter;
 
 use crate::constant;
-use crate::error::RepoError;
 use crate::message;
-use crate::param;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
-use crate::param::DbType;
 
-async fn run<R, E>(repo: R, port: u16) -> Result<()> 
+pub async fn run<R>(repo: R, port: u16) -> anyhow::Result<()> 
 where
-    R: LiplRepo<Error = E> + 'static + std::fmt::Debug,
-    E: std::error::Error + 'static + Into<RepoError>,
+    R: LiplRepo + 'static,
 {
     // Cache warmup
     let _lyrics = repo.get_lyrics().await;
@@ -45,16 +40,4 @@ where
 
     Ok(())
 
-}
-
-pub async fn serve(param: param::Serve) -> Result<()> {
-    match param.source {
-        DbType::File(_, f) => {
-            run(f.await?, param.port).await
-
-        },
-        DbType::Postgres(_, f) => {
-            run(f.await?, param.port).await
-        }
-    }
 }

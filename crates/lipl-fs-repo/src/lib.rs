@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::marker::PhantomData;
+use std::str::FromStr;
 use futures::future::{Ready};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, Without,
+    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, Without, into_anyhow_error,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
@@ -25,20 +25,27 @@ mod io;
 mod request;
 
 #[derive(Clone)]
-pub struct FileRepoConfig<E: std::error::Error> {
+pub struct FileRepoConfig {
     pub path: String,
-    phantom: PhantomData<E>,
 }
 
-impl std::future::IntoFuture for FileRepoConfig<FileRepoError> {
-    type Output = Result<FileRepo, FileRepoError>;
+impl FromStr for FileRepoConfig {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.is_dir()
+            .map_err(into_anyhow_error)
+            .map(|_| FileRepoConfig { path: s.into() })
+    }
+}
+
+impl std::future::IntoFuture for FileRepoConfig {
+    type Output = anyhow::Result<FileRepo>;
     type IntoFuture = Ready<Self::Output>;
 
     fn into_future(self) -> Self::IntoFuture {
         ready(FileRepo::new(self.path))
     }
 }
-
 
 #[derive(Clone)]
 pub struct FileRepo {
@@ -207,10 +214,8 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
 impl FileRepo {
     pub fn new(
         source_dir: String,
-    ) -> Result<FileRepo, FileRepoError> {
-        source_dir.is_dir().map_err(|_| FileRepoError::NoPath(source_dir.clone()))?;
+    ) -> anyhow::Result<FileRepo> {
         let dir = source_dir.clone();
-
         let (tx, rx) = mpsc::channel::<Request>(10);
 
         let join_handle = tokio::spawn(async move {
@@ -244,60 +249,69 @@ impl FileRepo {
 
 #[async_trait]
 impl LiplRepo for FileRepo {
-    type Error = FileRepoError;
-
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>, FileRepoError> {
+    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
         select(self.tx.clone(), Request::LyricList)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, FileRepoError> {
+    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::LyricSummaries)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, FileRepoError> {
+    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
         select_by_id(self.tx.clone(), id, Request::LyricItem)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, FileRepoError> {
+    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
         post(self.tx.clone(), lyric, Request::LyricPost)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> Result<(), FileRepoError> {
+    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::LyricDelete)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>, FileRepoError> {
+    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
         select(self.tx.clone(), Request::PlaylistList)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, FileRepoError> {
+    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::PlaylistSummaries)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, FileRepoError> {
+    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
         select_by_id(self.tx.clone(), id, Request::PlaylistItem)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, FileRepoError> {
+    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> Result<(), FileRepoError> {
+    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn stop(&self) -> Result<(), FileRepoError> {
+    async fn stop(&self) -> anyhow::Result<()> {
         select(self.tx.clone(), Request::Stop).await
+        .map_err(into_anyhow_error)
     }
 }
 

@@ -12,6 +12,20 @@ pub mod ext;
 mod path_ext;
 mod uuid;
 
+pub fn into_boxed_error<E>(error: E) -> Box<dyn std::error::Error + 'static>
+where
+    E: Into<Box<dyn std::error::Error>> + Send + Sync + 'static,
+{
+    error.into()
+}
+
+pub fn into_anyhow_error<E>(error: E) -> anyhow::Error
+where 
+    E: std::error::Error + Send + Sync + 'static,
+{
+    error.into()
+}
+
 #[async_trait]
 pub trait LyricDb {
     type Error: std::error::Error;
@@ -36,18 +50,17 @@ pub trait PlaylistDb {
 
 #[async_trait]
 pub trait LiplRepo: Clone + Send + Sync {
-    type Error: std::error::Error;
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error>;
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error>;
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error>;
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error>;
-    async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error>;
-    async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error>;
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error>;
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error>;
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error>;
-    async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error>;
-    async fn stop(&self) -> Result<(), Self::Error>;
+    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>>;
+    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>>;
+    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric>;
+    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric>;
+    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()>;
+    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>>;
+    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>>;
+    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist>;
+    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist>;
+    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()>;
+    async fn stop(&self) -> anyhow::Result<()>;
 }
 
 pub trait HasSummary {
@@ -258,7 +271,7 @@ pub struct RepoDb {
 }
 
 impl RepoDb {
-    pub fn to_yaml(&self) -> Result<String> {
+    pub fn to_yaml(&self) -> error::ModelResult<String> {
         let s = serde_yaml::to_string(self)?;
         Ok(s)
     }

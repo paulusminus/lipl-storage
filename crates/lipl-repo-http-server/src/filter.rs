@@ -1,9 +1,7 @@
-use std::fmt::Debug;
 use warp::{body, path, Filter};
 use warp::filters::query;
 use lipl_core::{LiplRepo};
 use crate::constant::{API, VERSION};
-use crate::error::RepoError;
 use crate::handler::lyric as lyric_handler;
 use crate::handler::playlist as playlist_handler;
 
@@ -21,8 +19,8 @@ macro_rules! and {
 
 macro_rules! create_fn {
     ($name:ident, $handler:ident) => {
-        pub fn $name<R, E>(repo: R, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
-        where R: LiplRepo<Error = E> + Debug, E: std::error::Error + Into<RepoError>
+        pub fn $name<R>(repo: R, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
+        where R: LiplRepo
         {
             let repo_filter  = warp::any().map(move || repo.clone());
             let prefix = join_paths!(API, VERSION, name);

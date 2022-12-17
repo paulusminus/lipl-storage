@@ -52,7 +52,7 @@ impl Db {
         };
     }
 
-    pub fn delete_lyric(&mut self, id: &Uuid) -> crate::Result<()> {
+    pub fn delete_lyric(&mut self, id: &Uuid) -> Result<(), crate::error::Error> {
         self._remove_lyric_from_playlists(id);
         self.lyrics.remove(id)
         .ok_or_else(|| crate::error::Error::NoKey("Lyric".to_owned()))

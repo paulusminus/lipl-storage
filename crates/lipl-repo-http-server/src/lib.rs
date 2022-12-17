@@ -8,3 +8,5 @@ mod model;
 pub mod param;
 mod recover;
 pub mod serve;
+
+pub use param::run;

@@ -6,7 +6,7 @@ use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
 use futures_util::FutureExt;
 use futures_util::{TryFutureExt};
-use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid};
+use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid, into_anyhow_error};
 use parts::{to_text, to_parts};
 use tokio_postgres::{Row};
 
@@ -23,17 +23,36 @@ type PostgresResult<T> = std::result::Result<T, PostgresRepoError>;
 
 #[derive(Clone)]
 pub struct PostgresRepoConfig {
-    _pool: Pool,
     pub connection_string: String,
     pub clear: bool,
+    pub pool: Pool,
+}
+
+impl PostgresRepoConfig {
+    pub fn clear(self, clear: bool) -> Self {
+        Self {
+            connection_string: self.connection_string,
+            clear,
+            pool: self.pool,
+        }
+    }
+}
+
+impl std::str::FromStr for PostgresRepoConfig {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        pool::get(s, 16)
+            .map_err(anyhow::Error::from)
+            .map(|pool| PostgresRepoConfig { connection_string: s.into(), clear: false, pool })
+    }
 }
 
 impl std::future::IntoFuture for PostgresRepoConfig {
-    type Output = Result<PostgresRepo, PostgresRepoError>;
+    type Output = anyhow::Result<PostgresRepo>;
     type IntoFuture = Pin<Box<dyn std::future::Future<Output = Self::Output>>>;
 
     fn into_future(self) -> Self::IntoFuture {
-        PostgresRepo::new(self.connection_string, self.clear).boxed()
+        PostgresRepo::new(self.connection_string, self.clear, self.pool).boxed()
     }
 }
 
@@ -50,8 +69,15 @@ impl Debug for PostgresRepo {
 }
 
 impl PostgresRepo {
-    pub async fn new(connection_string: String, clear: bool) -> PostgresResult<PostgresRepo> {
+    pub fn new_2(connection_string: String) -> PostgresResult<PostgresRepo> {
         let pool = pool::get(&connection_string, 16)?;
+        Ok(PostgresRepo {
+            pool,
+            connection_string,
+        })
+
+    }
+    pub async fn new(connection_string: String, clear: bool, pool: Pool) -> anyhow::Result<PostgresRepo> {
         if clear {
             for sql in db::DROP.iter() {
                 pool.get()
@@ -73,7 +99,9 @@ impl PostgresRepo {
             pool.get().await?.execute(*sql, &[]).await?;
         };
 
-        Ok(Self { pool, connection_string })
+        Ok(
+            Self { pool, connection_string }
+        )
     }
 
     query! (
@@ -247,22 +275,27 @@ fn to_ok<T>(t: T) -> PostgresResult<T> {
     Ok(t)
 }
 
+
+
 #[async_trait]
 impl LiplRepo for PostgresRepo {
-    type Error = PostgresRepoError;
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>, Self::Error> {
-        self.lyrics().await
+    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>>
+    {
+        self.lyrics().await.map_err(into_anyhow_error)
     }
 
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
-        self.lyric_summaries().await
+    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>>
+    {
+        self.lyric_summaries().await.map_err(into_anyhow_error)
     }
 
-    async fn get_lyric(&self, id: Uuid) -> Result<Lyric, Self::Error> {
-        self.lyric_detail(id.inner()).await
+    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric>
+    {
+        self.lyric_detail(id.inner()).await.map_err(into_anyhow_error)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric, Self::Error> {
+    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric>
+    {
         self.upsert_lyric(
             lyric.id.inner(),
             lyric.title,
@@ -272,27 +305,34 @@ impl LiplRepo for PostgresRepo {
             move |_| self.lyric_detail(lyric.id.inner())
         )
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> Result<(), Self::Error> {
+    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()>
+    {
         self.lyric_delete(id.inner())
         .map_ok(to_unit)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>, Self::Error> {
-        self.playlists().await
+    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>>
+    {
+        self.playlists().await.map_err(into_anyhow_error)
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>, Self::Error> {
-        self.playlist_summaries().await
+    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>>
+    {
+        self.playlist_summaries().await.map_err(into_anyhow_error)
     }
 
-    async fn get_playlist(&self, id: Uuid) -> Result<Playlist, Self::Error> {
-        self.playlist_detail(id.inner()).await
+    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist>
+    {
+        self.playlist_detail(id.inner()).await.map_err(into_anyhow_error)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist, Self::Error> {
+    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist>
+    {
         let title = playlist.title.clone();
         self.upsert_playlist(
             playlist.id.inner(),
@@ -300,18 +340,22 @@ impl LiplRepo for PostgresRepo {
             playlist.members.iter().map(|uuid| uuid.inner()).collect()
         )
         .map_ok(|_| {})
+        .map_err(into_anyhow_error)
         .and_then(move |_| self.get_playlist(playlist.id))
         .await
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> Result<(), Self::Error> {
+    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()>
+    {
         self.playlist_delete(id.inner())
         .map_ok(to_unit)
         .await
+        .map_err(into_anyhow_error)
     }
 
-    async fn stop(&self) -> Result<(), Self::Error> {
-        ready(Ok::<(), PostgresRepoError>(())).await
+    async fn stop(&self) -> anyhow::Result<()>
+    {
+        ready(Ok::<(), PostgresRepoError>(())).await.map_err(into_anyhow_error)
     }
 }
 

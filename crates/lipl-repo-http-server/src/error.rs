@@ -15,6 +15,9 @@ pub enum RepoError {
 
     #[error("Model: {0}")]
     Model(#[from] ModelError),
+
+    #[error("Backend: {0}")]
+    Backend(#[from] anyhow::Error)
 }
 
 impl Reject for RepoError {}
