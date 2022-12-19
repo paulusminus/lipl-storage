@@ -68,12 +68,12 @@ pub trait HasSummary {
     fn summary(&self) -> Summary;
 }
 
-pub trait Without<T>
-where
-    T: PartialEq,
-{
-    fn without(self, t: &T) -> Self;
-}
+// pub trait Without<T>
+// where
+//     T: PartialEq,
+// {
+//     fn without(self, t: &T) -> Self;
+// }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Lyric {
@@ -243,14 +243,14 @@ impl From<&Lyric> for LyricMeta {
     }
 }
 
-impl<T> Without<T> for Vec<T>
-where
-    T: PartialEq,
-{
-    fn without(self, t: &T) -> Self {
-        self.into_iter().filter(|s| s != t).collect()
-    }
-}
+// impl<T> Without<T> for Vec<T>
+// where
+//     T: PartialEq,
+// {
+//     fn without(self, t: &T) -> Self {
+//         self.into_iter().filter(|s| s != t).collect()
+//     }
+// }
 
 pub trait Etag {
     fn etag(&self) -> Option<String>;
@@ -269,6 +269,15 @@ impl<T: Serialize> Etag for T {
 pub struct RepoDb {
     pub lyrics: Vec<Lyric>,
     pub playlists: Vec<Playlist>,
+}
+
+impl From<(Vec<Lyric>, Vec<Playlist>)> for RepoDb {
+    fn from(tuple: (Vec<Lyric>, Vec<Playlist>)) -> Self {
+        Self {
+            lyrics: tuple.0,
+            playlists: tuple.1
+        }
+    }
 }
 
 impl RepoDb {
@@ -324,7 +333,7 @@ mod tests {
 
     #[test]
     fn without() {
-        use super::Without;
+        use super::ext::VecExt;
         let v = vec!["1", "2", "5"];
         let out = v.without(&"2");
         assert_eq!(out.len(), 2);

@@ -1,7 +1,19 @@
 use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering, iter::empty};
 
 use async_trait::async_trait;
-use lipl_core::{LyricDb, Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid, PlaylistDb, Without, Yaml, RepoDb, reexport::serde_yaml};
+use lipl_core::{
+    LyricDb,
+    Lyric,
+    LyricPost,
+    Playlist,
+    PlaylistPost,
+    Summary, Uuid,
+    PlaylistDb,
+    Yaml,
+    RepoDb,
+    reexport::serde_yaml,
+    ext::VecExt,
+};
 use crate::error::Error;
 
 mod error;
@@ -45,19 +57,26 @@ impl InMemoryDb {
     }
 
     fn to_repo_db(&self) -> RepoDb {
-        let mut lyrics: Vec<Lyric> = vec![];
-        let mut playlists: Vec<Playlist> = vec![];
-        self.db.read().unwrap().iter().for_each(|(uuid, record)| {
-            match record {
-                Record::Lyric(lyric_post) => {
-                    lyrics.push((Some(*uuid), lyric_post.clone()).into())
-                },
-                Record::Playlist(playlist_post) => {
-                    playlists.push((Some(*uuid), playlist_post.clone()).into())
-                },
-            }
-        });
-        RepoDb { lyrics, playlists }
+        self.db.read().unwrap()
+            .iter()
+            .fold(
+                (Vec::<Lyric>::new(), Vec::<Playlist>::new()),
+                |acc, (uuid, record)| {
+                    match record {
+                        Record::Lyric(lyric_post) =>
+                            (
+                                acc.0.add_one((Some(*uuid), lyric_post.clone()).into()),
+                                acc.1,
+                            ),
+                        Record::Playlist(playlist_post) =>
+                            (
+                                acc.0,
+                                acc.1.add_one((Some(*uuid), playlist_post.clone()).into()),
+                            )
+                    }
+                }
+            )
+            .into()
     }
 }
 

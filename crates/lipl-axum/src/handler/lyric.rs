@@ -1,5 +1,10 @@
 use super::{to_json_response, to_status_ok, to_error_response};
-use axum::{extract::{Path, Query, State}, http::StatusCode, Json, response::{Response}};
+use axum::{
+    Json,
+    extract::{Path, Query, State},
+    http::StatusCode,
+    response::{Response},
+};
 use futures_util::TryFutureExt;
 use lipl_core::{LyricDb, LyricPost};
 use super::ListQuery;
@@ -7,7 +12,7 @@ use super::ListQuery;
 /// Handler for getting all lyrics
 pub async fn list<T>(
     State(connection): State<T>,
-    query: Query<ListQuery>
+    query: Query<ListQuery>,
 ) -> Response 
 where
     T: LyricDb,

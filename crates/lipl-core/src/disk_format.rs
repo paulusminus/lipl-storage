@@ -3,7 +3,7 @@ use core::fmt::{Display, Formatter};
 use core::str::Lines;
 use core::iter::once;
 
-use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Without, Playlist};
+use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, ext::VecExt, Playlist};
 use crate::error::{ModelError};
 
 const YAML_PREFIX: &str = "---";

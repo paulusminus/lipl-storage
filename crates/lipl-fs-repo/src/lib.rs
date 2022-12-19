@@ -13,7 +13,7 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, Without, into_anyhow_error,
+    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, ext::VecExt, into_anyhow_error,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
