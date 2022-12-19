@@ -85,7 +85,7 @@ impl LiplRepo for Repo {
     }
 }
 
-async fn try_repo_from(s: &String) -> anyhow::Result<Repo> {
+async fn try_repo_from(s: &str) -> anyhow::Result<Repo> {
     let splitted = s.split(':').collect::<Vec<&str>>();
     if splitted.len() == 2 {
         let repo_dir = splitted[1].to_owned();
@@ -138,14 +138,14 @@ pub async fn run() -> anyhow::Result<()> {
 
     match matches.subcommand() {
         Some((SERVE, serve_matches)) => {
-            let port = serve_matches.get_one::<u16>("port").ok_or(anyhow!("Port missing"))?;
-            let source = serve_matches.get_one::<String>(SOURCE).ok_or(anyhow!("Source missing"))?;
+            let port = serve_matches.get_one::<u16>("port").ok_or_else(|| anyhow!("Port missing"))?;
+            let source = serve_matches.get_one::<String>(SOURCE).ok_or_else(|| anyhow!("Source missing"))?;
             let source_repo = try_repo_from(source).await?;
-            crate::serve::run(source_repo, port.clone()).await?;
+            crate::serve::run(source_repo, *port).await?;
         },
         Some((COPY, copy_matches)) => {
-            let source = copy_matches.get_one::<String>(SOURCE).ok_or(anyhow!("Source missing"))?;
-            let target = copy_matches.get_one::<String>(TARGET).ok_or(anyhow!("Target missing"))?;
+            let source = copy_matches.get_one::<String>(SOURCE).ok_or_else(|| anyhow!("Source missing"))?;
+            let target = copy_matches.get_one::<String>(TARGET).ok_or_else(|| anyhow!("Target missing"))?;
 
             let source_repo = try_repo_from(source).await?;
             let target_repo = try_repo_from(target).await?;
@@ -153,11 +153,11 @@ pub async fn run() -> anyhow::Result<()> {
             crate::db::copy(source_repo, target_repo).await?;
         },
         Some((LIST, list_matches)) => {
-            let yaml = list_matches.get_one::<bool>(YAML).ok_or(anyhow!("Parsing yaml flag failed"))?;
-            let source = list_matches.get_one::<String>(SOURCE).ok_or(anyhow!("Source missing"))?;
+            let yaml = list_matches.get_one::<bool>(YAML).ok_or_else(|| anyhow!("Parsing yaml flag failed"))?;
+            let source = list_matches.get_one::<String>(SOURCE).ok_or_else(|| anyhow!("Source missing"))?;
             let source_repo = try_repo_from(source).await?;
 
-            crate::db::list(source_repo, yaml.clone()).await?
+            crate::db::list(source_repo, *yaml).await?
         },
         Some((_, _)) => bail!("Unknown subcommand"),
         None => bail!("Invalid parameters"),

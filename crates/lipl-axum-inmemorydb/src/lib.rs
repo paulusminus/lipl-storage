@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering};
+use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering, iter::empty};
 
 use async_trait::async_trait;
 use lipl_core::{LyricDb, Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid, PlaylistDb, Without, Yaml, RepoDb, reexport::serde_yaml};
@@ -17,58 +17,53 @@ pub struct InMemoryDb {
     db: Arc<RwLock<HashMap<Uuid, Record>>>,
 }
 
+impl From<RepoDb> for InMemoryDb {
+    fn from(repo_db: RepoDb) -> Self {
+        InMemoryDb::new(repo_db.lyrics.into_iter(), repo_db.playlists.into_iter())
+    }
+}
+
+fn lyric_to_tuple(lyric: Lyric) -> (Uuid, Record) {
+    (lyric.id, Record::Lyric(lyric.into()))
+}
+
+fn playlist_to_tuple(playlist: Playlist) -> (Uuid, Record) {
+    (playlist.id, Record::Playlist(playlist.into()))
+}
+
 impl InMemoryDb {
-    pub fn new() -> Self {
+    pub fn new(lyrics: impl Iterator<Item = Lyric>, playlists: impl Iterator<Item = Playlist>) -> Self {
         Self {
-            db: Arc::new(RwLock::new(HashMap::new())),
+            db: Arc::new(
+                RwLock::new(
+                    HashMap::from_iter(
+                        lyrics.map(lyric_to_tuple).chain(playlists.map(playlist_to_tuple)),
+                    )
+                )
+            ),
         }
     }
 
-    fn add_lyric(&self, lyric: Lyric) {
-        self.db.write().unwrap().insert(lyric.id, Record::Lyric(LyricPost { title: lyric.title, parts: lyric.parts }));
-    }
-
-    fn add_playlist(&self, playlist: Playlist) {
-        self.db.write().unwrap().insert(playlist.id, Record::Playlist(PlaylistPost { title: playlist.title, members: playlist.members }));
-    }
-
-    fn lyrics(&self) -> Vec<Lyric> {
-        self.db.read().unwrap().iter().filter_map(|(uuid, record)| {
+    fn to_repo_db(&self) -> RepoDb {
+        let mut lyrics: Vec<Lyric> = vec![];
+        let mut playlists: Vec<Playlist> = vec![];
+        self.db.read().unwrap().iter().for_each(|(uuid, record)| {
             match record {
-                Record::Lyric(lyric_post) => Some(
-                    Lyric {
-                        id: uuid.clone(),
-                        title: lyric_post.title.clone(),
-                        parts: lyric_post.parts.clone(),
-                    }
-                ),
-                _ => None,
+                Record::Lyric(lyric_post) => {
+                    lyrics.push((Some(*uuid), lyric_post.clone()).into())
+                },
+                Record::Playlist(playlist_post) => {
+                    playlists.push((Some(*uuid), playlist_post.clone()).into())
+                },
             }
-        })
-        .collect()
-    }
-
-    fn playlists(&self) -> Vec<Playlist> {
-        self.db.read().unwrap().iter().filter_map(|(uuid, record)| {
-            match record {
-                Record::Playlist(playlist_post) => Some(
-                    Playlist {
-                        id: uuid.clone(),
-                        title: playlist_post.title.clone(),
-                        members: playlist_post.members.clone(),
-                    }
-                ),
-                _ => None,
-            }
-        })
-        .collect()
-
+        });
+        RepoDb { lyrics, playlists }
     }
 }
 
 impl Default for InMemoryDb {
     fn default() -> Self {
-        Self::new()
+        Self::new(empty(), empty())
     }
 }
 
@@ -84,7 +79,6 @@ fn playlist_compare_title(a: &Playlist, b: &Playlist) -> Ordering {
     a.title.cmp(&b.title)
 }
 
-#[async_trait::async_trait]
 impl Yaml for InMemoryDb {
     type Error = crate::error::Error;
     fn load<R>(r: R) -> Result<Self, Self::Error>
@@ -92,22 +86,17 @@ impl Yaml for InMemoryDb {
         R: std::io::Read,
         Self: Sized,
     {
-        let repo_db: RepoDb = serde_yaml::from_reader(r)?;
-        let db = InMemoryDb::new();
-        repo_db.lyrics.into_iter().for_each(|lyric| db.add_lyric(lyric));
-        repo_db.playlists.into_iter().for_each(|playlist| db.add_playlist(playlist));
-        Ok(db)
+        serde_yaml::from_reader::<_, RepoDb>(r)
+            .map_err(Error::from)
+            .map(InMemoryDb::from)
     }
 
     fn save<W>(&self, w: W) -> Result<(), Self::Error>
     where
         W: std::io::Write,
     {
-        let repo_db = RepoDb {
-            lyrics: self.lyrics(),
-            playlists: self.playlists(),
-        };
-        serde_yaml::to_writer(w, &repo_db).map_err(Error::from)
+        serde_yaml::to_writer(w, &self.to_repo_db())
+            .map_err(Error::from)
     }
 }
 
@@ -256,11 +245,13 @@ impl PlaylistDb for InMemoryDb {
 
 #[cfg(test)]
 mod tests {
+    use std::iter::empty;
+
     use lipl_core::PlaylistDb;
 
     #[tokio::test]
     async fn post_playlist() {
-        let db = super::InMemoryDb::new();
+        let db = super::InMemoryDb::new(empty(), empty());
 
         let playlist_post = super::PlaylistPost {
             title: "Alle 13 goed".to_owned(),
