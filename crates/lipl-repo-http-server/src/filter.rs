@@ -19,7 +19,7 @@ macro_rules! and {
 
 macro_rules! create_fn {
     ($name:ident, $handler:ident) => {
-        pub fn $name<R>(repo: R, name: &'static str) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone
+        pub fn $name<R>(repo: R, name: &'static str) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone
         where R: LiplRepo
         {
             let repo_filter  = warp::any().map(move || repo.clone());
