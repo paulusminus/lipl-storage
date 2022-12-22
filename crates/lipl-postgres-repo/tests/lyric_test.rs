@@ -1,7 +1,7 @@
 use lipl_postgres_repo::{PostgresRepoConfig};
 use lipl_core::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
 
-const CONNECTION: &str = "host=/var/run/postgresql/ user=paul dbname=test";
+const CONNECTION: &str = "host=/var/run/postgresql/ user=paul dbname=test2";
 const ROODKAPJE: &str = include_str!("./Roodkapje.md");
 const MOLEN: &str = include_str!("./Molen.md");
 const SINTERKLAAS: &str = include_str!("./Sinterklaas.md");
