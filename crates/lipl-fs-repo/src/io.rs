@@ -21,9 +21,9 @@ where P: AsRef<Path> + Send + Sync
 pub fn get_item<F, G>(s: String, id: Uuid) -> Result<G>
 where
     F: FromStr<Err=ModelError>,
-    G: From<(F, Uuid)>,
+    G: From<(Option<Uuid>, F)>,
 {
-    s.parse::<F>().map_err(|_| FileRepoError::Parse(format!("{id}"))).map(|f| G::from((f, id)))
+    s.parse::<F>().map_err(|_| FileRepoError::Parse(format!("{id}"))).map(|f| G::from((Some(id), f)))
 }
 
 pub async fn get_playlist<P>(path: P) -> Result<Playlist>

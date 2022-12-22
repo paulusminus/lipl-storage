@@ -238,7 +238,8 @@ mod tests {
     #[test]
     fn lyric_post_parse_equals_display() {
         let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
-        let lyric = Lyric::from((lyric_post, HERTOG_JAN_ID.to_owned().parse::<Uuid>().unwrap()));
+        let uuid = HERTOG_JAN_ID.to_owned().parse::<Uuid>().unwrap();
+        let lyric = Lyric::from((Some(uuid), lyric_post, ));
         assert_eq!(lyric.to_string().as_str(), hertog_jan_lyric().to_string().as_str());
     }
 

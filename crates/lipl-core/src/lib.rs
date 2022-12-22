@@ -82,30 +82,21 @@ pub struct Lyric {
     pub parts: Vec<Vec<String>>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct LyricPost {
     pub title: String,
     pub parts: Vec<Vec<String>>,
 }
 
-impl Default for LyricPost {
-    fn default() -> Self {
-        LyricPost {
-            title: "".to_owned(),
-            parts: vec![],
-        }
-    }
-}
-
-impl From<(LyricPost, Uuid)> for Lyric {
-    fn from(tuple: (LyricPost, Uuid)) -> Self {
-        Lyric {
-            id: tuple.1,
-            title: tuple.0.title,
-            parts: tuple.0.parts,
-        }
-    }
-}
+// impl From<(LyricPost, Uuid)> for Lyric {
+//     fn from(tuple: (LyricPost, Uuid)) -> Self {
+//         Lyric {
+//             id: tuple.1,
+//             title: tuple.0.title,
+//             parts: tuple.0.parts,
+//         }
+//     }
+// }
 
 impl From<(Option<Uuid>, LyricPost)> for Lyric {
     fn from(data: (Option<Uuid>, LyricPost)) -> Lyric {
@@ -186,11 +177,11 @@ pub struct Summary {
     pub title: String,
 }
 
-impl From<(LyricMeta, Uuid)> for Summary {
-    fn from(tuple: (LyricMeta, Uuid)) -> Self {
+impl From<(Option<Uuid>, LyricMeta)> for Summary {
+    fn from(tuple: (Option<Uuid>, LyricMeta)) -> Self {
         Summary {
-            id: tuple.1,
-            title: tuple.0.title
+            id: tuple.0.unwrap_or_default(),
+            title: tuple.1.title
         }
     }
 }
