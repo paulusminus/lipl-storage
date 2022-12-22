@@ -10,15 +10,13 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::{ApiError, ApiResult, ApiRequest};
 use futures_util::{Future, FutureExt, TryFutureExt, future::ready};
 
-trait ToJson {
-    fn to_json(&self) -> String;
-}
-
-impl<T> ToJson for T where T: Serialize {
-    fn to_json(&self) -> String {
-        serde_json::to_string(self).unwrap()
+trait ToJson: Serialize + Send + Sync {
+    fn to_json(&self) -> ApiResult<String> {
+        serde_json::to_string(self).map_err(ApiError::from)
     }
 }
+
+impl<T> ToJson for T where T: Serialize + Send + Sync { }
 
 pub struct ApiClient {
     client: Client<HttpsConnector<HttpConnector>>,
@@ -85,7 +83,7 @@ impl ApiRequest for ApiClient {
         api_request(
             self.uri(uri),
             Method::POST,
-            Some(object.to_json().into())
+            Some(object.to_json()?.into())
         )
         .and_then(|r| self.send(r))
         .map_ok(to_object)
