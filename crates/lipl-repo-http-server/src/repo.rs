@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use lipl_core::{LiplRepo, Lyric, Summary, Uuid, Playlist};
 use std::{str::FromStr, future::IntoFuture, pin::Pin};
 use anyhow::bail;
 use futures::{TryFutureExt, Future, FutureExt};
@@ -57,5 +59,61 @@ impl IntoFuture for RepoConfig {
                 .boxed()
             }
         }
+    }
+}
+
+macro_rules! dispatch {
+    ($self: ident, $method:ident $(,$param:expr)*) => {
+        match $self {
+            Repo::File(file) => file.$method($($param),*).await,
+            Repo::Postgres(postgres) => postgres.$method($($param)*).await
+        }        
+    };
+}
+
+#[async_trait]
+impl LiplRepo for Repo {
+    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+        dispatch!(self, get_lyrics)
+    }
+
+    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+        dispatch!(self, get_lyric_summaries)
+    }
+
+    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
+        dispatch!(self, get_lyric, id)
+    }
+
+    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
+        dispatch!(self, post_lyric, lyric)
+    }
+
+    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
+        dispatch!(self, delete_lyric, id)
+    }
+
+    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+        dispatch!(self, get_playlists)
+    }
+
+    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+        dispatch!(self, get_playlist_summaries)
+    }
+
+    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+        dispatch!(self, get_playlist, id)
+    }
+
+    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
+        dispatch!(self, post_playlist, playlist)
+    }
+
+    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
+        dispatch!(self, delete_playlist, id)
+    }
+
+    async fn stop(&self) -> anyhow::Result<()> {
+        dispatch!(self, stop)
     }
 }

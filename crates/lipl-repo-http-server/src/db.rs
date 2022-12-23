@@ -5,7 +5,6 @@ pub async fn list<R>(repo: R, yaml: bool) -> anyhow::Result<()>
 where
     R: LiplRepo,
 {
-
     let db = RepoDb {
         lyrics: repo.get_lyrics().await?,
         playlists: repo.get_playlists().await?,
