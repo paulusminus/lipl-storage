@@ -1,5 +1,5 @@
-use lipl_postgres_repo::{PostgresRepoConfig};
 use lipl_core::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
+use lipl_postgres_repo::{PostgresRepoConfig, PostgresRepo};
 
 const CONNECTION: &str = "host=/var/run/postgresql/ user=paul dbname=test2";
 const ROODKAPJE: &str = include_str!("./Roodkapje.md");
@@ -16,7 +16,8 @@ fn create_lyric(text: &str) -> Lyric {
 
 #[tokio::test]
 async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
-    let repo = CONNECTION.parse::<PostgresRepoConfig>()?.clear(true).await?;
+    let repo_config = CONNECTION.parse::<PostgresRepoConfig>()?.clear(true);
+    let repo = PostgresRepo::new(repo_config).await?;
 
     let lyric1 = create_lyric(ROODKAPJE);
 

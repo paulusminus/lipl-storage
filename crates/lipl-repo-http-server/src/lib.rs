@@ -10,4 +10,28 @@ mod recover;
 mod repo;
 pub mod serve;
 
-pub use param::run;
+use param::{LiplApp, LiplCommand};
+use clap::{Parser};
+use futures::TryFutureExt;
+
+pub async fn run() -> anyhow::Result<()> {
+    let cli = LiplApp::parse();
+    match cli.command {
+        LiplCommand::Serve(serve) => {
+            serve.source.to_repo()
+            .and_then(|source| crate::serve::run(source, serve.port))
+            .await
+        },
+        LiplCommand::Copy(copy) => {
+            copy.source.to_repo()
+            .and_then(|source| copy.target.to_repo().map_ok(|target| (source, target)))
+            .and_then(|(source, target)| crate::db::copy(source, target))
+            .await
+        },
+        LiplCommand::List(list) => {
+            list.source.to_repo()
+            .and_then(|source| crate::db::list(source, list.yaml))
+            .await
+        }
+    }
+}

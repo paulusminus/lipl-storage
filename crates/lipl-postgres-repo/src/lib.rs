@@ -1,10 +1,8 @@
 use std::fmt::{Debug};
 use std::future::ready;
-use std::pin::Pin;
 
 use async_trait::{async_trait};
 use deadpool_postgres::{Pool};
-use futures_util::FutureExt;
 use futures_util::{TryFutureExt};
 use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid, into_anyhow_error};
 use parts::{to_text, to_parts};
@@ -48,14 +46,14 @@ impl std::str::FromStr for PostgresRepoConfig {
     }
 }
 
-impl std::future::IntoFuture for PostgresRepoConfig {
-    type Output = anyhow::Result<PostgresRepo>;
-    type IntoFuture = Pin<Box<dyn std::future::Future<Output = Self::Output>>>;
+// impl std::future::IntoFuture for PostgresRepoConfig {
+//     type Output = anyhow::Result<PostgresRepo>;
+//     type IntoFuture = Pin<Box<dyn std::future::Future<Output = Self::Output>>>;
 
-    fn into_future(self) -> Self::IntoFuture {
-        PostgresRepo::new(self).boxed()
-    }
-}
+//     fn into_future(self) -> Self::IntoFuture {
+//         PostgresRepo::new(self).boxed()
+//     }
+// }
 
 #[derive(Clone)]
 pub struct PostgresRepo {

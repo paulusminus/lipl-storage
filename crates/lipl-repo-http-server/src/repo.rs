@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use lipl_core::{LiplRepo, Lyric, Summary, Uuid, Playlist};
-use std::{str::FromStr, future::IntoFuture, pin::Pin};
+use std::str::FromStr;
 use anyhow::bail;
-use futures::{TryFutureExt, Future, FutureExt};
 use lipl_fs_repo::{FileRepo, FileRepoConfig};
 use lipl_postgres_repo::{PostgresRepo, PostgresRepoConfig};
 
@@ -10,6 +9,19 @@ use lipl_postgres_repo::{PostgresRepo, PostgresRepoConfig};
 pub enum RepoConfig {
     Postgres(PostgresRepoConfig),
     File(FileRepoConfig),
+}
+
+impl RepoConfig {
+    pub async fn to_repo(&self) -> anyhow::Result<Repo> {
+        match self {
+            RepoConfig::File(file) => {
+                FileRepo::new(file.path.clone()).map(Repo::File)
+            },
+            RepoConfig::Postgres(postgres) => {
+                PostgresRepo::new(postgres.clone()).await.map(Repo::Postgres)
+            }
+        }
+    }
 }
 
 impl FromStr for RepoConfig {
@@ -41,26 +53,26 @@ pub enum Repo {
     File(FileRepo),
 }
 
-impl IntoFuture for RepoConfig {
-    type Output = anyhow::Result<Repo>;
-    type IntoFuture = Pin<Box<dyn Future<Output = Self::Output>>>;
-    fn into_future(self) -> Self::IntoFuture {
-        match self {
-            RepoConfig::File(config) => {
-                async move { 
-                    FileRepo::new(config.path)
-                }
-                .map_ok(Repo::File)
-                .boxed()
-            },
-            RepoConfig::Postgres(config) => {
-                PostgresRepo::new(config)
-                .map_ok(Repo::Postgres)
-                .boxed()
-            }
-        }
-    }
-}
+// impl IntoFuture for RepoConfig {
+//     type Output = anyhow::Result<Repo>;
+//     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output>>>;
+//     fn into_future(self) -> Self::IntoFuture {
+//         match self {
+//             RepoConfig::File(config) => {
+//                 async move { 
+//                     FileRepo::new(config.path)
+//                 }
+//                 .map_ok(Repo::File)
+//                 .boxed()
+//             },
+//             RepoConfig::Postgres(config) => {
+//                 PostgresRepo::new(config)
+//                 .map_ok(Repo::Postgres)
+//                 .boxed()
+//             }
+//         }
+//     }
+// }
 
 macro_rules! dispatch {
     ($self: ident, $method:ident $(,$param:expr)*) => {
