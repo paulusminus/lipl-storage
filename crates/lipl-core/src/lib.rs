@@ -68,13 +68,6 @@ pub trait HasSummary {
     fn summary(&self) -> Summary;
 }
 
-// pub trait Without<T>
-// where
-//     T: PartialEq,
-// {
-//     fn without(self, t: &T) -> Self;
-// }
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Lyric {
     pub id: Uuid,
@@ -87,16 +80,6 @@ pub struct LyricPost {
     pub title: String,
     pub parts: Vec<Vec<String>>,
 }
-
-// impl From<(LyricPost, Uuid)> for Lyric {
-//     fn from(tuple: (LyricPost, Uuid)) -> Self {
-//         Lyric {
-//             id: tuple.1,
-//             title: tuple.0.title,
-//             parts: tuple.0.parts,
-//         }
-//     }
-// }
 
 impl From<(Option<Uuid>, LyricPost)> for Lyric {
     fn from(data: (Option<Uuid>, LyricPost)) -> Lyric {

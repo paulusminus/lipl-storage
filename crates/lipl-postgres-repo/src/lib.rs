@@ -14,6 +14,7 @@ use crate::db::crud;
 use crate::macros::query;
 pub use error::PostgresRepoError;
 
+mod constant;
 mod db;
 mod error;
 pub mod pool;
@@ -41,7 +42,7 @@ impl PostgresRepoConfig {
 impl std::str::FromStr for PostgresRepoConfig {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        pool::get(s, 16)
+        pool::get(s, constant::POOL_MAX_SIZE)
             .map_err(anyhow::Error::from)
             .map(|pool| PostgresRepoConfig { connection_string: s.into(), clear: false, pool })
     }
@@ -69,16 +70,6 @@ impl Debug for PostgresRepo {
 }
 
 impl PostgresRepo {
-    // pub fn new_2(connection_string: String) -> PostgresResult<PostgresRepo> {
-    //     let pool = pool::get(&connection_string, 16)?;
-    //     Ok(
-    //         PostgresRepo {
-    //             pool,
-    //             connection_string,
-    //         }
-    //     )
-
-    // }
     pub async fn new(postgres_repo_config: PostgresRepoConfig) -> anyhow::Result<PostgresRepo> {
         if postgres_repo_config.clear {
             for sql in db::DROP.iter() {

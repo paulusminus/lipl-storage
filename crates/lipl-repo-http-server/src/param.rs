@@ -1,8 +1,7 @@
 use anyhow::{anyhow, bail};
 use clap::{Arg, Command, command, value_parser, ArgAction};
-use lipl_fs_repo::{FileRepo, FileRepoConfig};
-use lipl_postgres_repo::{PostgresRepo, PostgresRepoConfig};
 use lipl_core::{LiplRepo, Summary, Lyric, Uuid, Playlist};
+use crate::repo::{Repo, RepoConfig};
 
 const SERVE: &str = "serve";
 const LIST: &str = "list";
@@ -16,18 +15,6 @@ const TARGET: &str = "target";
 const TARGET_SHORT: char = 't';
 const YAML: &str = "yaml";
 const YAML_SHORT: char = 'y';
-
-// #[derive(Clone)]
-// enum RepoConfig {
-//     Postgres(PostgresRepoConfig),
-//     File(FileRepoConfig),
-// }
-
-#[derive(Clone)]
-enum Repo {
-    Postgres(PostgresRepo),
-    File(FileRepo),
-}
 
 macro_rules! dispatch {
     ($self: ident, $method:ident $(,$param:expr)*) => {
@@ -85,25 +72,6 @@ impl LiplRepo for Repo {
     }
 }
 
-async fn try_repo_from(s: &str) -> anyhow::Result<Repo> {
-    let splitted = s.split(':').collect::<Vec<&str>>();
-    if splitted.len() == 2 {
-        let repo_dir = splitted[1].to_owned();
-        if splitted[0] == "file" {
-            repo_dir.parse::<FileRepoConfig>()?.await.map(Repo::File)
-        }
-        else if splitted[0] == "postgres" {
-            repo_dir.parse::<PostgresRepoConfig>()?.await.map(Repo::Postgres)
-        }
-        else {
-            bail!("Unknown prefix for db connection string")
-        }
-    }
-    else {
-        bail!("Problem with separator (none or too many)")
-    }
-}
-
 pub async fn run() -> anyhow::Result<()> {
     let matches = command!()
         .subcommand_required(true)
@@ -138,24 +106,24 @@ pub async fn run() -> anyhow::Result<()> {
 
     match matches.subcommand() {
         Some((SERVE, serve_matches)) => {
-            let port = serve_matches.get_one::<u16>("port").ok_or_else(|| anyhow!("Port missing"))?;
+            let port = serve_matches.get_one::<u16>(PORT).ok_or_else(|| anyhow!("Port missing"))?;
             let source = serve_matches.get_one::<String>(SOURCE).ok_or_else(|| anyhow!("Source missing"))?;
-            let source_repo = try_repo_from(source).await?;
+            let source_repo = source.parse::<RepoConfig>()?.await?;
             crate::serve::run(source_repo, *port).await?;
         },
         Some((COPY, copy_matches)) => {
             let source = copy_matches.get_one::<String>(SOURCE).ok_or_else(|| anyhow!("Source missing"))?;
             let target = copy_matches.get_one::<String>(TARGET).ok_or_else(|| anyhow!("Target missing"))?;
 
-            let source_repo = try_repo_from(source).await?;
-            let target_repo = try_repo_from(target).await?;
+            let source_repo = source.parse::<RepoConfig>()?.await?;
+            let target_repo = target.parse::<RepoConfig>()?.await?;
 
             crate::db::copy(source_repo, target_repo).await?;
         },
         Some((LIST, list_matches)) => {
             let yaml = list_matches.get_one::<bool>(YAML).ok_or_else(|| anyhow!("Parsing yaml flag failed"))?;
             let source = list_matches.get_one::<String>(SOURCE).ok_or_else(|| anyhow!("Source missing"))?;
-            let source_repo = try_repo_from(source).await?;
+            let source_repo = source.parse::<RepoConfig>()?.await?;
 
             crate::db::list(source_repo, *yaml).await?
         },
