@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use lipl_core::LiplRepo;
 use tokio::signal;
 use tracing::{info, error};
@@ -7,9 +9,7 @@ use crate::constant;
 use crate::message;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
 
-pub async fn run<R>(repo: R, port: u16) -> anyhow::Result<()> 
-where
-    R: LiplRepo + 'static,
+pub async fn run(repo: Arc<dyn LiplRepo>, port: u16) -> anyhow::Result<()> 
 {
     let filter =
         std::env::var(constant::RUST_LOG)

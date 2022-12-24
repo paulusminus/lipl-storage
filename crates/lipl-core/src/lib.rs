@@ -50,7 +50,7 @@ pub trait PlaylistDb {
 }
 
 #[async_trait]
-pub trait LiplRepo: Clone + Send + Sync {
+pub trait LiplRepo: Send + Sync {
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>>;
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>>;
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric>;
