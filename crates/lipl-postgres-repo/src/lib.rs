@@ -46,15 +46,6 @@ impl std::str::FromStr for PostgresRepoConfig {
     }
 }
 
-// impl std::future::IntoFuture for PostgresRepoConfig {
-//     type Output = anyhow::Result<PostgresRepo>;
-//     type IntoFuture = Pin<Box<dyn std::future::Future<Output = Self::Output>>>;
-
-//     fn into_future(self) -> Self::IntoFuture {
-//         PostgresRepo::new(self).boxed()
-//     }
-// }
-
 #[derive(Clone)]
 pub struct PostgresRepo {
     pool: Pool,

@@ -11,13 +11,15 @@ pub enum RepoConfig {
 }
 
 impl RepoConfig {
-    pub async fn to_repo(&self) -> anyhow::Result<Repo> {
+    pub async fn to_repo(self) -> anyhow::Result<Arc<dyn LiplRepo>> {
         match self {
             RepoConfig::File(file) => {
-                FileRepo::new(file.path.clone()).map(Repo::File)
+                let repo = FileRepo::new(file.path.clone())?;
+                Ok(Arc::new(repo))
             },
             RepoConfig::Postgres(postgres) => {
-                PostgresRepo::new(postgres.clone()).await.map(Repo::Postgres)
+                let repo = PostgresRepo::new(postgres.clone()).await?;
+                Ok(Arc::new(repo))
             }
         }
     }
@@ -43,20 +45,5 @@ impl FromStr for RepoConfig {
         else {
             bail!("Problem with separator (none or too many)")
         }            
-    }
-}
-
-#[derive(Clone)]
-pub enum Repo {
-    Postgres(PostgresRepo),
-    File(FileRepo),
-}
-
-impl Repo {
-    pub fn to_lipl_repo(self) -> Arc<dyn LiplRepo> {
-        match self {
-            Repo::File(repo) => Arc::new(repo),
-            Repo::Postgres(repo) => Arc::new(repo),
-        }
     }
 }

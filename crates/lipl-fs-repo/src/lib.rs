@@ -1,9 +1,7 @@
 use std::fmt::Debug;
 use std::str::FromStr;
-// use futures::future::{Ready};
 use std::path::PathBuf;
 use std::sync::Arc;
-// use futures::future::ready;
 use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
@@ -37,15 +35,6 @@ impl FromStr for FileRepoConfig {
             .map(|_| FileRepoConfig { path: s.into() })
     }
 }
-
-// impl std::future::IntoFuture for FileRepoConfig {
-//     type Output = anyhow::Result<FileRepo>;
-//     type IntoFuture = Ready<Self::Output>;
-
-//     fn into_future(self) -> Self::IntoFuture {
-//         ready(FileRepo::new(self.path))
-//     }
-// }
 
 #[derive(Clone)]
 pub struct FileRepo {
