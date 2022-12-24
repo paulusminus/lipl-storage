@@ -106,7 +106,7 @@ impl Yaml for InMemoryDb {
         Self: Sized,
     {
         serde_yaml::from_reader::<_, RepoDb>(r)
-            .map_err(Error::from)
+            .map_err(Into::into)
             .map(InMemoryDb::from)
     }
 
@@ -115,7 +115,7 @@ impl Yaml for InMemoryDb {
         W: std::io::Write,
     {
         serde_yaml::to_writer(w, &self.to_repo_db())
-            .map_err(Error::from)
+            .map_err(Into::into)
     }
 }
 

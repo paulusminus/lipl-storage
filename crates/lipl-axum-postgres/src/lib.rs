@@ -48,7 +48,7 @@ impl PostgresConnectionPool {
 
     async fn batch_execute(&self, sql: &str) -> Result<()> {
         let connection = self.inner.get().await?;
-        connection.batch_execute(sql).await.map_err(Error::from)
+        connection.batch_execute(sql).await.map_err(Into::into)
     }
 
     fn query<'a, F, T>(

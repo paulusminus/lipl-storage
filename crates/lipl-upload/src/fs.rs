@@ -31,7 +31,7 @@ where P: AsRef<Path>
 {
     read_to_string(path.as_ref())
     .await
-    .map_err(UploadError::from)
+    .map_err(Into::into)
     .map(|contents| Entry { path: path.as_ref().to_path_buf(), contents })
 }
 
@@ -43,7 +43,7 @@ pub fn extension_filter(extension: &str) -> impl Fn(&PathBuf) -> Ready<bool> + '
 async fn get_files_stream<P: AsRef<Path>>(path: P) -> UploadResult<impl Stream<Item=Result<DirEntry, IOError>>> {
     read_dir(path.as_ref())
     .await
-    .map_err(UploadError::from)
+    .map_err(Into::into)
     .map(ReadDirStream::new)
 }
 
@@ -57,7 +57,7 @@ where
     .await
     .map(|s|
         s.map_ok(|de| de.path())
-        .map_err(UploadError::from)
+        .map_err(Into::into)
         .try_filter(filter)
         .and_then(entry_from_file)
         .map_ok(LyricPost::from)

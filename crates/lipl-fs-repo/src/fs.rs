@@ -52,7 +52,7 @@ where
             .try_take_while(|l| ready(Ok(l.trim() != "---")))
             .try_collect::<Vec<String>>()
         )
-        .map_err(FileRepoError::from)
+        .map_err(Into::into)
         .map_ok(|parts| parts.join("\n"))
         .await
     }
@@ -64,7 +64,7 @@ where
 
     async fn write_string(&self, s: String) -> Result<()> {
         tokio::fs::write(self, s)
-        .map_err(FileRepoError::from)
+        .map_err(Into::into)
         .await
     }
 
@@ -73,11 +73,11 @@ where
         F: Fn(&PathBuf) -> Ready<bool> + Send + 'a,
     {
         read_dir(self)
-        .map_err(FileRepoError::from)
+        .map_err(Into::into)
         .map_ok(
             |de| 
                 ReadDirStream::new(de)
-                .map_err(FileRepoError::from)
+                .map_err(Into::into)
                 .map_ok(|de| de.path())
                 .try_filter(filter)
                 .boxed()

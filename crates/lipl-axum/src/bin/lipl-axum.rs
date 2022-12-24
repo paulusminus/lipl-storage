@@ -9,7 +9,7 @@ async fn run(service: Router<()>) -> Result<(), Error> {
     .serve(service.into_make_service())
     .with_graceful_shutdown(exit_on_signal_int())
     .await
-    .map_err(Error::from)
+    .map_err(Into::into)
 }
 
 #[tokio::main]

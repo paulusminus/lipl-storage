@@ -7,12 +7,12 @@ use hyper::header::CONTENT_TYPE;
 use hyper::{client::{Client, HttpConnector}, Response, Body, body::{aggregate, Buf}, Method, header::{CONTENT_ENCODING, ACCEPT, ACCEPT_ENCODING, USER_AGENT}, Request};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use serde::{de::DeserializeOwned, Serialize};
-use crate::{ApiError, ApiResult, ApiRequest};
+use crate::{ApiResult, ApiRequest};
 use futures_util::{Future, FutureExt, TryFutureExt, future::ready};
 
 trait ToJson: Serialize + Send + Sync {
     fn to_json(&self) -> ApiResult<String> {
-        serde_json::to_string(self).map_err(ApiError::from)
+        serde_json::to_string(self).map_err(Into::into)
     }
 }
 
@@ -47,7 +47,7 @@ impl ApiClient {
             )
         )
         .await
-        .map_err(ApiError::from)
+        .map_err(Into::into)
     }
 
 }
@@ -56,7 +56,7 @@ fn to_object<T>(response: Box<dyn Read>) -> ApiResult<T>
 where T: DeserializeOwned
 {
     serde_json::from_reader(response)
-    .map_err(ApiError::from)
+    .map_err(Into::into)
 }
 
 #[async_trait]
@@ -116,7 +116,7 @@ fn api_request(uri: String, method: Method, body: Option<Body>) -> Pin<Box<dyn F
                 .header(CONTENT_TYPE, "application/json")
                 .header(USER_AGENT, "Rust hyper")
                 .body(body)
-                .map_err(crate::error::ApiError::from),
+                .map_err(Into::into),
             None =>
                 Request::builder()
                 .uri(uri)
@@ -125,7 +125,7 @@ fn api_request(uri: String, method: Method, body: Option<Body>) -> Pin<Box<dyn F
                 .header(ACCEPT_ENCODING, "gzip")
                 .header(USER_AGENT, "Rust hyper")
                 .body(Body::empty())
-                .map_err(crate::error::ApiError::from),
+                .map_err(Into::into),
 }
     )
     .boxed()

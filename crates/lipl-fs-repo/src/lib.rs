@@ -11,7 +11,7 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, ext::VecExt, into_anyhow_error,
+    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, ext::VecExt,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
@@ -31,7 +31,7 @@ impl FromStr for FileRepoConfig {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         s.is_dir()
-            .map_err(into_anyhow_error)
+            .map_err(Into::into)
             .map(|_| FileRepoConfig { path: s.into() })
     }
 }
@@ -241,66 +241,66 @@ impl LiplRepo for FileRepo {
     async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
         select(self.tx.clone(), Request::LyricList)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::LyricSummaries)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
         select_by_id(self.tx.clone(), id, Request::LyricItem)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
         post(self.tx.clone(), lyric, Request::LyricPost)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::LyricDelete)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
         select(self.tx.clone(), Request::PlaylistList)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::PlaylistSummaries)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
         select_by_id(self.tx.clone(), id, Request::PlaylistItem)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
         .await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 
     async fn stop(&self) -> anyhow::Result<()> {
         select(self.tx.clone(), Request::Stop).await
-        .map_err(into_anyhow_error)
+        .map_err(Into::into)
     }
 }
 

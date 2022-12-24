@@ -5,7 +5,7 @@ mod error;
 use std::{path::{Path, PathBuf}, sync::Arc};
 use tokio::sync::RwLock;
 
-use lipl_core::{LiplRepo, Lyric, Summary, Uuid, Playlist, into_anyhow_error};
+use lipl_core::{LiplRepo, Lyric, Summary, Uuid, Playlist};
 use model::{Db, HasSummaries};
 pub use serde::{Deserialize, Serialize};
 
@@ -46,15 +46,15 @@ impl LiplRepo for RepoWrapper {
             .await
             .get_lyric(&id)
             .ok_or_else(|| crate::error::Error::NoKey(id.to_string()))
-            .map_err(into_anyhow_error)
+            .map_err(Into::into)
     }
 
     async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
-        self.inner.write().await.delete_lyric(&id).map_err(into_anyhow_error)
+        self.inner.write().await.delete_lyric(&id).map_err(Into::into)
     }
 
     async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
-        self.inner.write().await.update_lyric(&lyric).map_err(into_anyhow_error)
+        self.inner.write().await.update_lyric(&lyric).map_err(Into::into)
     }
 
     async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
@@ -75,15 +75,15 @@ impl LiplRepo for RepoWrapper {
             .await
             .get_playlist(&id)
             .ok_or_else(|| crate::error::Error::NoKey(id.to_string()))
-            .map_err(into_anyhow_error)
+            .map_err(Into::into)
     }
 
     async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
-        self.inner.write().await.delete_playlist(&id).map_err(into_anyhow_error)
+        self.inner.write().await.delete_playlist(&id).map_err(Into::into)
     }
 
     async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
-        self.inner.write().await.update_playlist(&playlist).map_err(into_anyhow_error)
+        self.inner.write().await.update_playlist(&playlist).map_err(Into::into)
     }
 
     async fn stop(&self) -> anyhow::Result<()> {

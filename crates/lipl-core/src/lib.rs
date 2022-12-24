@@ -13,19 +13,12 @@ mod path_ext;
 pub mod reexport;
 mod uuid;
 
-pub fn into_boxed_error<E>(error: E) -> Box<dyn std::error::Error + 'static>
-where
-    E: Into<Box<dyn std::error::Error>> + Send + Sync + 'static,
-{
-    error.into()
-}
-
-pub fn into_anyhow_error<E>(error: E) -> anyhow::Error
-where 
-    E: std::error::Error + Send + Sync + 'static,
-{
-    error.into()
-}
+// pub fn into_boxed_error<E>(error: E) -> Box<dyn std::error::Error + 'static>
+// where
+//     E: Into<Box<dyn std::error::Error>> + Send + Sync + 'static,
+// {
+//     error.into()
+// }
 
 #[async_trait]
 pub trait LyricDb {
@@ -111,16 +104,6 @@ impl HasSummary for Playlist {
             title: self.title.clone(),
         }
     }
-}
-
-impl From<(PlaylistPost, Uuid)> for Playlist {
-    fn from(tuple: (PlaylistPost, Uuid)) -> Self {
-        Playlist {
-            id: tuple.1,
-            title: tuple.0.title,
-            members: tuple.0.members,
-        }
-    } 
 }
 
 impl From<PlaylistPost> for Playlist {
@@ -216,15 +199,6 @@ impl From<&Lyric> for LyricMeta {
         }
     }
 }
-
-// impl<T> Without<T> for Vec<T>
-// where
-//     T: PartialEq,
-// {
-//     fn without(self, t: &T) -> Self {
-//         self.into_iter().filter(|s| s != t).collect()
-//     }
-// }
 
 pub trait Etag {
     fn etag(&self) -> Option<String>;
