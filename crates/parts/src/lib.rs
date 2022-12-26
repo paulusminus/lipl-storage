@@ -1,8 +1,10 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
+mod from_reader;
 mod st;
 pub use st::to_parts_async;
+pub use from_reader::parts_from_reader;
 
 const DOUBLE_LINE: &str = r"\n\s*\n";
 
@@ -75,6 +77,8 @@ pub fn to_text(parts: &[Vec<String>]) -> String {
     .collect::<Vec<String>>()
     .join("\n\n")
 }
+
+
 
 #[cfg(test)]
 mod test {
