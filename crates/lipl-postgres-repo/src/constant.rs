@@ -1,1 +1,1 @@
-pub const POOL_MAX_SIZE: usize = 16;
+pub const POOL_MAX_SIZE: u32 = 16;

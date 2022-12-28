@@ -2,11 +2,12 @@ use std::fmt::{Debug};
 use std::future::ready;
 
 use async_trait::{async_trait};
-use deadpool_postgres::{Pool};
+use bb8_postgres::PostgresConnectionManager;
+use bb8_postgres::bb8::{Pool};
 use futures_util::{TryFutureExt};
 use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid};
 use parts::{to_text, to_parts};
-use tokio_postgres::{Row};
+use tokio_postgres::{Row, NoTls};
 
 use crate::db::crud;
 use crate::macros::query;
@@ -23,7 +24,7 @@ type PostgresResult<T> = std::result::Result<T, PostgresRepoError>;
 pub struct PostgresRepoConfig {
     pub connection_string: String,
     pub clear: bool,
-    pub pool: Pool,
+    pub pool: PostgresConnectionManager<NoTls>,
 }
 
 impl PostgresRepoConfig {
@@ -39,7 +40,7 @@ impl PostgresRepoConfig {
 impl std::str::FromStr for PostgresRepoConfig {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        pool::get(s, constant::POOL_MAX_SIZE)
+        pool::get(s)
             .map_err(Into::into)
             .map(|pool| PostgresRepoConfig { connection_string: s.into(), clear: false, pool })
     }
@@ -47,7 +48,7 @@ impl std::str::FromStr for PostgresRepoConfig {
 
 #[derive(Clone)]
 pub struct PostgresRepo {
-    pool: Pool,
+    pool: Pool<PostgresConnectionManager<NoTls>>,
     connection_string: String,
 }
 
@@ -59,9 +60,14 @@ impl Debug for PostgresRepo {
 
 impl PostgresRepo {
     pub async fn new(postgres_repo_config: PostgresRepoConfig) -> anyhow::Result<PostgresRepo> {
+        let pool = 
+            Pool::builder()
+                .max_size(constant::POOL_MAX_SIZE)
+                .build(postgres_repo_config.pool)
+                .await?;
         if postgres_repo_config.clear {
             for sql in db::DROP.iter() {
-                postgres_repo_config.pool.get()
+                pool.get()
                 .map_err(PostgresRepoError::from)
                 .and_then(
                     |pool| async move {
@@ -77,11 +83,11 @@ impl PostgresRepo {
         }
 
         for sql in db::CREATE {
-            postgres_repo_config.pool.get().await?.execute(*sql, &[]).await?;
+            pool.get().await?.execute(*sql, &[]).await?;
         };
 
         Ok(
-            Self { pool: postgres_repo_config.pool, connection_string: postgres_repo_config.connection_string }
+            Self { pool, connection_string: postgres_repo_config.connection_string }
         )
     }
 

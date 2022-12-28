@@ -1,17 +1,7 @@
-use deadpool_postgres::{Pool, Manager};
-use tokio_postgres::Config;
+use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::tls::NoTls;
-use crate::PostgresRepoError;
 
-pub fn get(connection: &str, max_size: usize) -> Result<Pool, crate::PostgresRepoError> {
-    connection.parse::<Config>()
-    .map_err(PostgresRepoError::from)
-    .and_then(|config| 
-        Pool::builder(
-            Manager::from_config(config, NoTls, Default::default())
-        )
-        .max_size(max_size)
-        .build()
-        .map_err(crate::PostgresRepoError::from)
-    )
+pub fn get(connection: &str) -> Result<PostgresConnectionManager<NoTls>, crate::PostgresRepoError> {
+    let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls)?;
+    Ok(manager)   
 }
