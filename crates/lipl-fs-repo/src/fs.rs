@@ -9,7 +9,7 @@ use tokio::fs::{read_dir, File, remove_file};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};
 
-use crate::error::{FileRepoError};
+use lipl_core::{FileRepoError};
 use lipl_core::{Uuid};
 
 type Result<T> = std::result::Result<T, FileRepoError>;

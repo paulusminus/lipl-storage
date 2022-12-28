@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{Uuid, Summary, Lyric, Playlist};
 use futures::channel::{mpsc, oneshot};
-use crate::error::FileRepoError;
+use crate::FileRepoError;
 
 type Result<T> = std::result::Result<T, FileRepoError>;
 type ResultSender<T> = oneshot::Sender<Result<T>>;

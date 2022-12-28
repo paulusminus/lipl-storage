@@ -1,4 +1,4 @@
-use bb8::{Pool};
+use bb8_postgres::bb8::{Pool};
 use bb8_postgres::PostgresConnectionManager;
 use std::future::Future;
 use lipl_core::{LyricDb, PlaylistDb};

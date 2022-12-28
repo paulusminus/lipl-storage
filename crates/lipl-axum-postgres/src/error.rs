@@ -1,4 +1,4 @@
-use bb8::RunError;
+use bb8_postgres::bb8::RunError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

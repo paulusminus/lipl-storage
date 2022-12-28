@@ -6,7 +6,7 @@ use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
 
-pub use error::FileRepoError;
+pub use lipl_core::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
@@ -17,7 +17,7 @@ use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 
 mod constant;
-mod error;
+// mod error;
 mod fs;
 mod io;
 mod request;

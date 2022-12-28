@@ -952,7 +952,6 @@ name = "lipl-axum-postgres"
 version = "0.1.1"
 dependencies = [
  "async-trait",
- "bb8",
  "bb8-postgres",
  "lipl-core",
  "parts",
@@ -970,6 +969,7 @@ dependencies = [
  "async-trait",
  "bincode",
  "bs58",
+ "deadpool-postgres",
  "etag",
  "futures",
  "serde",
@@ -977,6 +977,8 @@ dependencies = [
  "serde_yaml",
  "thiserror",
  "timeit",
+ "tokio",
+ "tokio-postgres",
  "uuid",
 ]
 
@@ -1250,6 +1252,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "lazy_static",
+ "lipl-core",
  "regex",
  "tokio",
 ]

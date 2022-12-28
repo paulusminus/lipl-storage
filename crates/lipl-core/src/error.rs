@@ -52,4 +52,12 @@ pub enum ModelError {
 
     #[error("Stopped on request")]
     Stop,
+
+    #[cfg(feature = "postgres")]
+    #[error("Postgres: {0}")]
+    Postgres(#[from] crate::PostgresRepoError),
+
+    #[cfg(feature = "file")]
+    #[error("File: {0}")]
+    File(#[from] crate::FileRepoError),
 }

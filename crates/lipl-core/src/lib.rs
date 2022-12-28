@@ -6,10 +6,20 @@ pub use crate::uuid::Uuid;
 pub use path_ext::{PathExt};
 pub use error::ModelError;
 
+#[cfg(feature = "postgres")]
+pub use postgres_error::PostgresRepoError;
+
+#[cfg(feature = "file")]
+pub use file_error::FileRepoError;
+
 mod disk_format;
 pub mod error;
 pub mod ext;
+#[cfg(feature = "file")]
+mod file_error;
 mod path_ext;
+#[cfg(feature = "postgres")]
+mod postgres_error;
 pub mod reexport;
 mod uuid;
 

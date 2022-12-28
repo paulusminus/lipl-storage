@@ -10,11 +10,10 @@ use tokio_postgres::{Row};
 
 use crate::db::crud;
 use crate::macros::query;
-pub use error::PostgresRepoError;
+pub use lipl_core::PostgresRepoError;
 
 mod constant;
 mod db;
-mod error;
 pub mod pool;
 mod macros;
 

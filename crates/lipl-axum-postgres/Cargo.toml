@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1"
-bb8 = "0.8"
+# bb8 = "0.8"
 bb8-postgres = "0.8"
 lipl-core = { path = "../lipl-core" }
 parts = { path = "../parts" }
