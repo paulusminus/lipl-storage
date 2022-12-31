@@ -1,6 +1,8 @@
 use futures::channel::oneshot::Canceled;
 use thiserror::{Error};
 
+use crate::Uuid;
+
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -61,7 +63,7 @@ pub enum Error {
     File(#[from] crate::FileRepoError),
 
     #[error("Not Found")]
-    NotFound,
+    NotFound(Uuid),
 
     #[error("Occupied")]
     Occupied,

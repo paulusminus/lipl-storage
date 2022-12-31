@@ -1,13 +1,17 @@
 use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering, iter::empty};
 
+
 use async_trait::async_trait;
 use lipl_core::{
+    Error,
     LyricDb,
     Lyric,
     LyricPost,
     Playlist,
     PlaylistPost,
-    Summary, Uuid,
+    Result,
+    Summary,
+    Uuid,
     PlaylistDb,
     Yaml,
     RepoDb,
@@ -96,7 +100,7 @@ fn playlist_compare_title(a: &Playlist, b: &Playlist) -> Ordering {
 }
 
 impl Yaml for InMemoryDb {
-    fn load<R>(r: R) -> lipl_core::Result<Self>
+    fn load<R>(r: R) -> Result<Self>
     where 
         R: std::io::Read,
         Self: Sized,
@@ -106,7 +110,7 @@ impl Yaml for InMemoryDb {
             .map(InMemoryDb::from)
     }
 
-    fn save<W>(&self, w: W) -> lipl_core::Result<()>
+    fn save<W>(&self, w: W) -> Result<()>
     where
         W: std::io::Write,
     {
@@ -117,7 +121,7 @@ impl Yaml for InMemoryDb {
 
 #[async_trait]
 impl LyricDb for InMemoryDb {
-    async fn lyric_list(&self) ->  lipl_core::Result<Vec<Summary>> {
+    async fn lyric_list(&self) ->  Result<Vec<Summary>> {
         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
                 if let Record::Lyric(lyric_post) = record {
                     Some(Summary { id: *key, title: lyric_post.title.clone() })
@@ -132,7 +136,7 @@ impl LyricDb for InMemoryDb {
         Ok(summaries)
     }
 
-    async fn lyric_list_full(&self) ->  lipl_core::Result<Vec<Lyric>> {
+    async fn lyric_list_full(&self) ->  Result<Vec<Lyric>> {
         let mut lyrics = self.db.read().unwrap().iter().filter_map(|(key, record)| {
                 if let Record::Lyric(lyric_post) = record {
                     Some(Lyric::from((Some(*key), lyric_post.clone())))
@@ -147,28 +151,29 @@ impl LyricDb for InMemoryDb {
         Ok(lyrics)
     }
 
-    async fn lyric_item(&self, uuid: Uuid) -> lipl_core::Result<Lyric> {
-        self.db.read().unwrap().get(&uuid)
+    async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric> {
+        self.db.read().unwrap()
+        .get(&uuid)
         .and_then(|record| {
             match record {
                 Record::Lyric(lyric_post) => Some(Lyric::from((Some(uuid), lyric_post.clone()))),
                 _ => None
             }
         })
-        .ok_or(lipl_core::Error::NotFound)
+        .ok_or(Error::NotFound(uuid))
     }
 
-    async fn lyric_post(&self, lyric_post: LyricPost) ->  lipl_core::Result<Lyric> {
+    async fn lyric_post(&self, lyric_post: LyricPost) ->  Result<Lyric> {
         let uuid = Uuid::default();
         match self.db.write().unwrap().insert(uuid, Record::Lyric(lyric_post.clone())) {
-            Some(_) => Err(lipl_core::Error::Occupied),
+            Some(_) => Err(Error::Occupied),
             None => Ok(
                 Lyric::from((Some(uuid), lyric_post))
             )
         }
     }
 
-    async fn lyric_delete(&self, uuid: Uuid) -> lipl_core::Result<()> {
+    async fn lyric_delete(&self, uuid: Uuid) -> Result<()> {
         let mut db = self.db.write().unwrap();
         if db.remove(&uuid).is_some() {
             db.iter_mut().for_each(|(_, record)| {
@@ -182,14 +187,14 @@ impl LyricDb for InMemoryDb {
             Ok(())
         }
         else {
-            Err(lipl_core::Error::NotFound)
+            Err(Error::NotFound(uuid))
         }
     }
 
-    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> lipl_core::Result<Lyric> {
+    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric> {
         let mut db = self.db.write().unwrap();
         let lyric = Lyric::from((Some(uuid), lyric_post.clone()));
-        let entry = db.get_mut(&uuid).ok_or(lipl_core::Error::NotFound)?;
+        let entry = db.get_mut(&uuid).ok_or(Error::NotFound(uuid))?;
         *entry = Record::Lyric(lyric_post);
         Ok(lyric)
     }
@@ -197,7 +202,7 @@ impl LyricDb for InMemoryDb {
 
 #[async_trait]
 impl PlaylistDb for InMemoryDb {
-    async fn playlist_list(&self) -> lipl_core::Result<Vec<Summary>> {
+    async fn playlist_list(&self) -> Result<Vec<Summary>> {
         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
             match record {
                 Record::Playlist(playlist_post) => Some(Summary { id: *key, title: playlist_post.title.clone() }),
@@ -210,7 +215,7 @@ impl PlaylistDb for InMemoryDb {
         Ok(summaries)
     }
 
-    async fn playlist_list_full(&self) -> lipl_core::Result<Vec<Playlist>> {
+    async fn playlist_list_full(&self) -> Result<Vec<Playlist>> {
         let mut playlists = self.db.read().unwrap().iter().filter_map(|(key, record)| {
             match record {
                 Record::Playlist(playlist_post) => Some(Playlist::from((Some(*key), playlist_post.clone()))),
@@ -223,7 +228,7 @@ impl PlaylistDb for InMemoryDb {
         Ok(playlists)
     }
 
-    async fn playlist_item(&self, uuid: Uuid) -> lipl_core::Result<Playlist> {
+    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist> {
         self.db.read().unwrap().get(&uuid)
         .and_then(|record| {
             match record {
@@ -231,23 +236,23 @@ impl PlaylistDb for InMemoryDb {
                 _ => None,
             }
         })
-        .ok_or(lipl_core::Error::NotFound)
+        .ok_or(Error::NotFound(uuid))
     }
 
-    async fn playlist_post(&self, playlist_post: PlaylistPost) -> lipl_core::Result<Playlist> {
+    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist> {
         let uuid = Uuid::default();
 
         match self.db.write().unwrap().insert(uuid, Record::Playlist(playlist_post.clone())) {
-            Some(_) => Err(lipl_core::Error::Occupied),
+            Some(_) => Err(Error::Occupied),
             None => Ok(Playlist::from((Some(uuid), playlist_post)))
         }
     }
 
-    async fn playlist_delete(&self, uuid: Uuid) -> lipl_core::Result<()> {
-        self.db.write().unwrap().remove(&uuid).ok_or(lipl_core::Error::NotFound).map(|_| ())
+    async fn playlist_delete(&self, uuid: Uuid) -> Result<()> {
+        self.db.write().unwrap().remove(&uuid).ok_or(Error::NotFound(uuid)).map(|_| ())
     }
 
-    async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> lipl_core::Result<Playlist> {
+    async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist> {
         let playlist = Playlist::from((Some(uuid), playlist_post.clone()));
         self.db.write().unwrap().entry(uuid).and_modify(|v| *v = Record::Playlist(playlist_post));
         Ok(playlist)
