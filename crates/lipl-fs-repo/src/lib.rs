@@ -11,7 +11,7 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, error::{ModelError}, Summary, Uuid, ext::VecExt,
+    LiplRepo, Lyric, Playlist, Summary, Uuid, ext::VecExt,
 };
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
@@ -61,7 +61,7 @@ fn check_members(playlist: &Playlist, lyric_ids: &[Uuid]) -> impl futures::Futur
 }
 
 
-async fn handle_request<P, Q>(request: Request, source_dir: String, lyric_path: P, playlist_path: Q) -> Result<(), ModelError> 
+async fn handle_request<P, Q>(request: Request, source_dir: String, lyric_path: P, playlist_path: Q) -> Result<(), lipl_core::Error> 
 where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
 {
     match request {
@@ -70,9 +70,9 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 Ok::<(), FileRepoError>(())
             }
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed("Stop".to_string()))
+            .map_err(|_| lipl_core::Error::SendFailed("Stop".to_string()))
             .await?;
-            Err(ModelError::Stop)
+            Err(lipl_core::Error::Stop)
         },
         Request::LyricSummaries(sender) => {
             io::get_list(
@@ -81,7 +81,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 io::get_lyric_summary,
             )
             .map(|v|sender.send(v))
-            .map_err(|_| ModelError::SendFailed("LyricSummaries".to_string()))
+            .map_err(|_| lipl_core::Error::SendFailed("LyricSummaries".to_string()))
             .await
         }
         Request::LyricList(sender) => {
@@ -91,13 +91,13 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 io::get_lyric,
             )
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed("LyricList".to_string()))
+            .map_err(|_| lipl_core::Error::SendFailed("LyricList".to_string()))
             .await
         }
         Request::LyricItem(uuid, sender) => {
             io::get_lyric(lyric_path(&uuid))
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed(format!("LyricItem {uuid}")))
+            .map_err(|_| lipl_core::Error::SendFailed(format!("LyricItem {uuid}")))
             .await
         }
         Request::LyricDelete(uuid, sender) => {
@@ -126,7 +126,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 Ok::<(), FileRepoError>(())
             }
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed(format!("LyricDelete {uuid}")))
+            .map_err(|_| lipl_core::Error::SendFailed(format!("LyricDelete {uuid}")))
             .await
         }
         Request::LyricPost(lyric, sender) => {
@@ -137,7 +137,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
             )
             .and_then(|_| io::get_lyric(&path))
             .map(|v| sender.send(v))
-            .map_err(|e| ModelError::SendFailed(format!("LyricPost {}", e.unwrap().title)))
+            .map_err(|e| lipl_core::Error::SendFailed(format!("LyricPost {}", e.unwrap().title)))
             .await
         }
         Request::PlaylistSummaries(sender) => {
@@ -148,7 +148,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
             )
             .map_ok(lipl_core::summaries)
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed("PlaylistSummaries".to_string()))
+            .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
             .await
         }
         Request::PlaylistList(sender) => {
@@ -158,13 +158,13 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 io::get_playlist
             )
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed("PlaylistList".to_string()))
+            .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
             .await
         }
         Request::PlaylistItem(uuid, sender) => {
             io::get_playlist(playlist_path(&uuid))
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed(format!("PlaylistItem {uuid}")))
+            .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistItem {uuid}")))
             .await
         }
         Request::PlaylistDelete(uuid, sender) => {
@@ -172,7 +172,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
             path
             .remove()
             .map(|v| sender.send(v))
-            .map_err(|_| ModelError::SendFailed(format!("PlaylistDelete {uuid}")))
+            .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistDelete {uuid}")))
             .await
         }
         Request::PlaylistPost(playlist, sender) => {
@@ -194,7 +194,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 )
             )
             .map(|v| sender.send(v))
-            .map_err(|e| ModelError::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))
+            .map_err(|e| lipl_core::Error::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))
             .await
         }
     }
@@ -238,69 +238,70 @@ impl FileRepo {
 
 #[async_trait]
 impl LiplRepo for FileRepo {
-    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+    async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>> {
         select(self.tx.clone(), Request::LyricList)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_lyric_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::LyricSummaries)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
+    async fn get_lyric(&self, id: Uuid) -> lipl_core::Result<Lyric> {
         select_by_id(self.tx.clone(), id, Request::LyricItem)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
+    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
         post(self.tx.clone(), lyric, Request::LyricPost)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_lyric(&self, id: Uuid) -> lipl_core::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::LyricDelete)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+    async fn get_playlists(&self) -> lipl_core::Result<Vec<Playlist>> {
         select(self.tx.clone(), Request::PlaylistList)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_playlist_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::PlaylistSummaries)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+    async fn get_playlist(&self, id: Uuid) -> lipl_core::Result<Playlist> {
         select_by_id(self.tx.clone(), id, Request::PlaylistItem)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
+    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
+    async fn delete_playlist(&self, id: Uuid) -> lipl_core::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn stop(&self) -> anyhow::Result<()> {
-        select(self.tx.clone(), Request::Stop).await
-        .map_err(Into::into)
+    async fn stop(&self) -> lipl_core::Result<()> {
+        select(self.tx.clone(), Request::Stop)
+        .err_into()
+        .await
     }
 }
 

@@ -1,29 +1,37 @@
 use async_trait::async_trait;
+use futures_util::TryFutureExt;
 use lipl_core::{ext::VecExt, Playlist, PlaylistDb, PlaylistPost, Summary, Uuid};
 
 use super::convert;
-use crate::{error::Error, PostgresConnectionPool};
+use crate::{PostgresConnectionPool};
 
 #[async_trait]
 impl PlaylistDb for PostgresConnectionPool {
-    type Error = Error;
-    async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error> {
-        self.query(sql::LIST, sql::LIST_TYPES, convert::to_summary, &[]).await
+    async fn playlist_list(&self) -> lipl_core::Result<Vec<Summary>> {
+        self.query(sql::LIST, sql::LIST_TYPES, convert::to_summary, &[])
+        .err_into()
+        .await
     }
 
-    async fn playlist_list_full(&self) -> Result<Vec<Playlist>, Self::Error> {
-        self.query(sql::LIST_FULL, sql::LIST_FULL_TYPES, convert::to_playlist, &[]).await
+    async fn playlist_list_full(&self) -> lipl_core::Result<Vec<Playlist>> {
+        self.query(sql::LIST_FULL, sql::LIST_FULL_TYPES, convert::to_playlist, &[])
+        .err_into()
+        .await
     }
 
-    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error> {
-        self.query_one(sql::ITEM, sql::ITEM_TYPES, convert::to_playlist, &[&uuid.inner()]).await
+    async fn playlist_item(&self, uuid: Uuid) -> lipl_core::Result<Playlist> {
+        self.query_one(sql::ITEM, sql::ITEM_TYPES, convert::to_playlist, &[&uuid.inner()])
+        .err_into()
+        .await
     }
 
-    async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
-        self.execute(sql::DELETE, sql::DELETE_TYPES, &[&uuid.inner()]).await
+    async fn playlist_delete(&self, uuid: Uuid) -> lipl_core::Result<()> {
+        self.execute(sql::DELETE, sql::DELETE_TYPES, &[&uuid.inner()])
+        .err_into()
+        .await
     }
 
-    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error> {
+    async fn playlist_post(&self, playlist_post: PlaylistPost) -> lipl_core::Result<Playlist> {
         self.query_one(
             sql::UPSERT,
             sql::UPSERT_TYPES,
@@ -33,6 +41,7 @@ impl PlaylistDb for PostgresConnectionPool {
                 &playlist_post.title.clone(),
                 &playlist_post.members.map(convert::to_inner).as_slice()
             ])
+            .err_into()
             .await
     }
 
@@ -40,7 +49,7 @@ impl PlaylistDb for PostgresConnectionPool {
         &self,
         uuid: Uuid,
         playlist_post: PlaylistPost,
-    ) -> Result<Playlist, Self::Error> {
+    ) -> lipl_core::Result<Playlist> {
         self.query_one(
             sql::UPSERT,
             sql::UPSERT_TYPES,
@@ -50,6 +59,7 @@ impl PlaylistDb for PostgresConnectionPool {
                 &playlist_post.title.clone(),
                 &playlist_post.members.map(convert::to_inner).as_slice()
             ])
+            .err_into()
             .await
     }
 }

@@ -9,7 +9,7 @@ impl From<Vec<Vec<String>>> for Parts {
 }
 
 impl Parts {
-    fn parts(&self) -> Vec<Vec<String>> {
+    pub fn parts(&self) -> Vec<Vec<String>> {
         self.0.clone()
     }
 }
@@ -40,7 +40,7 @@ where
     let mut lines = lines(r);
     let mut result = vec![];
     let mut part = next_part(&mut lines)?;
-    while part.len() > 0 {
+    while !part.is_empty() {
         result.push(part);
         part = next_part(&mut lines)?;
     }

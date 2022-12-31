@@ -1,19 +1,19 @@
 use bb8_postgres::bb8::{Pool};
 use bb8_postgres::PostgresConnectionManager;
-use std::future::Future;
+use futures_util::{Future, TryFutureExt};
 use lipl_core::{LyricDb, PlaylistDb};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
-pub use crate::error::Error;
+// pub use crate::error::Error;
 
 mod convert;
-mod error;
+// mod error;
 mod lyric;
 mod playlist;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
-pub type Result<T> = std::result::Result<T, Error>;
+type Result<T> = std::result::Result<T, lipl_core::PostgresRepoError>;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 
@@ -48,7 +48,7 @@ impl PostgresConnectionPool {
 
     async fn batch_execute(&self, sql: &str) -> Result<()> {
         let connection = self.inner.get().await?;
-        connection.batch_execute(sql).await.map_err(Into::into)
+        connection.batch_execute(sql).err_into().await
     }
 
     fn query<'a, F, T>(
@@ -96,8 +96,15 @@ pub async fn connection_pool(connection: &'static str) -> Result<PostgresConnect
     tracing::info!("Finished executing database creation script");
 
     tracing::info!("Warm up cache");
-    postgres_connection_pool.lyric_list().await?;
-    postgres_connection_pool.playlist_list().await?;
+    
+    if let Err(error) = postgres_connection_pool.lyric_list().await {
+        tracing::error!("Failed to get lyrics for warming up cache: {}", error);
+    }
+
+    if let Err(error) = postgres_connection_pool.playlist_list().await {
+        tracing::error!("Failed to get playlists for warming up cache: {}", error);
+    }
+
     tracing::info!("Warm up cache finished");
 
     Ok(postgres_connection_pool)

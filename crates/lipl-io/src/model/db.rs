@@ -52,15 +52,15 @@ impl Db {
         };
     }
 
-    pub fn delete_lyric(&mut self, id: &Uuid) -> Result<(), crate::error::Error> {
+    pub fn delete_lyric(&mut self, id: &Uuid) -> Result<(), lipl_core::Error> {
         self._remove_lyric_from_playlists(id);
         self.lyrics.remove(id)
-        .ok_or_else(|| crate::error::Error::NoKey("Lyric".to_owned()))
+        .ok_or_else(|| lipl_core::Error::NoKey("Lyric".to_owned()))
         .map(|_| {})
     }
 
-    pub fn update_lyric(&mut self, lyric: &Lyric) -> crate::Result<Lyric> {
-        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| crate::error::Error::NoKey("".to_owned()))?;
+    pub fn update_lyric(&mut self, lyric: &Lyric) -> lipl_core::Result<Lyric> {
+        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| lipl_core::Error::NoKey("".to_owned()))?;
         *e = lyric.clone();
         Ok(lyric.clone())
     }
@@ -90,16 +90,16 @@ impl Db {
         playlist
     }
 
-    pub fn delete_playlist(&mut self, id: &Uuid) -> crate::Result<()> {
+    pub fn delete_playlist(&mut self, id: &Uuid) -> lipl_core::Result<()> {
         self.playlists.remove(id)
-        .ok_or_else(|| crate::error::Error::NoKey("Playlist".to_owned()))
+        .ok_or_else(|| lipl_core::Error::NoKey("Playlist".to_owned()))
         .map(|_| {})
     }
 
-    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> crate::Result<Playlist> {
+    pub fn update_playlist(&mut self, playlist_update: &Playlist) -> lipl_core::Result<Playlist> {
         let mut playlist = playlist_update.clone();
         playlist.members = self._valid_members(&playlist.members);
-        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| crate::error::Error::NoKey("".to_owned()))?;
+        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| lipl_core::Error::NoKey("".to_owned()))?;
         *e = playlist.clone();
         Ok(playlist)
     }
@@ -111,14 +111,14 @@ pub enum DataType {
 }
 
 pub trait Persist {
-    fn load(&mut self) -> crate::Result<()>;
-    fn save(&self) -> crate::Result<()>;
-    fn save_to(&self, path: &Path) -> crate::Result<()>;
+    fn load(&mut self) -> lipl_core::Result<()>;
+    fn save(&self) -> lipl_core::Result<()>;
+    fn save_to(&self, path: &Path) -> lipl_core::Result<()>;
     fn clear(&mut self);
 }
 
 impl Persist for Db {
-    fn load(&mut self) -> crate::Result<()> {
+    fn load(&mut self) -> lipl_core::Result<()> {
         self.clear();
         /* if self.path.has_extension(ZIP) { 
             zip_read(self.path.clone(), self)
@@ -140,7 +140,7 @@ impl Persist for Db {
             )
         }
         else {
-            Err(crate::error::Error::NoPath(self.path.to_path_buf()))
+            Err(lipl_core::Error::NoPath(self.path.to_path_buf()))
         }
     }
 
@@ -149,11 +149,11 @@ impl Persist for Db {
         self.playlists.clear();
     }
 
-    fn save(&self) -> crate::Result<()> {
+    fn save(&self) -> lipl_core::Result<()> {
         self.save_to(&self.path)
     }
 
-    fn save_to(&self, path: &Path) -> crate::Result<()> {
+    fn save_to(&self, path: &Path) -> lipl_core::Result<()> {
         info!("{:?}", path.extension());
         /* if path.has_extension(ZIP) { 
             info!("Target is a zipfile");
@@ -166,7 +166,7 @@ impl Persist for Db {
             fs_write(path, self)
         }
         else {
-            Err(crate::error::Error::NoPath(path.to_path_buf()))
+            Err(lipl_core::Error::NoPath(path.to_path_buf()))
         }
     }
 }

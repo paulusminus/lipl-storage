@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1"
-# bb8 = "0.8"
 bb8-postgres = "0.8"
-lipl-core = { path = "../lipl-core" }
+futures-util = "0.3"
+lipl-core = { path = "../lipl-core", features = ["postgres"] }
 parts = { path = "../parts" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"

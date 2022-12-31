@@ -1,10 +1,9 @@
 use futures::channel::oneshot::Canceled;
 use thiserror::{Error};
 
-pub type ModelResult<T> = core::result::Result<T, ModelError>;
 
 #[derive(Error, Debug)]
-pub enum ModelError {
+pub enum Error {
     #[error("File {0:?} has invalid filestem")]
     Filestem(Option<String>),
 
@@ -60,4 +59,10 @@ pub enum ModelError {
     #[cfg(feature = "file")]
     #[error("File: {0}")]
     File(#[from] crate::FileRepoError),
+
+    #[error("Not Found")]
+    NotFound,
+
+    #[error("Occupied")]
+    Occupied,
 }

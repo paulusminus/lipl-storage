@@ -1,47 +1,48 @@
 use async_trait::async_trait;
+use futures_util::TryFutureExt;
 use lipl_core::{Lyric, LyricDb, LyricPost, Summary, Uuid};
 use parts::to_text;
 
 use super::convert;
-use crate::error::Error;
 use crate::PostgresConnectionPool;
 
 #[async_trait]
 impl LyricDb for PostgresConnectionPool {
-    type Error = Error;
-
-    async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error> {
-        self.query(sql::LIST, sql::LIST_TYPES, convert::to_summary, &[]).await
+    async fn lyric_list(&self) -> lipl_core::Result<Vec<Summary>> {
+        self.query(sql::LIST, sql::LIST_TYPES, convert::to_summary, &[]).err_into().await
     }
 
-    async fn lyric_list_full(&self) -> Result<Vec<Lyric>, Self::Error> {
-        self.query(sql::LIST_FULL, sql::LIST_FULL_TYPES, convert::to_lyric, &[]).await
+    async fn lyric_list_full(&self) -> lipl_core::Result<Vec<Lyric>> {
+        self.query(sql::LIST_FULL, sql::LIST_FULL_TYPES, convert::to_lyric, &[]).err_into().await
     }
 
-    async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error> {
-        self.query_one(sql::ITEM, sql::ITEM_TYPES, convert::to_lyric, &[&uuid.inner()]).await
+    async fn lyric_item(&self, uuid: Uuid) -> lipl_core::Result<Lyric> {
+        self.query_one(sql::ITEM, sql::ITEM_TYPES, convert::to_lyric, &[&uuid.inner()]).err_into().await
     }
 
-    async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric, Self::Error> {
+    async fn lyric_post(&self, lyric_post: LyricPost) -> lipl_core::Result<Lyric> {
         self.query_one(
             sql::INSERT,
             sql::INSERT_TYPES,
             convert::to_lyric,
             &[&Uuid::default().inner(), &lyric_post.title.clone(), &to_text(&lyric_post.parts)],
-        ).await
+        )
+        .err_into()
+        .await
     }
 
-    async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error> {
-        self.execute(sql::DELETE, sql::DELETE_TYPES, &[&uuid.inner()]).await
+    async fn lyric_delete(&self, uuid: Uuid) -> lipl_core::Result<()> {
+        self.execute(sql::DELETE, sql::DELETE_TYPES, &[&uuid.inner()]).err_into().await
     }
 
-    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric, Self::Error> {
+    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> lipl_core::Result<Lyric> {
         self.query_one(
             sql::UPDATE,
             sql::UPDATE_TYPES,
             convert::to_lyric,
             &[&lyric_post.title.clone(), &to_text(&lyric_post.parts), &uuid.inner()]
         )
+        .err_into()
         .await
     }
 }

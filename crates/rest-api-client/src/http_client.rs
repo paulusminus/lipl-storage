@@ -46,8 +46,8 @@ impl ApiClient {
                 .map_ok(move |r| wrap_reader(r.reader(), is_zip)
             )
         )
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
 }

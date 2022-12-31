@@ -1,7 +1,7 @@
 use std::io::{Read, BufRead, BufReader};
 use lipl_core::{LyricMeta, LyricPost};
 
-pub fn lyricpost_from_reader<R>(reader: R) -> crate::Result<LyricPost>
+pub fn lyricpost_from_reader<R>(reader: R) -> lipl_core::Result<LyricPost>
 where R: Read
 {
     let buf_reader = BufReader::new(reader);

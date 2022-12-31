@@ -1,10 +1,9 @@
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
-use anyhow::Result;
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
 pub use path_ext::{PathExt};
-pub use error::ModelError;
+pub use error::Error;
 
 #[cfg(feature = "postgres")]
 pub use postgres_error::PostgresRepoError;
@@ -23,48 +22,41 @@ mod postgres_error;
 pub mod reexport;
 mod uuid;
 
-// pub fn into_boxed_error<E>(error: E) -> Box<dyn std::error::Error + 'static>
-// where
-//     E: Into<Box<dyn std::error::Error>> + Send + Sync + 'static,
-// {
-//     error.into()
-// }
+pub type Result<T> = core::result::Result<T, Error>;
 
 #[async_trait]
 pub trait LyricDb {
-    type Error: std::error::Error;
-    async fn lyric_list(&self) -> Result<Vec<Summary>, Self::Error>;
-    async fn lyric_list_full(&self) -> Result<Vec<Lyric>, Self::Error>;
-    async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric, Self::Error>;
-    async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric, Self::Error>;
-    async fn lyric_delete(&self, uuid: Uuid) -> Result<(), Self::Error>;
-    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric, Self::Error>;
+    async fn lyric_list(&self) -> Result<Vec<Summary>>;
+    async fn lyric_list_full(&self) -> Result<Vec<Lyric>>;
+    async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric>;
+    async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric>;
+    async fn lyric_delete(&self, uuid: Uuid) -> Result<()>;
+    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric>;
 }
 
 #[async_trait]
 pub trait PlaylistDb {
-    type Error: std::error::Error;
-    async fn playlist_list(&self) -> Result<Vec<Summary>, Self::Error>;
-    async fn playlist_list_full(&self) -> Result<Vec<Playlist>, Self::Error>;
-    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist, Self::Error>;
-    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
-    async fn playlist_delete(&self, uuid: Uuid) -> Result<(), Self::Error>;
-    async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist, Self::Error>;
+    async fn playlist_list(&self) -> Result<Vec<Summary>>;
+    async fn playlist_list_full(&self) -> Result<Vec<Playlist>>;
+    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist>;
+    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist>;
+    async fn playlist_delete(&self, uuid: Uuid) -> Result<()>;
+    async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist>;
 }
 
 #[async_trait]
 pub trait LiplRepo: Send + Sync {
-    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>>;
-    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>>;
-    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric>;
-    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric>;
-    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()>;
-    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>>;
-    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>>;
-    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist>;
-    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist>;
-    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()>;
-    async fn stop(&self) -> anyhow::Result<()>;
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>>;
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric>;
+    async fn post_lyric(&self, lyric: Lyric) -> Result<Lyric>;
+    async fn delete_lyric(&self, id: Uuid) -> Result<()>;
+    async fn get_playlists(&self) -> Result<Vec<Playlist>>;
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist>;
+    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist>;
+    async fn delete_playlist(&self, id: Uuid) -> Result<()>;
+    async fn stop(&self) -> Result<()>;
 }
 
 pub trait HasSummary {
@@ -239,7 +231,7 @@ impl From<(Vec<Lyric>, Vec<Playlist>)> for RepoDb {
 }
 
 impl RepoDb {
-    pub fn to_yaml(&self) -> error::ModelResult<String> {
+    pub fn to_yaml(&self) -> Result<String> {
         let s = serde_yaml::to_string(self)?;
         Ok(s)
     }
@@ -279,9 +271,8 @@ impl std::fmt::Display for RepoDb {
 }
 
 pub trait Yaml {
-    type Error: std::error::Error;
-    fn load<R>(r: R) -> Result<Self, Self::Error> where R: std::io::Read, Self: Sized;
-    fn save<W>(&self, w: W) -> Result<(), Self::Error> where W: std::io::Write;
+    fn load<R>(r: R) -> Result<Self> where R: std::io::Read, Self: Sized;
+    fn save<W>(&self, w: W) -> Result<()> where W: std::io::Write;
 }
 
 

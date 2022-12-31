@@ -1,6 +1,5 @@
 use futures::channel::oneshot::Canceled;
 use thiserror::{Error};
-use tokio::task::JoinError;
 
 #[derive(Error, Debug)]
 pub enum FileRepoError {
@@ -26,7 +25,7 @@ pub enum FileRepoError {
     Parse(String),
 
     #[error("Join error for {0}")]
-    Join(#[from] JoinError),
+    Join(#[from] tokio::task::JoinError),
 
     #[error("No Path: {0}")]
     NoPath(String),

@@ -24,7 +24,7 @@ type PostgresResult<T> = std::result::Result<T, PostgresRepoError>;
 pub struct PostgresRepoConfig {
     pub connection_string: String,
     pub clear: bool,
-    pub pool: PostgresConnectionManager<NoTls>,
+    pub manager: PostgresConnectionManager<NoTls>,
 }
 
 impl PostgresRepoConfig {
@@ -32,7 +32,7 @@ impl PostgresRepoConfig {
         Self {
             connection_string: self.connection_string,
             clear,
-            pool: self.pool,
+            manager: self.manager,
         }
     }
 }
@@ -42,7 +42,7 @@ impl std::str::FromStr for PostgresRepoConfig {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         pool::get(s)
             .map_err(Into::into)
-            .map(|pool| PostgresRepoConfig { connection_string: s.into(), clear: false, pool })
+            .map(|manager| PostgresRepoConfig { connection_string: s.into(), clear: false, manager })
     }
 }
 
@@ -63,7 +63,7 @@ impl PostgresRepo {
         let pool = 
             Pool::builder()
                 .max_size(constant::POOL_MAX_SIZE)
-                .build(postgres_repo_config.pool)
+                .build(postgres_repo_config.manager)
                 .await?;
         if postgres_repo_config.clear {
             for sql in db::DROP.iter() {
@@ -266,22 +266,28 @@ fn to_ok<T>(t: T) -> PostgresResult<T> {
 
 #[async_trait]
 impl LiplRepo for PostgresRepo {
-    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>>
+    async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>>
     {
-        self.lyrics().await.map_err(Into::into)
+        self.lyrics()
+        .err_into()
+        .await
     }
 
-    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>>
+    async fn get_lyric_summaries(&self) -> lipl_core::Result<Vec<Summary>>
     {
-        self.lyric_summaries().await.map_err(Into::into)
+        self.lyric_summaries()
+        .err_into()
+        .await
     }
 
-    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric>
+    async fn get_lyric(&self, id: Uuid) -> lipl_core::Result<Lyric>
     {
-        self.lyric_detail(id.inner()).await.map_err(Into::into)
+        self.lyric_detail(id.inner())
+        .err_into()
+        .await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric>
+    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric>
     {
         self.upsert_lyric(
             lyric.id.inner(),
@@ -291,40 +297,40 @@ impl LiplRepo for PostgresRepo {
         .and_then(
             move |_| self.lyric_detail(lyric.id.inner())
         )
+        .err_into()
         .await
-        .map_err(Into::into)
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()>
+    async fn delete_lyric(&self, id: Uuid) -> lipl_core::Result<()>
     {
         self.lyric_delete(id.inner())
             .map_ok(to_unit)
+            .err_into()
             .await
-            .map_err(Into::into)
     }
 
-    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>>
+    async fn get_playlists(&self) -> lipl_core::Result<Vec<Playlist>>
     {
         self.playlists()
+            .err_into()
             .await
-            .map_err(Into::into)
     }
 
-    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>>
+    async fn get_playlist_summaries(&self) -> lipl_core::Result<Vec<Summary>>
     {
         self.playlist_summaries()
+            .err_into()
             .await
-            .map_err(Into::into)
     }
 
-    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist>
+    async fn get_playlist(&self, id: Uuid) -> lipl_core::Result<Playlist>
     {
         self.playlist_detail(id.inner())
+            .err_into()
             .await
-            .map_err(Into::into)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist>
+    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist>
     {
         let title = playlist.title.clone();
         self.upsert_playlist(
@@ -332,25 +338,24 @@ impl LiplRepo for PostgresRepo {
             title,
             playlist.members.iter().map(|uuid| uuid.inner()).collect()
         )
-        .map_ok(|_| {})
-        .map_err(Into::into)
+        .err_into()
         .and_then(move |_| self.get_playlist(playlist.id))
         .await
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()>
+    async fn delete_playlist(&self, id: Uuid) -> lipl_core::Result<()>
     {
         self.playlist_delete(id.inner())
             .map_ok(to_unit)
+            .err_into()
             .await
-            .map_err(Into::into)
     }
 
-    async fn stop(&self) -> anyhow::Result<()>
+    async fn stop(&self) -> lipl_core::Result<()>
     {
         ready(Ok::<(), PostgresRepoError>(()))
+            .err_into()
             .await
-            .map_err(Into::into)
     }
 }
 

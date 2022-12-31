@@ -8,7 +8,7 @@ postgres = ["dep:bb8-postgres", "dep:tokio-postgres"]
 file = ["dep:tokio"]
 
 [dependencies]
-anyhow = { version = "1.0.59", features = ["std"] }
+# anyhow = { version = "1.0.59", features = ["std"] }
 async-trait = "0.1"
 bincode = "1"
 bs58 = "0.4"

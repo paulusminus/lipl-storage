@@ -4,7 +4,7 @@ use core::str::Lines;
 use core::iter::once;
 
 use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, ext::VecExt, Playlist};
-use crate::error::{ModelError};
+use crate::error::{Error};
 
 const YAML_PREFIX: &str = "---";
 
@@ -49,7 +49,7 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, se
 }
 
 impl FromStr for LyricPost {
-    type Err = ModelError;
+    type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let lyric_post = lines_to_lyric_post(Default::default(), s.lines())?;
         Ok(lyric_post)
@@ -69,7 +69,7 @@ impl Display for Lyric {
 }
 
 impl FromStr for PlaylistPost {
-    type Err = ModelError;
+    type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         serde_yaml::from_str::<PlaylistPost>(s)
         .map_err(Into::into)
@@ -93,7 +93,7 @@ fn non_empty_line(s: &&str) -> bool {
 }
 
 impl FromStr for LyricMeta {
-    type Err = ModelError;
+    type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // let lines = s.lines();
         let yaml = 
@@ -106,7 +106,7 @@ impl FromStr for LyricMeta {
             .collect::<Vec<_>>()
             .join("\n");
 
-        serde_yaml::from_str(&yaml).map_err(Self::Err::from)
+        serde_yaml::from_str(&yaml).map_err(Into::into)
     }
 }
 

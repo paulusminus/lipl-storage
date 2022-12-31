@@ -1,6 +1,6 @@
 pub mod io;
 pub mod model;
-mod error;
+// mod error;
 
 use std::{path::{Path, PathBuf}, sync::Arc};
 use tokio::sync::RwLock;
@@ -10,7 +10,7 @@ use model::{Db, HasSummaries};
 pub use serde::{Deserialize, Serialize};
 
 pub type BoxResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-pub type Result<T> = std::result::Result<T, error::Error>;
+// pub type Result<T> = std::result::Result<T, error::Error>;
 
 #[derive(Clone)]
 pub struct RepoWrapper {
@@ -28,65 +28,78 @@ impl RepoWrapper {
 
 #[async_trait::async_trait]
 impl LiplRepo for RepoWrapper {
-    async fn get_lyrics(&self) -> anyhow::Result<Vec<Lyric>> {
+    async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>> {
         Ok(
             self.inner.read().await.get_lyric_list()
         )
     }
 
-    async fn get_lyric_summaries(&self) -> anyhow::Result<Vec<Summary>>  {
+    async fn get_lyric_summaries(&self) -> lipl_core::Result<Vec<Summary>>  {
         Ok(
             self.inner.read().await.get_lyric_list().to_summaries()
         )
     }
 
-    async fn get_lyric(&self, id: Uuid) -> anyhow::Result<Lyric> {
+    async fn get_lyric(&self, id: Uuid) -> lipl_core::Result<Lyric> {
         self.inner
             .read()
             .await
             .get_lyric(&id)
-            .ok_or_else(|| crate::error::Error::NoKey(id.to_string()))
+            .ok_or_else(|| lipl_core::Error::NoKey(id.to_string()))
             .map_err(Into::into)
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> anyhow::Result<()> {
-        self.inner.write().await.delete_lyric(&id).map_err(Into::into)
+    async fn delete_lyric(&self, id: Uuid) -> lipl_core::Result<()> {
+        self
+            .inner
+            .write()
+            .await
+            .delete_lyric(&id)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> anyhow::Result<Lyric> {
-        self.inner.write().await.update_lyric(&lyric).map_err(Into::into)
+    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
+        self
+            .inner
+            .write()
+            .await
+            .update_lyric(&lyric)
     }
 
-    async fn get_playlists(&self) -> anyhow::Result<Vec<Playlist>> {
+    async fn get_playlists(&self) -> lipl_core::Result<Vec<Playlist>> {
         Ok(
             self.inner.read().await.get_playlist_list()
         )
     }
 
-    async fn get_playlist_summaries(&self) -> anyhow::Result<Vec<Summary>> {
+    async fn get_playlist_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
         Ok(
             self.inner.read().await.get_playlist_list().to_summaries()
         )
     }
 
-    async fn get_playlist(&self, id: Uuid) -> anyhow::Result<Playlist> {
+    async fn get_playlist(&self, id: Uuid) -> lipl_core::Result<Playlist> {
         self.inner
             .read()
             .await
             .get_playlist(&id)
-            .ok_or_else(|| crate::error::Error::NoKey(id.to_string()))
-            .map_err(Into::into)
+            .ok_or_else(|| lipl_core::Error::NoKey(id.to_string()))
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> anyhow::Result<()> {
-        self.inner.write().await.delete_playlist(&id).map_err(Into::into)
+    async fn delete_playlist(&self, id: Uuid) -> lipl_core::Result<()> {
+        self.inner
+            .write()
+            .await
+            .delete_playlist(&id)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> anyhow::Result<Playlist> {
-        self.inner.write().await.update_playlist(&playlist).map_err(Into::into)
+    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
+        self.inner.write()
+        .await
+        .update_playlist(&playlist)
+        .map_err(Into::into)
     }
 
-    async fn stop(&self) -> anyhow::Result<()> {
+    async fn stop(&self) -> lipl_core::Result<()> {
         Ok(())
     }
 }

@@ -2,7 +2,7 @@ use std::path::{Path};
 use std::time::{Instant};
 use crate::model::{Db, Persist};
 
-pub fn copy<P>(source: P, target: P) -> crate::Result<()> 
+pub fn copy<P>(source: P, target: P) -> lipl_core::Result<()> 
 where P: AsRef<Path>
 {
     let start = Instant::now();

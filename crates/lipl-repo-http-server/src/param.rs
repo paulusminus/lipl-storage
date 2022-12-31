@@ -6,15 +6,15 @@ pub struct ServeCommand {
     #[arg(long, short)]
     pub port: u16,
     #[arg(long, short)]
-    pub source: RepoConfig,
+    pub source: Box<RepoConfig>,
 }
 
 #[derive(Parser)]
 pub struct CopyCommand {
     #[arg(long, short)]
-    pub source: RepoConfig,
+    pub source: Box<RepoConfig>,
     #[arg(long, short)]
-    pub target: RepoConfig,
+    pub target: Box<RepoConfig>,
 }
 
 #[derive(Parser)]
