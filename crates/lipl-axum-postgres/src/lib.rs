@@ -1,14 +1,10 @@
-use bb8_postgres::bb8::{Pool};
-use bb8_postgres::PostgresConnectionManager;
+use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::{Future, TryFutureExt};
 use lipl_core::{LyricDb, PlaylistDb};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
-// pub use crate::error::Error;
-
 mod convert;
-// mod error;
 mod lyric;
 mod playlist;
 
