@@ -212,7 +212,7 @@ impl From<(Vec<Lyric>, Vec<Playlist>)> for RepoDb {
 
 impl RepoDb {
     pub fn find_lyric_by_title(&self, title: &str) -> Option<Lyric> {
-        self.lyrics.iter().find(|lyric| lyric.title == title.to_owned()).cloned()
+        self.lyrics.iter().find(|lyric| lyric.title == *title).cloned()
     }
 
     pub fn to_yaml(&self) -> Result<String> {
