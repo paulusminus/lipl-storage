@@ -1,5 +1,5 @@
 #[derive(Debug, thiserror::Error)]
-pub enum UploadError {
+pub enum Error {
     #[error("Https connection: {0}")]
     Https(&'static str),
 

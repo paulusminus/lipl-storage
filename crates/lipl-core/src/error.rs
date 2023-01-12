@@ -1,4 +1,3 @@
-use futures::channel::oneshot::Canceled;
 use thiserror::{Error};
 
 use crate::Uuid;
@@ -48,8 +47,9 @@ pub enum Error {
     #[error("Send failed for {0}")]
     SendFailed(String),
 
+    #[cfg(feature = "file")]
     #[error("Canceled")]
-    Canceled(#[from] Canceled),
+    Canceled(#[from] futures::channel::oneshot::Canceled),
 
     #[error("Stopped on request")]
     Stop,
@@ -61,6 +61,10 @@ pub enum Error {
     #[cfg(feature = "file")]
     #[error("File: {0}")]
     File(#[from] crate::FileRepoError),
+
+    #[cfg(feature = "reqwest")]
+    #[error("Reqwest: {0}")]
+    Reqwest(#[from] reqwest::Error),
 
     #[error("Not Found")]
     NotFound(Uuid),

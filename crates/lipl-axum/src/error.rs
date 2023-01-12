@@ -26,7 +26,7 @@ pub enum Error {
 
     #[cfg(feature = "postgres")]
     #[error("Postgres: {0}")]
-    Postgres(#[from] lipl_axum_postgres::Error),
+    Postgres(#[from] lipl_core::PostgresRepoError),
 }
 
 impl IntoResponse for Error {

@@ -1,7 +1,7 @@
 use super::{to_error_response, to_json_response, to_status_ok};
 use axum::{extract::{Path, State, Query}, http::StatusCode, Json, response::Response};
 use futures_util::TryFutureExt;
-use lipl_core::{PlaylistDb, PlaylistPost};
+use lipl_core::{LiplRepo, PlaylistPost};
 use super::ListQuery;
 
 /// Handler for getting all playlists
@@ -10,17 +10,17 @@ pub async fn list<T>(
     query: Query<ListQuery>,
 ) -> Response
 where
-    T: PlaylistDb,
+    T: LiplRepo,
 {
     if query.full == Some(true) {
         connection
-        .playlist_list_full()
+        .get_playlists()
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
     }
     else {
         connection
-        .playlist_list()
+        .get_playlist_summaries()
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
     }
@@ -32,10 +32,10 @@ pub async fn item<T>(
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response
 where
-    T: PlaylistDb,
+    T: LiplRepo,
 {
     connection
-        .playlist_item(id)
+        .get_playlist(id)
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }
@@ -46,10 +46,10 @@ pub async fn post<T>(
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Response
 where
-    T: PlaylistDb,
+    T: LiplRepo,
 {
     connection
-        .playlist_post(playlist_post)
+        .post_playlist((None, playlist_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
         .await
 }
@@ -60,9 +60,9 @@ pub async fn delete<T>(
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response
 where
-    T: PlaylistDb,
+    T: LiplRepo,
 {
-    connection.playlist_delete(id)
+    connection.delete_playlist(id)
         .map_ok_or_else(to_error_response, to_status_ok)
         .await
 }
@@ -74,10 +74,10 @@ pub async fn put<T>(
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Response
 where
-    T: PlaylistDb,
+    T: LiplRepo,
 {
     connection
-        .playlist_put(id, playlist_post)
+        .post_playlist((Some(id), playlist_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }

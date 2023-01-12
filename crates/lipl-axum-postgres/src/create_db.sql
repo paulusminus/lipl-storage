@@ -21,6 +21,22 @@ CREATE INDEX IF NOT EXISTS member_lyric_id ON member (lyric_id);
 
 CREATE INDEX IF NOT EXISTS member_playlist_id ON member (playlist_id);
 
+CREATE OR REPLACE FUNCTION fn_upsert_lyric(new_id uuid, new_title text, new_parts text)
+RETURNS TABLE (
+    id uuid,
+    title text,
+    parts text
+) AS $$
+BEGIN
+    INSERT INTO lyric (id, title, parts)
+    VALUES (new_id, new_title, new_parts)
+    ON CONFLICT ON CONSTRAINT lyric_pkey
+    DO
+    UPDATE SET title = new_title, parts = new_parts;
+    RETURN QUERY SELECT new_id AS id, new_title AS title, new_parts AS parts;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION fn_upsert_playlist(new_id uuid, new_title text, new_members uuid[]) 
 RETURNS TABLE (
     id uuid,

@@ -1,7 +1,7 @@
 use lipl_core::LyricPost;
 use futures::TryStream;
 use futures::stream::iter;
-use crate::{fs, UploadResult, error::UploadError};
+use crate::{fs, Result, error::Error};
 use parts::{to_parts};
 
 impl From<fs::Entry> for LyricPost {
@@ -13,10 +13,10 @@ impl From<fs::Entry> for LyricPost {
     }
 }
 
-pub fn try_iter<T>(v: Vec<T>) -> impl TryStream<Ok=T, Error=UploadError> {
+pub fn try_iter<T>(v: Vec<T>) -> impl TryStream<Ok=T, Error=Error> {
     iter(
         v
         .into_iter()
-        .map(UploadResult::Ok)
+        .map(Result::Ok)
     )
 }

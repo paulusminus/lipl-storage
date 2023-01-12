@@ -5,7 +5,8 @@ edition = "2021"
 
 [features]
 postgres = ["dep:bb8-postgres", "dep:tokio-postgres"]
-file = ["dep:tokio"]
+file = ["dep:tokio", "dep:futures"]
+reqwest = ["dep:reqwest"]
 
 [dependencies]
 # anyhow = { version = "1.0.59", features = ["std"] }
@@ -14,7 +15,7 @@ bincode = "1"
 bs58 = "0.4"
 bb8-postgres = { version = "0.8", optional = true }
 etag = "4"
-futures = "0.3"
+futures = { version = "0.3", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
 serde_with = "2.0"
@@ -23,3 +24,4 @@ timeit = { path = "../timeit" }
 tokio = { version = "1.23", features = ["rt"], optional = true }
 tokio-postgres = { version = "0.7", optional = true }
 uuid = { version = "1.0", features = ["v4"] }
+reqwest = { version = "0.11.13", optional = true }

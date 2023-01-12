@@ -1,12 +1,13 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::{Future, TryFutureExt};
-use lipl_core::{LyricDb, PlaylistDb};
+use lipl_core::{LiplRepo};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
 mod convert;
-mod lyric;
-mod playlist;
+mod db;
+// mod lyric;
+// mod playlist;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
 type Result<T> = std::result::Result<T, lipl_core::PostgresRepoError>;
@@ -93,11 +94,11 @@ pub async fn connection_pool(connection: &'static str) -> Result<PostgresConnect
 
     tracing::info!("Warm up cache");
     
-    if let Err(error) = postgres_connection_pool.lyric_list().await {
+    if let Err(error) = postgres_connection_pool.get_lyrics().await {
         tracing::error!("Failed to get lyrics for warming up cache: {}", error);
     }
 
-    if let Err(error) = postgres_connection_pool.playlist_list().await {
+    if let Err(error) = postgres_connection_pool.get_playlists().await {
         tracing::error!("Failed to get playlists for warming up cache: {}", error);
     }
 

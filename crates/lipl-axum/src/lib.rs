@@ -1,6 +1,6 @@
 use axum::routing::{get};
 use axum::{Router};
-use lipl_core::{LyricDb, PlaylistDb};
+use lipl_core::{LiplRepo};
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
@@ -42,7 +42,7 @@ pub async fn create_pool() -> Result<lipl_axum_postgres::PostgresConnectionPool>
 
 pub fn create_service<T>(t: T) -> Router<()>
 where
-    T: LyricDb + PlaylistDb + Clone + Send + Sync + 'static,
+    T: LiplRepo + Clone + Send + Sync + 'static,
 {
     Router::new().nest(constant::PREFIX, Router::new()
         .route("/lyric", get(lyric::list::<T>).post(lyric::post::<T>))

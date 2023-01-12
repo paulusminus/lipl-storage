@@ -5,7 +5,7 @@ mod fs;
 mod model;
 
 use crate::api::Api;
-use crate::error::UploadError;
+use crate::error::Error;
 use api::UploadClient;
 use clap::Parser;
 use futures::{Future, TryStreamExt, TryFutureExt};
@@ -14,13 +14,13 @@ use rest_api_client::{ApiClient};
 use std::time::Instant;
 use crate::model::{try_iter};
 
-pub type UploadResult<T> = std::result::Result<T, UploadError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-async fn delete_collection<G, H, I>(i: I, g: G) -> UploadResult<()> 
+async fn delete_collection<G, H, I>(i: I, g: G) -> Result<()> 
 where 
     G: Fn(Summary) -> H, 
-    H: Future<Output=UploadResult<()>>,
-    I: Future<Output=UploadResult<Vec<Summary>>>,
+    H: Future<Output=Result<()>>,
+    I: Future<Output=Result<Vec<Summary>>>,
 {
     i
     .and_then(|summaries| {

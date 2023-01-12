@@ -24,25 +24,25 @@ mod uuid;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[async_trait]
-pub trait LyricDb {
-    async fn lyric_list(&self) -> Result<Vec<Summary>>;
-    async fn lyric_list_full(&self) -> Result<Vec<Lyric>>;
-    async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric>;
-    async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric>;
-    async fn lyric_delete(&self, uuid: Uuid) -> Result<()>;
-    async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric>;
-}
+// #[async_trait]
+// pub trait LyricDb {
+//     async fn lyric_list(&self) -> Result<Vec<Summary>>;
+//     async fn lyric_list_full(&self) -> Result<Vec<Lyric>>;
+//     async fn lyric_item(&self, uuid: Uuid) -> Result<Lyric>;
+//     async fn lyric_post(&self, lyric_post: LyricPost) -> Result<Lyric>;
+//     async fn lyric_delete(&self, uuid: Uuid) -> Result<()>;
+//     async fn lyric_put(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric>;
+// }
 
-#[async_trait]
-pub trait PlaylistDb {
-    async fn playlist_list(&self) -> Result<Vec<Summary>>;
-    async fn playlist_list_full(&self) -> Result<Vec<Playlist>>;
-    async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist>;
-    async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist>;
-    async fn playlist_delete(&self, uuid: Uuid) -> Result<()>;
-    async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist>;
-}
+// #[async_trait]
+// pub trait PlaylistDb {
+//     async fn playlist_list(&self) -> Result<Vec<Summary>>;
+//     async fn playlist_list_full(&self) -> Result<Vec<Playlist>>;
+//     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist>;
+//     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist>;
+//     async fn playlist_delete(&self, uuid: Uuid) -> Result<()>;
+//     async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist>;
+// }
 
 #[async_trait]
 pub trait LiplRepo: Send + Sync {

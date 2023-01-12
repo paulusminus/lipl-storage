@@ -1,14 +1,13 @@
 use std::path::{Path, PathBuf};
 use std::ffi::OsStr;
 use std::io::Error as IOError;
-use std::result::Result;
 use futures::{future::{ready, Ready}, Future, Stream, TryFutureExt, TryStream, TryStreamExt};
 use tokio_stream::wrappers::ReadDirStream;
 use tokio::fs::{read_dir, read_to_string, DirEntry};
-use crate::UploadResult;
+use crate::Result;
 use crate::api::{UploadClient, Api};
 use lipl_core::{Uuid, LyricPost};
-use crate::error::UploadError;
+use crate::error::Error;
 
 pub struct Entry {
     pub path: PathBuf,
@@ -26,7 +25,7 @@ impl Entry {
     }
 }
 
-async fn entry_from_file<P>(path: P) -> UploadResult<Entry> 
+async fn entry_from_file<P>(path: P) -> Result<Entry> 
 where P: AsRef<Path>
 {
     read_to_string(path.as_ref())
@@ -40,14 +39,14 @@ pub fn extension_filter(extension: &str) -> impl Fn(&PathBuf) -> Ready<bool> + '
     |p| ready(p.extension() == Some(OsStr::new(extension)))
 }
 
-async fn get_files_stream<P: AsRef<Path>>(path: P) -> UploadResult<impl Stream<Item=Result<DirEntry, IOError>>> {
+async fn get_files_stream<P: AsRef<Path>>(path: P) -> Result<impl Stream<Item=std::result::Result<DirEntry, IOError>>> {
     read_dir(path.as_ref())
     .err_into()
     .map_ok(ReadDirStream::new)
     .await
 }
 
-pub async fn post_lyrics<'a, P, F, Fut>(path: P, filter: F, client: &'a UploadClient) -> UploadResult<impl TryStream<Ok=Uuid, Error=UploadError> + 'a>
+pub async fn post_lyrics<'a, P, F, Fut>(path: P, filter: F, client: &'a UploadClient) -> Result<impl TryStream<Ok=Uuid, Error=Error> + 'a>
 where 
     P: AsRef<Path> + 'a,
     F: Fn(&PathBuf) -> Fut + 'a,

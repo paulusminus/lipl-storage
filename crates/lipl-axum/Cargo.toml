@@ -4,9 +4,9 @@ version = "0.1.1"
 edition = "2021"
 
 [features]
-default = ["memory"]
-postgres = ["dep:lipl-axum-postgres"]
-memory = ["dep:lipl-axum-inmemorydb"]
+default = ["memory", "postgres"]
+postgres = ["dep:lipl-axum-postgres", "dep:lipl-core", "lipl-core?/postgres"]
+memory = ["dep:lipl-axum-inmemorydb", "dep:lipl-core"]
 
 [dependencies]
 axum = { version = "0.6", features = ["headers", "query"] }
@@ -14,7 +14,7 @@ futures-util = "0.3.25"
 hyper = "0.14"
 lipl-axum-postgres = { path = "../lipl-axum-postgres", optional = true }
 lipl-axum-inmemorydb = { path = "../lipl-axum-inmemorydb", optional = true }
-lipl-core = { path = "../lipl-core" }
+lipl-core = { path = "../lipl-core", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }

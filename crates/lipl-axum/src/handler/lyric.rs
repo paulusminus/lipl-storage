@@ -6,7 +6,7 @@ use axum::{
     response::{Response},
 };
 use futures_util::TryFutureExt;
-use lipl_core::{LyricDb, LyricPost};
+use lipl_core::{LiplRepo, LyricPost};
 use super::ListQuery;
 
 /// Handler for getting all lyrics
@@ -15,17 +15,17 @@ pub async fn list<T>(
     query: Query<ListQuery>,
 ) -> Response 
 where
-    T: LyricDb,
+    T: LiplRepo,
 {
     if query.full == Some(true) {
         connection
-            .lyric_list_full()
+            .get_lyrics()
             .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
             .await
     }
     else {
         connection
-            .lyric_list()
+            .get_lyric_summaries()
             .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
             .await
     }
@@ -37,10 +37,10 @@ pub async fn item<T>(
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response 
 where
-    T: LyricDb,
+    T: LiplRepo,
 {
     connection
-        .lyric_item(id)
+        .get_lyric(id)
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }
@@ -51,10 +51,10 @@ pub async fn post<T>(
     Json(lyric_post): Json<LyricPost>,
 ) -> Response
 where
-    T: LyricDb,
+    T: LiplRepo,
 {
     connection
-        .lyric_post(lyric_post)
+        .post_lyric((None, lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
         .await
 }
@@ -65,10 +65,10 @@ pub async fn delete<T>(
     Path(id): Path<lipl_core::Uuid>,
 ) -> Response
 where
-    T: LyricDb,
+    T: LiplRepo,
 {
     connection
-        .lyric_delete(id)
+        .delete_lyric(id)
         .map_ok_or_else(to_error_response, to_status_ok)
         .await
 }
@@ -80,10 +80,10 @@ pub async fn put<T>(
     Json(lyric_post): Json<LyricPost>,
 ) -> Response
 where
-    T: LyricDb,
+    T: LiplRepo,
 {
     connection
-        .lyric_put(id, lyric_post)
+        .post_lyric((Some(id), lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }
