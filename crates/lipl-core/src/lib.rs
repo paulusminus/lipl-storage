@@ -211,6 +211,10 @@ impl From<(Vec<Lyric>, Vec<Playlist>)> for RepoDb {
 }
 
 impl RepoDb {
+    pub fn find_lyric_by_title(&self, title: &str) -> Option<Lyric> {
+        self.lyrics.iter().find(|lyric| lyric.title == title.to_owned()).cloned()
+    }
+
     pub fn to_yaml(&self) -> Result<String> {
         let s = serde_yaml::to_string(self)?;
         Ok(s)
@@ -254,8 +258,6 @@ pub trait Yaml {
     fn load<R>(r: R) -> Result<Self> where R: std::io::Read, Self: Sized;
     fn save<W>(&self, w: W) -> Result<()> where W: std::io::Write;
 }
-
-
 
 #[cfg(test)]
 mod tests {
