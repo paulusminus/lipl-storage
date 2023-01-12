@@ -95,7 +95,6 @@ fn non_empty_line(s: &&str) -> bool {
 impl FromStr for LyricMeta {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // let lines = s.lines();
         let yaml = 
             s
             .lines()

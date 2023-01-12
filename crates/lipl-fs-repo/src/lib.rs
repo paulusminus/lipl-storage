@@ -38,7 +38,6 @@ impl FromStr for FileRepoConfig {
 
 #[derive(Clone)]
 pub struct FileRepo {
-    // join_handle: Arc<Pin<Box<dyn Future<Output = bool>>>>,
     tx: mpsc::Sender<Request>,
     path: String,
     _join_handle: Arc<JoinHandle<bool>>,
