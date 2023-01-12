@@ -163,10 +163,11 @@ impl LiplRepo for InMemoryDb {
     }
 
     async fn upsert_lyric(&self, lyric: Lyric) ->  Result<Lyric> {
-        match self.db.write().unwrap().insert(lyric.clone().id, Record::Lyric(lyric.clone().into())) {
-            Some(_) => Err(Error::Occupied),
-            None => Ok(lyric)
-        }
+        self.db.write().unwrap()
+            .entry(lyric.clone().id)
+            .and_modify(|lyric_post| *lyric_post = Record::Lyric(lyric.clone().into()))
+            .or_insert(Record::Lyric(lyric.clone().into()));
+        Ok(lyric)
     }
 
     async fn delete_lyric(&self, uuid: Uuid) -> Result<()> {
@@ -225,10 +226,11 @@ impl LiplRepo for InMemoryDb {
     }
 
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
-        match self.db.write().unwrap().insert(playlist.clone().id, Record::Playlist(playlist.clone().into())) {
-            Some(_) => Err(Error::Occupied),
-            None => Ok(playlist)
-        }
+        self.db.write().unwrap()
+            .entry(playlist.clone().id)
+            .and_modify(|record| *record = Record::Playlist(playlist.clone().into()))
+            .or_insert(Record::Playlist(playlist.clone().into()));
+        Ok(playlist) 
     }
 
     async fn delete_playlist(&self, uuid: Uuid) -> Result<()> {
@@ -242,15 +244,51 @@ impl LiplRepo for InMemoryDb {
 
 #[cfg(test)]
 mod tests {
-    use std::iter::empty;
+    use super::{InMemoryDb};
+    use lipl_core::{LiplRepo, PlaylistPost, LyricPost};
 
-    use lipl_core::{LiplRepo};
+    #[tokio::test]
+    async fn post_lyric() {
+        let db = InMemoryDb::default();
+
+        let lyric_post = LyricPost {
+            title: "Alle 13 goed".to_owned(),
+            parts: vec![],
+        };
+
+        let lyric = db.upsert_lyric((None, lyric_post).into()).await.unwrap();
+
+        let lyrics = db.get_lyrics().await.unwrap();
+        assert_eq!(lyrics[0].title, "Alle 13 goed".to_owned());
+        assert_eq!(lyrics[0].id, lyric.id);
+    }
+
+    #[tokio::test]
+    async fn post_lyric_change() {
+        let db = InMemoryDb::default();
+
+        let lyric_post = LyricPost {
+            title: "Alle 13 goed".to_owned(),
+            parts: vec![],
+        };
+
+        let mut lyric = db.upsert_lyric((None, lyric_post).into()).await.unwrap();
+        let mut lyrics = db.get_lyrics().await.unwrap();
+        assert_eq!(lyrics[0].title, "Alle 13 goed".to_owned());
+        assert_eq!(lyrics[0].id, lyric.id);
+
+        lyric.title = "Alle 15 goed".to_owned();
+        lyric = db.upsert_lyric(lyric).await.unwrap();
+        lyrics = db.get_lyrics().await.unwrap();
+        assert_eq!(lyrics[0].title, "Alle 15 goed".to_owned());
+        assert_eq!(lyrics[0].id, lyric.id);
+    }
 
     #[tokio::test]
     async fn post_playlist() {
-        let db = super::InMemoryDb::new(empty(), empty());
+        let db = InMemoryDb::default();
 
-        let playlist_post = super::PlaylistPost {
+        let playlist_post = PlaylistPost {
             title: "Alle 13 goed".to_owned(),
             members: vec![],
         };

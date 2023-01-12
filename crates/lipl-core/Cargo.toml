@@ -9,7 +9,6 @@ file = ["dep:tokio", "dep:futures"]
 reqwest = ["dep:reqwest"]
 
 [dependencies]
-# anyhow = { version = "1.0.59", features = ["std"] }
 async-trait = "0.1"
 bincode = "1"
 bs58 = "0.4"
@@ -20,7 +19,6 @@ serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
 serde_with = "2.0"
 thiserror = "1"
-timeit = { path = "../timeit" }
 tokio = { version = "1.23", features = ["rt"], optional = true }
 tokio-postgres = { version = "0.7", optional = true }
 uuid = { version = "1.0", features = ["v4"] }

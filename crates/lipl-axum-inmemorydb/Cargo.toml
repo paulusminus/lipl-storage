@@ -9,4 +9,4 @@ lipl-core = { path = "../lipl-core" }
 thiserror = "1.0.37"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt", "macros"] }

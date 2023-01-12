@@ -4,7 +4,7 @@ version = "0.1.1"
 edition = "2021"
 
 [features]
-default = ["memory", "postgres"]
+default = ["memory"]
 postgres = ["dep:lipl-axum-postgres", "dep:lipl-core", "lipl-core?/postgres"]
 memory = ["dep:lipl-axum-inmemorydb", "dep:lipl-core"]
 

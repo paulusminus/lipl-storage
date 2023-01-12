@@ -1020,7 +1020,6 @@ dependencies = [
  "serde_with",
  "serde_yaml",
  "thiserror",
- "timeit",
  "tokio",
  "tokio-postgres",
  "uuid",
