@@ -55,12 +55,12 @@ impl Db {
     pub fn delete_lyric(&mut self, id: &Uuid) -> Result<(), lipl_core::Error> {
         self._remove_lyric_from_playlists(id);
         self.lyrics.remove(id)
-        .ok_or_else(|| lipl_core::Error::NoKey("Lyric".to_owned()))
+        .ok_or_else(|| lipl_core::Error::NoKey(id.to_string()))
         .map(|_| {})
     }
 
     pub fn update_lyric(&mut self, lyric: &Lyric) -> lipl_core::Result<Lyric> {
-        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| lipl_core::Error::NoKey("".to_owned()))?;
+        let e = self.lyrics.get_mut(&lyric.id).ok_or_else(|| lipl_core::Error::NoKey(lyric.id.to_string()))?;
         *e = lyric.clone();
         Ok(lyric.clone())
     }
@@ -92,14 +92,14 @@ impl Db {
 
     pub fn delete_playlist(&mut self, id: &Uuid) -> lipl_core::Result<()> {
         self.playlists.remove(id)
-        .ok_or_else(|| lipl_core::Error::NoKey("Playlist".to_owned()))
+        .ok_or_else(|| lipl_core::Error::NoKey(id.to_string()))
         .map(|_| {})
     }
 
     pub fn update_playlist(&mut self, playlist_update: &Playlist) -> lipl_core::Result<Playlist> {
         let mut playlist = playlist_update.clone();
         playlist.members = self._valid_members(&playlist.members);
-        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| lipl_core::Error::NoKey("".to_owned()))?;
+        let e = self.playlists.get_mut(&playlist_update.id).ok_or_else(|| lipl_core::Error::NoKey(playlist.id.to_string()))?;
         *e = playlist.clone();
         Ok(playlist)
     }

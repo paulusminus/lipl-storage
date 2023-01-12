@@ -18,8 +18,12 @@ where T: Serialize
     move |t| (status_code, Json(t)).into_response()
 }
 
-pub(crate) fn to_error_response<E: std::error::Error>(error: E) -> Response {
-    (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorReport::from(error))).into_response()
+pub(crate) fn to_error_response(error: lipl_core::Error) -> Response {
+    match error {
+        lipl_core::Error::NoKey(_) => (StatusCode::NOT_FOUND, Json(ErrorReport::from(error))).into_response(),
+        _ => (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorReport::from(error))).into_response()
+    }
+    
 }
 
 pub(crate) fn to_status_ok<T>(_: T) -> Response {

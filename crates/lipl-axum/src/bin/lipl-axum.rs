@@ -13,17 +13,19 @@ async fn run(service: Router<()>) -> Result<(), Error> {
     .await
 }
 
+fn log_filter() -> String {
+    std::env::var(constant::RUST_LOG)
+    .unwrap_or_else(|_| constant::DEFAULT_LOG_FILTER.to_owned())
+}
+
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
-    let filter =
-        std::env::var(constant::RUST_LOG)
-        .unwrap_or_else(|_| constant::DEFAULT_LOG_FILTER.to_owned());
-    
     tracing_subscriber::fmt()
-    .with_env_filter(filter)
-    .init();
+        .with_env_filter(log_filter())
+        .init();
 
-    let pool = lipl_axum::create_pool().await?;
-    let service = create_service(pool);
-    run(service).await
+    lipl_axum::create_pool()
+        .map_ok(create_service)
+        .and_then(run)
+        .await
 }

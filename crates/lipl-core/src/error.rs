@@ -41,7 +41,7 @@ pub enum Error {
     #[error("Directory does not exist: {0}")]
     NonExistingDirectory(std::path::PathBuf),
 
-    #[error("No Path error: {0}")]
+    #[error("Key not found: {0}")]
     NoKey(String),
 
     #[error("Send failed for {0}")]
