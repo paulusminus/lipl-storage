@@ -26,7 +26,7 @@ impl LiplRepo for PostgresConnectionPool {
         .await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
+    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
         self.query_one(
             lyric::UPSERT,
             lyric::UPSERT_TYPES,
@@ -67,7 +67,7 @@ impl LiplRepo for PostgresConnectionPool {
         .await
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
+    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
         self.query_one(
             playlist::UPSERT,
             playlist::UPSERT_TYPES,

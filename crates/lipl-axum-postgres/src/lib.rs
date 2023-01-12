@@ -6,8 +6,6 @@ use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
 mod convert;
 mod db;
-// mod lyric;
-// mod playlist;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
 type Result<T> = std::result::Result<T, lipl_core::PostgresRepoError>;

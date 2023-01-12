@@ -75,7 +75,7 @@ create_handler! (
     get_lyric_summaries,
     get_lyric,
     delete_lyric,
-    post_lyric,
+    upsert_lyric,
     lipl_core::LyricPost,
     lipl_core::Lyric
 );
@@ -86,7 +86,7 @@ create_handler! (
     get_playlist_summaries,
     get_playlist,
     delete_playlist,
-    post_playlist,
+    upsert_playlist,
     lipl_core::PlaylistPost,
     lipl_core::Playlist
 );

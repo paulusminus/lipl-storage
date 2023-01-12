@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum ApiError {
+pub enum Error {
     #[error("Http: {0}")]
     Http(#[from] hyper::http::Error),
 

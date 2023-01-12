@@ -49,7 +49,7 @@ where
     T: LiplRepo,
 {
     connection
-        .post_playlist((None, playlist_post).into())
+        .upsert_playlist((None, playlist_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
         .await
 }
@@ -77,7 +77,7 @@ where
     T: LiplRepo,
 {
     connection
-        .post_playlist((Some(id), playlist_post).into())
+        .upsert_playlist((Some(id), playlist_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }

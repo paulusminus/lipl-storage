@@ -18,7 +18,7 @@ mod db;
 pub mod pool;
 mod macros;
 
-type PostgresResult<T> = std::result::Result<T, PostgresRepoError>;
+type Result<T> = std::result::Result<T, PostgresRepoError>;
 
 #[derive(Clone)]
 pub struct PostgresRepoConfig {
@@ -39,7 +39,7 @@ impl PostgresRepoConfig {
 
 impl std::str::FromStr for PostgresRepoConfig {
     type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         pool::get(s)
             .map_err(Into::into)
             .map(|manager| PostgresRepoConfig { connection_string: s.into(), clear: false, manager })
@@ -192,26 +192,26 @@ impl PostgresRepo {
     );
 }
 
-fn get_id(row: &Row) -> PostgresResult<Uuid> {
+fn get_id(row: &Row) -> Result<Uuid> {
     row.try_get::<&str, uuid::Uuid>("id")
     .map_err(Into::into)
     .map(Uuid::from)
 }
 
 #[allow(clippy::map_identity)]
-fn get_title(row: &Row) -> PostgresResult<String> {
+fn get_title(row: &Row) -> Result<String> {
     row.try_get::<&str, String>("title")
     .map_err(Into::into)
     .map(std::convert::identity)
 }
 
-fn get_parts(row: &Row) -> PostgresResult<Vec<Vec<String>>> {
+fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
     row.try_get::<&str, String>("parts")
     .map_err(Into::into)
     .map(to_parts)
 }
 
-fn get_members(row: &Row) -> PostgresResult<Vec<Uuid>> {
+fn get_members(row: &Row) -> Result<Vec<Uuid>> {
     row.try_get::<&str, Vec<uuid::Uuid>>("members")
     .map_err(Into::into)
     .map(convert_vec(Uuid::from))
@@ -223,13 +223,13 @@ where F: Fn(T) -> U + Copy
     move |v| v.into_iter().map(f).collect()
 }
 
-fn try_convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> PostgresResult<Vec<U>>
-where F: Fn(T) -> PostgresResult<U> + Copy
+fn try_convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> Result<Vec<U>>
+where F: Fn(T) -> Result<U> + Copy
 {
     move |v| v.into_iter().map(f).collect()
 }
 
-fn to_lyric(row: Row) -> PostgresResult<Lyric> {
+fn to_lyric(row: Row) -> Result<Lyric> {
     Ok(
         Lyric {
             id: get_id(&row)?,
@@ -239,7 +239,7 @@ fn to_lyric(row: Row) -> PostgresResult<Lyric> {
     )    
 }
 
-fn to_playlist(row: Row) -> PostgresResult<Playlist> {
+fn to_playlist(row: Row) -> Result<Playlist> {
     Ok(
         Playlist {
             id: get_id(&row)?,
@@ -249,7 +249,7 @@ fn to_playlist(row: Row) -> PostgresResult<Playlist> {
     )
 }
 
-fn to_summary(row: Row) -> PostgresResult<Summary> {
+fn to_summary(row: Row) -> Result<Summary> {
     Ok(
         Summary {
             id: get_id(&row)?,
@@ -258,7 +258,7 @@ fn to_summary(row: Row) -> PostgresResult<Summary> {
     )
 }
 
-fn to_ok<T>(t: T) -> PostgresResult<T> {
+fn to_ok<T>(t: T) -> Result<T> {
     Ok(t)
 }
 
@@ -287,7 +287,7 @@ impl LiplRepo for PostgresRepo {
         .await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric>
+    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric>
     {
         self.upsert_lyric(
             lyric.id.inner(),
@@ -330,7 +330,7 @@ impl LiplRepo for PostgresRepo {
             .await
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist>
+    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist>
     {
         let title = playlist.title.clone();
         self.upsert_playlist(

@@ -22,15 +22,15 @@ async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
     let lyric1 = create_lyric(ROODKAPJE);
 
     let lyric1_posted = 
-        repo.post_lyric(lyric1.clone()).await?;
+        repo.upsert_lyric(lyric1.clone()).await?;
     assert_eq!(lyric1.id, lyric1_posted.id);
 
     let lyric2: Lyric = create_lyric(MOLEN);
-    let posted_lyric2 = repo.post_lyric(lyric2.clone()).await?;
+    let posted_lyric2 = repo.upsert_lyric(lyric2.clone()).await?;
     assert_eq!(lyric2.id, posted_lyric2.id);
 
     let lyric3: Lyric = create_lyric(SINTERKLAAS);
-    let posted_lyric3 = repo.post_lyric(lyric3.clone()).await?;
+    let posted_lyric3 = repo.upsert_lyric(lyric3.clone()).await?;
     assert_eq!(lyric3.id, posted_lyric3.id);
 
     let mut count = repo.get_lyric_summaries().await?.len();
@@ -54,7 +54,7 @@ async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
         }
     )
     .into();
-    let failed_insert = repo.post_lyric(lyric4).await;
+    let failed_insert = repo.upsert_lyric(lyric4).await;
     assert_eq!(failed_insert.is_ok(), false);
 
     let playlist: Playlist = (
@@ -69,7 +69,7 @@ async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
     )
     .into();
 
-    let playlist_posted = repo.post_playlist(playlist.clone()).await?;
+    let playlist_posted = repo.upsert_playlist(playlist.clone()).await?;
     assert_eq!(playlist_posted.members, vec![lyric3.id, lyric1.id]);
 
     let playlist_retrieved1 = repo.get_playlist(playlist.id).await?;
@@ -78,7 +78,7 @@ async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
     let mut playlist2 = playlist.clone();
     playlist2.title = "Diversen".to_owned();
 
-    repo.post_playlist(playlist2).await?;
+    repo.upsert_playlist(playlist2).await?;
 
     Ok(())
 }

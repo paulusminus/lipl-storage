@@ -7,11 +7,11 @@ use hyper::header::CONTENT_TYPE;
 use hyper::{client::{Client, HttpConnector}, Response, Body, body::{aggregate, Buf}, Method, header::{CONTENT_ENCODING, ACCEPT, ACCEPT_ENCODING, USER_AGENT}, Request};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use serde::{de::DeserializeOwned, Serialize};
-use crate::{ApiResult, ApiRequest};
+use crate::{Result, ApiRequest};
 use futures_util::{Future, FutureExt, TryFutureExt, future::ready};
 
 trait ToJson: Serialize + Send + Sync {
-    fn to_json(&self) -> ApiResult<String> {
+    fn to_json(&self) -> Result<String> {
         serde_json::to_string(self).map_err(Into::into)
     }
 }
@@ -37,7 +37,7 @@ impl ApiClient {
         format!("{}{}", self.prefix, uri)
     }
 
-    async fn send(&self, request: Request<Body>) -> ApiResult<Box<dyn Read>> {
+    async fn send(&self, request: Request<Body>) -> Result<Box<dyn Read>> {
         self.client.clone().request(request)
         .map_ok(|response| (is_zip_encoded(&response), response))
         .and_then(
@@ -52,7 +52,7 @@ impl ApiClient {
 
 }
 
-fn to_object<T>(response: Box<dyn Read>) -> ApiResult<T>
+fn to_object<T>(response: Box<dyn Read>) -> Result<T>
 where T: DeserializeOwned
 {
     serde_json::from_reader(response)
@@ -61,7 +61,7 @@ where T: DeserializeOwned
 
 #[async_trait]
 impl ApiRequest for ApiClient {
-    async fn get<T>(&self, uri: &str) -> ApiResult<T>
+    async fn get<T>(&self, uri: &str) -> Result<T>
     where T: DeserializeOwned
     {
         api_request(
@@ -75,7 +75,7 @@ impl ApiRequest for ApiClient {
         .and_then(identity)
     }
 
-    async fn post<T, U>(&self, uri: &str, object: T) -> ApiResult<U>
+    async fn post<T, U>(&self, uri: &str, object: T) -> Result<U>
     where 
         T: Serialize + Send + Sync,
         U: DeserializeOwned
@@ -91,7 +91,7 @@ impl ApiRequest for ApiClient {
         .and_then(identity)
     }
 
-    async fn delete(&self, uri: &str) -> ApiResult<()> {
+    async fn delete(&self, uri: &str) -> Result<()> {
         api_request(
             self.uri(uri),
             Method::DELETE,
@@ -103,7 +103,7 @@ impl ApiRequest for ApiClient {
     }
 }
 
-fn api_request(uri: String, method: Method, body: Option<Body>) -> Pin<Box<dyn Future<Output = ApiResult<Request<Body>>> + Send>>
+fn api_request(uri: String, method: Method, body: Option<Body>) -> Pin<Box<dyn Future<Output = Result<Request<Body>>> + Send>>
 {
     ready(
         match body {

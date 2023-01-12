@@ -1,6 +1,5 @@
 pub mod io;
 pub mod model;
-// mod error;
 
 use std::{path::{Path, PathBuf}, sync::Arc};
 use tokio::sync::RwLock;
@@ -10,7 +9,6 @@ use model::{Db, HasSummaries};
 pub use serde::{Deserialize, Serialize};
 
 pub type BoxResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-// pub type Result<T> = std::result::Result<T, error::Error>;
 
 #[derive(Clone)]
 pub struct RepoWrapper {
@@ -57,7 +55,7 @@ impl LiplRepo for RepoWrapper {
             .delete_lyric(&id)
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
+    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
         self
             .inner
             .write()
@@ -92,7 +90,7 @@ impl LiplRepo for RepoWrapper {
             .delete_playlist(&id)
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
+    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
         self.inner.write()
         .await
         .update_playlist(&playlist)

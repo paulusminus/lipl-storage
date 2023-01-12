@@ -256,7 +256,7 @@ impl LiplRepo for FileRepo {
         .await
     }
 
-    async fn post_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
+    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
         post(self.tx.clone(), lyric, Request::LyricPost)
         .err_into()
         .await
@@ -286,7 +286,7 @@ impl LiplRepo for FileRepo {
         .await
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
+    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
         .err_into()
         .await

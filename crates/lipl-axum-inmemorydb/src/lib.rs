@@ -162,7 +162,7 @@ impl LiplRepo for InMemoryDb {
         .ok_or(Error::NotFound(uuid))
     }
 
-    async fn post_lyric(&self, lyric: Lyric) ->  Result<Lyric> {
+    async fn upsert_lyric(&self, lyric: Lyric) ->  Result<Lyric> {
         match self.db.write().unwrap().insert(lyric.clone().id, Record::Lyric(lyric.clone().into())) {
             Some(_) => Err(Error::Occupied),
             None => Ok(lyric)
@@ -186,14 +186,6 @@ impl LiplRepo for InMemoryDb {
             Err(Error::NotFound(uuid))
         }
     }
-
-    // async fn put_lyric(&self, uuid: Uuid, lyric_post: LyricPost) -> Result<Lyric> {
-    //     let mut db = self.db.write().unwrap();
-    //     let lyric = Lyric::from((Some(uuid), lyric_post.clone()));
-    //     let entry = db.get_mut(&uuid).ok_or(Error::NotFound(uuid))?;
-    //     *entry = Record::Lyric(lyric_post);
-    //     Ok(lyric)
-    // }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
@@ -232,7 +224,7 @@ impl LiplRepo for InMemoryDb {
         .ok_or(Error::NotFound(uuid))
     }
 
-    async fn post_playlist(&self, playlist: Playlist) -> Result<Playlist> {
+    async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
         match self.db.write().unwrap().insert(playlist.clone().id, Record::Playlist(playlist.clone().into())) {
             Some(_) => Err(Error::Occupied),
             None => Ok(playlist)
@@ -246,74 +238,7 @@ impl LiplRepo for InMemoryDb {
     async fn stop(&self) -> Result<()> {
         Ok(())
     }
-
-    // async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist> {
-    //     let playlist = Playlist::from((Some(uuid), playlist_post.clone()));
-    //     self.db.write().unwrap().entry(uuid).and_modify(|v| *v = Record::Playlist(playlist_post));
-    //     Ok(playlist)
-    // }
-
 }
-
-// #[async_trait]
-// impl PlaylistDb for InMemoryDb {
-//     async fn playlist_list(&self) -> Result<Vec<Summary>> {
-//         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
-//             match record {
-//                 Record::Playlist(playlist_post) => Some(Summary { id: *key, title: playlist_post.title.clone() }),
-//                 _ => None
-//             }
-//         })
-//         .collect::<Vec<_>>();
-
-//         summaries.sort_by(compare_title);
-//         Ok(summaries)
-//     }
-
-//     async fn playlist_list_full(&self) -> Result<Vec<Playlist>> {
-//         let mut playlists = self.db.read().unwrap().iter().filter_map(|(key, record)| {
-//             match record {
-//                 Record::Playlist(playlist_post) => Some(Playlist::from((Some(*key), playlist_post.clone()))),
-//                 _ => None
-//             }
-//         })
-//         .collect::<Vec<_>>();
-
-//         playlists.sort_by(playlist_compare_title);
-//         Ok(playlists)
-//     }
-
-//     async fn playlist_item(&self, uuid: Uuid) -> Result<Playlist> {
-//         self.db.read().unwrap().get(&uuid)
-//         .and_then(|record| {
-//             match record {
-//                 Record::Playlist(playlist_post) => Some(Playlist::from((Some(uuid), playlist_post.clone()))),
-//                 _ => None,
-//             }
-//         })
-//         .ok_or(Error::NotFound(uuid))
-//     }
-
-//     async fn playlist_post(&self, playlist_post: PlaylistPost) -> Result<Playlist> {
-//         let uuid = Uuid::default();
-
-//         match self.db.write().unwrap().insert(uuid, Record::Playlist(playlist_post.clone())) {
-//             Some(_) => Err(Error::Occupied),
-//             None => Ok(Playlist::from((Some(uuid), playlist_post)))
-//         }
-//     }
-
-//     async fn playlist_delete(&self, uuid: Uuid) -> Result<()> {
-//         self.db.write().unwrap().remove(&uuid).ok_or(Error::NotFound(uuid)).map(|_| ())
-//     }
-
-//     async fn playlist_put(&self, uuid: Uuid, playlist_post: PlaylistPost) -> Result<Playlist> {
-//         let playlist = Playlist::from((Some(uuid), playlist_post.clone()));
-//         self.db.write().unwrap().entry(uuid).and_modify(|v| *v = Record::Playlist(playlist_post));
-//         Ok(playlist)
-//     }
-// }
-
 
 #[cfg(test)]
 mod tests {
@@ -330,7 +255,7 @@ mod tests {
             members: vec![],
         };
 
-        let playlist = db.post_playlist((None, playlist_post).into()).await.unwrap();
+        let playlist = db.upsert_playlist((None, playlist_post).into()).await.unwrap();
 
         let playlists = db.get_playlists().await.unwrap();
         assert_eq!(playlists[0].title, "Alle 13 goed".to_owned());

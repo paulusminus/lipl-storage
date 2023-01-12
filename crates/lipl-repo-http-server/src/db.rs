@@ -18,12 +18,12 @@ pub async fn copy(source: Arc<dyn LiplRepo>, target: Arc<dyn LiplRepo>) -> anyho
 {
     for lyric in source.get_lyrics().await? {
         info!("Copying lyric {} with id {}", lyric.title, lyric.id);
-        target.post_lyric(lyric).await.unwrap();
+        target.upsert_lyric(lyric).await.unwrap();
     }
 
     for playlist in source.get_playlists().await? {
         info!("Copying playlist {} with id {}", playlist.title, playlist.id);
-        target.post_playlist(playlist).await.unwrap();
+        target.upsert_playlist(playlist).await.unwrap();
     }
 
     Ok(())

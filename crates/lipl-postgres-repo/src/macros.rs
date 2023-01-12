@@ -8,7 +8,7 @@ macro_rules! query {
         $f:expr
         $(, $param_name:ident : $param_type:ty)* $(,)?
     ) => {
-        async fn $name(&self, $($param_name: $param_type,)*) -> PostgresResult<$return_type> {
+        async fn $name(&self, $($param_name: $param_type,)*) -> Result<$return_type> {
             let client = self.pool.get().await?;
             let statement = client.prepare_typed($sql, $types,).await?;
             let query_result = client.$action(&statement, &[$(&$param_name,)*]).await?;

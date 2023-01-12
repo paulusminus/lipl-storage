@@ -54,7 +54,7 @@ where
     T: LiplRepo,
 {
     connection
-        .post_lyric((None, lyric_post).into())
+        .upsert_lyric((None, lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
         .await
 }
@@ -83,7 +83,7 @@ where
     T: LiplRepo,
 {
     connection
-        .post_lyric((Some(id), lyric_post).into())
+        .upsert_lyric((Some(id), lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }

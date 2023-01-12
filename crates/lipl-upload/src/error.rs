@@ -7,5 +7,5 @@ pub enum Error {
     IO(#[from] std::io::Error),
 
     #[error("Api: {0}")]
-    Api(#[from] rest_api_client::ApiError),
+    Api(#[from] rest_api_client::Error),
 }
