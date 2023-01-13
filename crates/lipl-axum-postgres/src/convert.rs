@@ -1,7 +1,6 @@
 use lipl_core::{ext::VecExt, reexport, Lyric, Summary, Uuid, Playlist};
 use tokio_postgres::Row;
-
-type Result<T> = std::result::Result<T, lipl_core::PostgresRepoError>;
+use crate::Result;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Result<Vec<T>>
 where
