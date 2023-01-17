@@ -10,4 +10,7 @@ pub enum PostgresRepoError {
 
     #[error("Connection: {0}")]
     Connection(#[from] bb8_postgres::bb8::RunError<tokio_postgres::Error>),
+
+    #[error("No results")]
+    NoResults,
 }

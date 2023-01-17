@@ -1,7 +1,7 @@
-use super::{to_json_response, to_status_ok, to_error_response};
+use super::{to_json_response, to_status_ok, to_error_response, Key};
 use axum::{
     Json,
-    extract::{Path, Query, State},
+    extract::{Query, State},
     http::StatusCode,
     response::{Response},
 };
@@ -34,13 +34,13 @@ where
 /// Handler for getting a specific lyric
 pub async fn item<T>(
     State(connection): State<T>,
-    Path(id): Path<lipl_core::Uuid>,
+    key: Key,
 ) -> Response 
 where
     T: LiplRepo,
 {
     connection
-        .get_lyric(id)
+        .get_lyric(key.id)
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }
@@ -62,28 +62,28 @@ where
 /// Handler for deleting a specific lyric
 pub async fn delete<T>(
     State(connection): State<T>,
-    Path(id): Path<lipl_core::Uuid>,
+    key: Key,
 ) -> Response
 where
     T: LiplRepo,
 {
-    connection
-        .delete_lyric(id)
-        .map_ok_or_else(to_error_response, to_status_ok)
-        .await
+        connection
+            .delete_lyric(key.id)
+            .map_ok_or_else(to_error_response, to_status_ok)
+            .await
 }
 
 /// Handler for changing a specific lyric
 pub async fn put<T>(
     State(connection): State<T>,
-    Path(id): Path<lipl_core::Uuid>,
+    key: Key,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response
 where
     T: LiplRepo,
 {
     connection
-        .upsert_lyric((Some(id), lyric_post).into())
+        .upsert_lyric((Some(key.id), lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
         .await
 }

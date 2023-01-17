@@ -1,10 +1,30 @@
 use async_trait::async_trait;
 use futures_util::TryFutureExt;
-use lipl_core::{ext::VecExt, LiplRepo, Lyric, Result, Summary, Uuid, Playlist};
+use lipl_core::{ext::VecExt, Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist, PostgresRepoError};
 use parts::to_text;
 
 use super::convert;
 use crate::PostgresConnectionPool;
+
+fn error_on_count(count: u64, uuid: Uuid) -> Result<()> {
+    if count < 1 {
+        Err(Error::NoKey(uuid.to_string()))
+    }
+    else {
+        Ok(())
+    }
+}
+
+fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(PostgresRepoError) -> lipl_core::Error {
+    move |pg_error| {
+        if let PostgresRepoError::NoResults = pg_error {
+            Error::NoKey(uuid.to_string())
+        }
+        else {
+            pg_error.into()
+        }
+    }
+}
 
 #[async_trait]
 impl LiplRepo for PostgresConnectionPool {
@@ -22,8 +42,8 @@ impl LiplRepo for PostgresConnectionPool {
 
     async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
         self.query_one(lyric::ITEM, lyric::ITEM_TYPES, convert::to_lyric, &[&uuid.inner()])
-        .err_into()
-        .await
+            .map_err(pg_error_to_lipl_core(uuid))
+            .await
     }
 
     async fn upsert_lyric(&self, lyric: Lyric) -> Result<Lyric> {
@@ -38,9 +58,8 @@ impl LiplRepo for PostgresConnectionPool {
     }
 
     async fn delete_lyric(&self, uuid: Uuid) -> Result<()> {
-        self.execute(lyric::DELETE, lyric::DELETE_TYPES, &[&uuid.inner()])
-        .err_into()
-        .await
+        let count = self.execute(lyric::DELETE, lyric::DELETE_TYPES, &[&uuid.inner()]).await?;
+        error_on_count(count, uuid)
     }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
@@ -57,14 +76,13 @@ impl LiplRepo for PostgresConnectionPool {
 
     async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
         self.query_one(playlist::ITEM, playlist::ITEM_TYPES, convert::to_playlist, &[&uuid.inner()])
-        .err_into()
-        .await
+            .map_err(pg_error_to_lipl_core(uuid))
+            .await
     }
 
     async fn delete_playlist(&self, uuid: Uuid) -> Result<()> {
-        self.execute(playlist::DELETE, playlist::DELETE_TYPES, &[&uuid.inner()])
-        .err_into()
-        .await
+        let count = self.execute(playlist::DELETE, playlist::DELETE_TYPES, &[&uuid.inner()]).await?;
+        error_on_count(count, uuid)
     }
 
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {

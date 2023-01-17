@@ -1,6 +1,6 @@
-use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
+use bb8_postgres::{PostgresConnectionManager, bb8::{Pool}};
 use futures_util::{Future, TryFutureExt};
-use lipl_core::{LiplRepo};
+use lipl_core::{LiplRepo, PostgresRepoError};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
@@ -30,14 +30,14 @@ impl PostgresConnectionPool {
         &'a self,
         sql: &'static str,
         types: &'a[Type],
-        params: &'a[&(dyn ToSql + Sync)]
-    ) -> impl Future<Output = Result<()>> + 'a
+        params: &'a[&(dyn ToSql + Sync)],
+    ) -> impl Future<Output = Result<u64>> + 'a
     {
         async move {
             let connection = self.inner.get().await?;
             let statement = connection.prepare_typed(sql, types).await?;
-            connection.execute(&statement, params).await?;
-            Ok(())
+            let count = connection.execute(&statement, params).await?;
+            Ok(count)
         }
     }
 
@@ -75,8 +75,12 @@ impl PostgresConnectionPool {
         async move {
             let connection = self.inner.get().await?;
             let statement = connection.prepare_typed(sql, types).await?;
-            let row = connection.query_one(&statement, params).await?;
-            convert(row)
+            if let Some(row) = connection.query_opt(&statement, params).await? {
+                convert(row)
+            }
+            else {
+                Err(PostgresRepoError::NoResults)
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 use thiserror::{Error};
 
-use crate::Uuid;
+use crate::{Uuid};
 
 
 #[derive(Error, Debug)]
