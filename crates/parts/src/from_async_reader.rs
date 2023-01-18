@@ -3,7 +3,7 @@ use futures::{
     io::BufReader,
     AsyncRead, AsyncBufReadExt, TryStreamExt, TryFutureExt,
 };
-use lipl_core::ext::VecExt;
+use lipl_util::VecExt;
 use std::io::Error;
 
 trait IntoReadyOk {

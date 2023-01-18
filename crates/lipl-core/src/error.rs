@@ -66,6 +66,10 @@ pub enum Error {
     #[error("Reqwest: {0}")]
     Reqwest(#[from] reqwest::Error),
 
+    #[cfg(feature = "redis")]
+    #[error("Redis: {0}")]
+    Redis(#[from] crate::RedisRepoError),
+
     #[error("Not Found")]
     NotFound(Uuid),
 

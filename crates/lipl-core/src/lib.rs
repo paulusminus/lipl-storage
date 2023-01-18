@@ -11,6 +11,9 @@ pub use postgres_error::PostgresRepoError;
 #[cfg(feature = "file")]
 pub use file_error::FileRepoError;
 
+#[cfg(feature = "redis")]
+pub use redis_error::RedisRepoError;
+
 mod disk_format;
 pub mod error;
 pub mod ext;
@@ -19,6 +22,8 @@ mod file_error;
 mod path_ext;
 #[cfg(feature = "postgres")]
 mod postgres_error;
+#[cfg(feature = "redis")]
+mod redis_error;
 pub mod reexport;
 mod uuid;
 
@@ -66,9 +71,28 @@ impl From<(Option<Uuid>, LyricPost)> for Lyric {
     }
 }
 
+impl From<LyricPost> for Lyric {
+    fn from(lyric_post: LyricPost) -> Self {
+        Self {
+            id: Default::default(),
+            title: lyric_post.title,
+            parts: lyric_post.parts,
+        }
+    }
+}
+
 impl From<Lyric> for LyricPost {
     fn from(lyric: Lyric) -> Self {
         Self { title: lyric.title, parts: lyric.parts }
+    }
+}
+
+impl From<(&str, &str)> for LyricPost {
+    fn from(value: (&str, &str)) -> Self {
+        Self {
+            title: value.0.to_owned(),
+            parts: parts::to_parts(value.1.to_owned()),
+        }
     }
 }
 
@@ -257,18 +281,4 @@ impl std::fmt::Display for RepoDb {
 pub trait Yaml {
     fn load<R>(r: R) -> Result<Self> where R: std::io::Read, Self: Sized;
     fn save<W>(&self, w: W) -> Result<()> where W: std::io::Write;
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn without() {
-        use super::ext::VecExt;
-        let v = vec!["1", "2", "5"];
-        let out = v.without(&"2");
-        assert_eq!(out.len(), 2);
-        assert_eq!(out[0], "1");
-        assert_eq!(out[1], "5");
-    }
 }

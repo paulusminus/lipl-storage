@@ -8,6 +8,7 @@ async-trait = "0.1"
 bb8-postgres = "0.8"
 futures-util = "0.3"
 lipl-core = { path = "../lipl-core", features = ["postgres"] }
+lipl-util = { path = "../lipl-util" }
 parts = { path = "../parts" }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0.37"

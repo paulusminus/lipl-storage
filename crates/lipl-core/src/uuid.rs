@@ -27,26 +27,31 @@ impl std::fmt::Debug for Uuid {
     }
 }
 
+fn bytes_to_uuid(bytes: Vec<u8>) -> Result<uuid::Uuid, Error> {
+    uuid::Uuid::from_slice(&bytes)
+    .map_err(Error::from)
+}
+
 impl FromStr for Uuid {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let decoded = decode(s).into_vec()?;
-        let uuid = uuid::Uuid::from_slice(&decoded)?;
-        Ok(Uuid(uuid))
+        decode(s)
+            .into_vec()
+            .map_err(Error::from)
+            .and_then(bytes_to_uuid)
+            .map(Uuid::from)
     }
 }
 
 impl Default for Uuid {
     fn default() -> Self {
-        Uuid(
-            uuid::Uuid::new_v4()
-        )
+        uuid::Uuid::new_v4().into()
     }
 }
 
 impl From<uuid::Uuid> for Uuid {
     fn from(uuid: uuid::Uuid) -> Self {
-        Uuid(uuid)
+        Self(uuid)
     }
 }

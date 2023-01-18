@@ -7,14 +7,18 @@ edition = "2021"
 postgres = ["dep:bb8-postgres", "dep:tokio-postgres"]
 file = ["dep:tokio", "dep:futures"]
 reqwest = ["dep:reqwest"]
+redis = ["dep:bb8-redis"]
 
 [dependencies]
 async-trait = "0.1"
+bb8-redis = { version = "0.12", optional = true }
 bincode = "1"
 bs58 = "0.4"
 bb8-postgres = { version = "0.8", optional = true }
 etag = "4"
 futures = { version = "0.3", optional = true }
+lipl-util = { path = "../lipl-util" }
+parts = { path = "../parts" }
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
 serde_with = "2.0"

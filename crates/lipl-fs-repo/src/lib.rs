@@ -11,8 +11,9 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, Summary, Uuid, ext::VecExt,
+    LiplRepo, Lyric, Playlist, Summary, Uuid,
 };
+use lipl_util::VecExt;
 use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 

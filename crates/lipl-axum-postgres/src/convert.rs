@@ -1,4 +1,5 @@
-use lipl_core::{ext::VecExt, reexport, Lyric, Summary, Uuid, Playlist};
+use lipl_core::{reexport, Lyric, Summary, Uuid, Playlist};
+use lipl_util::VecExt;
 use tokio_postgres::Row;
 use crate::Result;
 

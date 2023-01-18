@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.59"
 lipl-core = { path = "../lipl-core" }
+lipl-util = { path = "../lipl-util" }
 thiserror = "1.0.37"
 
 [dev-dependencies]
