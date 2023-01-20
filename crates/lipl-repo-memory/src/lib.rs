@@ -152,7 +152,7 @@ impl LiplRepo for MemoryRepo {
         self.db.write().unwrap()
             .entry(lyric.clone().id)
             .and_modify(|lyric_post| *lyric_post = Record::Lyric(lyric.clone().into()))
-            .or_insert(Record::Lyric(lyric.clone().into()));
+            .or_insert_with(|| Record::Lyric(lyric.clone().into()));
         Ok(lyric)
     }
 
@@ -215,7 +215,7 @@ impl LiplRepo for MemoryRepo {
         self.db.write().unwrap()
             .entry(playlist.clone().id)
             .and_modify(|record| *record = Record::Playlist(playlist.clone().into()))
-            .or_insert(Record::Playlist(playlist.clone().into()));
+            .or_insert_with(|| Record::Playlist(playlist.clone().into()));
         Ok(playlist) 
     }
 

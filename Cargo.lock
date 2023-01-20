@@ -1040,7 +1040,6 @@ dependencies = [
  "serde_yaml",
  "thiserror",
  "tokio",
- "tokio-postgres",
  "uuid",
 ]
 
