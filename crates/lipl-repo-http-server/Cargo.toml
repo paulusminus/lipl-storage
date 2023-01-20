@@ -5,17 +5,21 @@ authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2021"
 
 [features]
-default = ["file", "postgres"]
-postgres = ["dep:lipl-postgres-repo"]
-file = ["dep:lipl-fs-repo"]
+default = ["memory"]
+postgres = ["dep:lipl-repo-postgres"]
+file = ["dep:lipl-repo-fs"]
+memory = ["dep:lipl-repo-memory"]
+redis = ["dep:lipl-repo-redis"]
 
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "4", features = ["cargo", "derive"] }
+lipl-repo-memory = { path = "../lipl-repo-memory", optional = true }
 lipl-core = { path = "../lipl-core" }
-lipl-fs-repo = { path = "../lipl-fs-repo", optional = true }
-lipl-postgres-repo = { path = "../lipl-postgres-repo", optional = true }
+lipl-repo-fs = { path = "../lipl-repo-fs", optional = true }
+lipl-repo-postgres = { path = "../lipl-repo-postgres", optional = true }
+lipl-repo-redis = { path = "../lipl-repo-redis", optional = true }
 serde = "1.0"
 thiserror = "1.0.32"
 tokio = { version = "1.0", features = ["macros", "rt", "signal", "sync"] }

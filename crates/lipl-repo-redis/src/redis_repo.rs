@@ -4,7 +4,7 @@ use bb8_redis::redis::{AsyncCommands};
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use parts::{to_parts, to_text};
 use std::{collections::{HashMap}, ops::DerefMut, sync::Arc};
-use lipl_core::{Lyric, Uuid, RedisRepoError, Playlist, Summary, LiplRepo};
+use lipl_core::{Lyric, Uuid, RedisRepoError, Playlist, Summary, LiplRepo, by_title};
 use crate::Result;
 
 const LYRIC: &str = "lyric";
@@ -99,7 +99,7 @@ impl Default for RedisRepoConfig<String>
 {
     fn default() -> Self {
         Self {
-            clear: true,
+            clear: false,
             url: "redis://127.0.0.1/".to_owned(),
         }
     }
@@ -252,7 +252,7 @@ impl LiplRepo for RedisRepo {
                 )
             )
             .await?;
-        lyrics.sort_by(|a, b| a.title.cmp(&b.title));
+        lyrics.sort_by(by_title);
         Ok(lyrics)
 
     }
@@ -270,7 +270,7 @@ impl LiplRepo for RedisRepo {
                     )
                 )
                 .await?;
-        summaries.sort_by(|a, b| a.title.cmp(&b.title));
+        summaries.sort_by(by_title);
         Ok(summaries)
     }
 
@@ -288,7 +288,7 @@ impl LiplRepo for RedisRepo {
                     )
                 )
                 .await?;
-        playlists.sort_by(|a, b| a.title.cmp(&b.title));
+        playlists.sort_by(by_title);
         Ok(playlists)
     }
 
@@ -305,7 +305,7 @@ impl LiplRepo for RedisRepo {
                     )
                 )
                 .await?;
-        summaries.sort_by(|a, b| a.title.cmp(&b.title));
+        summaries.sort_by(by_title);
         Ok(summaries)
     }
 

@@ -1,5 +1,5 @@
 use std::{fmt::{Display}, time::Instant};
-use lipl_fs_repo::{FileRepo};
+use lipl_repo_fs::{FileRepo};
 use lipl_core::{LiplRepo};
 
 pub fn print<D>(d: D) 

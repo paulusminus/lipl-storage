@@ -28,8 +28,8 @@ pub async fn exit_on_signal_int() {
 }
 
 #[cfg(not(feature = "postgres"))]
-pub async fn create_pool() -> Result<lipl_axum_inmemorydb::InMemoryDb> {
-    Ok(lipl_axum_inmemorydb::InMemoryDb::default())
+pub async fn create_pool() -> Result<lipl_repo_memory::MemoryRepo> {
+    Ok(lipl_repo_memory::MemoryRepo::default())
 } 
 
 #[cfg(feature = "postgres")]

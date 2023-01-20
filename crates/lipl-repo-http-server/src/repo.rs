@@ -1,25 +1,50 @@
 use lipl_core::{LiplRepo};
 use std::{str::FromStr, sync::Arc};
 use anyhow::bail;
-use lipl_fs_repo::{FileRepo, FileRepoConfig};
-use lipl_postgres_repo::{PostgresRepo, PostgresRepoConfig};
 
 #[derive(Clone)]
 pub enum RepoConfig {
-    Postgres(Box<PostgresRepoConfig>),
-    File(Box<FileRepoConfig>),
+    #[cfg(feature = "postgres")]
+    Postgres(Box<lipl_repo_postgres::PostgresRepoConfig>),
+
+    #[cfg(feature = "file")]
+    File(Box<lipl_repo_fs::FileRepoConfig>),
+
+    #[cfg(feature = "redis")]
+    Redis,
+
+    #[cfg(feature = "memory")]
+    Memory,
 }
 
 impl RepoConfig {
     pub async fn build_repo(self) -> anyhow::Result<Arc<dyn LiplRepo>> {
         match self {
+            #[cfg(feature = "postgres")]
             RepoConfig::File(file) => {
-                let repo = FileRepo::new(file.path)?;
+                let repo = lipl_repo_fs::FileRepo::new(file.path)?;
                 Ok(Arc::new(repo))
             },
+
+            #[cfg(feature = "file")]
             RepoConfig::Postgres(postgres) => {
-                let repo = PostgresRepo::new(*postgres.clone()).await?;
+                let repo = lipl_repo_postgres::PostgresRepo::new(*postgres.clone()).await?;
                 Ok(Arc::new(repo))
+            },
+
+            #[cfg(feature = "redis")]
+            RepoConfig::Redis => {
+                let repo = lipl_repo_redis::RedisRepoConfig::default().to_repo().await?;
+                Ok(repo)
+            }
+
+            #[cfg(feature = "memory")]
+            RepoConfig::Memory => {
+                Ok(
+                    Arc::new(
+                        lipl_repo_memory::MemoryRepo::default()
+                    )
+                )
             }
         }
     }
@@ -40,15 +65,23 @@ impl FromStr for RepoConfig {
         let splitted = s.split(':').collect::<Vec<&str>>();
         if splitted.len() == 2 {
             let repo_dir = splitted[1].to_owned();
+
+            #[cfg(feature = "file")]
             if splitted[0] == "file" {
-                repo_dir.parse::<FileRepoConfig>().map(Box::new).map(RepoConfig::File)
+                return repo_dir.parse::<FileRepoConfig>().map(Box::new).map(RepoConfig::File);
             }
-            else if splitted[0] == "postgres" {
-                repo_dir.parse::<PostgresRepoConfig>().map(Box::new).map(RepoConfig::Postgres)
+
+            #[cfg(feature = "postgres")]
+            if splitted[0] == "postgres" {
+                return repo_dir.parse::<PostgresRepoConfig>().map(Box::new).map(RepoConfig::Postgres);
             }
-            else {
-                bail!("Unknown prefix for db connection string")
+
+            #[cfg(feature = "redis")]
+            if splitted[0] == "redis" {
+                return Ok(RepoConfig::Redis);
             }
+
+            bail!("Unknown prefix for db connection string")
         }
         else {
             bail!("Problem with separator (none or too many)")

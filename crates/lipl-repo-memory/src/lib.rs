@@ -1,6 +1,4 @@
-use std::{collections::HashMap, sync::{RwLock, Arc}, cmp::Ordering, iter::empty};
-
-
+use std::{collections::HashMap, sync::{RwLock, Arc}, iter::empty};
 use async_trait::async_trait;
 use lipl_core::{
     Error,
@@ -14,7 +12,7 @@ use lipl_core::{
     Uuid,
     Yaml,
     RepoDb,
-    reexport::serde_yaml,
+    reexport::serde_yaml, by_title,
 };
 use lipl_util::VecExt;
 
@@ -25,13 +23,13 @@ enum Record {
 }
 
 #[derive(Clone)]
-pub struct InMemoryDb {
+pub struct MemoryRepo {
     db: Arc<RwLock<HashMap<Uuid, Record>>>,
 }
 
-impl From<RepoDb> for InMemoryDb {
+impl From<RepoDb> for MemoryRepo {
     fn from(repo_db: RepoDb) -> Self {
-        InMemoryDb::new(repo_db.lyrics.into_iter(), repo_db.playlists.into_iter())
+        MemoryRepo::new(repo_db.lyrics.into_iter(), repo_db.playlists.into_iter())
     }
 }
 
@@ -43,7 +41,7 @@ fn playlist_to_tuple(playlist: Playlist) -> (Uuid, Record) {
     (playlist.id, Record::Playlist(playlist.into()))
 }
 
-impl InMemoryDb {
+impl MemoryRepo {
     pub fn new(lyrics: impl Iterator<Item = Lyric>, playlists: impl Iterator<Item = Playlist>) -> Self {
         Self {
             db: Arc::new(
@@ -80,25 +78,13 @@ impl InMemoryDb {
     }
 }
 
-impl Default for InMemoryDb {
+impl Default for MemoryRepo {
     fn default() -> Self {
         Self::new(empty(), empty())
     }
 }
 
-fn compare_title(a: &Summary, b: &Summary) -> Ordering {
-    a.title.cmp(&b.title)
-}
-
-fn lyric_compare_title(a: &Lyric, b: &Lyric) -> Ordering {
-    a.title.cmp(&b.title)
-}
-
-fn playlist_compare_title(a: &Playlist, b: &Playlist) -> Ordering {
-    a.title.cmp(&b.title)
-}
-
-impl Yaml for InMemoryDb {
+impl Yaml for MemoryRepo {
     fn load<R>(r: R) -> Result<Self>
     where 
         R: std::io::Read,
@@ -106,7 +92,7 @@ impl Yaml for InMemoryDb {
     {
         serde_yaml::from_reader::<_, RepoDb>(r)
             .map_err(Into::into)
-            .map(InMemoryDb::from)
+            .map(MemoryRepo::from)
     }
 
     fn save<W>(&self, w: W) -> Result<()>
@@ -119,7 +105,7 @@ impl Yaml for InMemoryDb {
 }
 
 #[async_trait]
-impl LiplRepo for InMemoryDb {
+impl LiplRepo for MemoryRepo {
     async fn get_lyric_summaries(&self) ->  Result<Vec<Summary>> {
         let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
                 if let Record::Lyric(lyric_post) = record {
@@ -131,7 +117,7 @@ impl LiplRepo for InMemoryDb {
             })
             .collect::<Vec<_>>();
 
-        summaries.sort_by(compare_title);
+        summaries.sort_by(by_title);
         Ok(summaries)
     }
 
@@ -146,7 +132,7 @@ impl LiplRepo for InMemoryDb {
             })
             .collect::<Vec<_>>();
 
-        lyrics.sort_by(lyric_compare_title);
+        lyrics.sort_by(by_title);
         Ok(lyrics)
     }
 
@@ -197,7 +183,7 @@ impl LiplRepo for InMemoryDb {
         })
         .collect::<Vec<_>>();
 
-        summaries.sort_by(compare_title);
+        summaries.sort_by(by_title);
         Ok(summaries)
     }
 
@@ -210,7 +196,7 @@ impl LiplRepo for InMemoryDb {
         })
         .collect::<Vec<_>>();
 
-        playlists.sort_by(playlist_compare_title);
+        playlists.sort_by(by_title);
         Ok(playlists)
     }
 
@@ -244,12 +230,12 @@ impl LiplRepo for InMemoryDb {
 
 #[cfg(test)]
 mod tests {
-    use super::{InMemoryDb};
+    use super::{MemoryRepo};
     use lipl_core::{LiplRepo, PlaylistPost, LyricPost};
 
     #[tokio::test]
     async fn post_lyric() {
-        let db = InMemoryDb::default();
+        let db = MemoryRepo::default();
 
         let lyric_post = LyricPost {
             title: "Alle 13 goed".to_owned(),
@@ -265,7 +251,7 @@ mod tests {
 
     #[tokio::test]
     async fn post_lyric_change() {
-        let db = InMemoryDb::default();
+        let db = MemoryRepo::default();
 
         let lyric_post = LyricPost {
             title: "Alle 13 goed".to_owned(),
@@ -286,7 +272,7 @@ mod tests {
 
     #[tokio::test]
     async fn post_playlist() {
-        let db = InMemoryDb::default();
+        let db = MemoryRepo::default();
 
         let playlist_post = PlaylistPost {
             title: "Alle 13 goed".to_owned(),

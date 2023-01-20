@@ -31,9 +31,11 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
             RepoError::Model(m) => {
                 json_response(StatusCode::NOT_FOUND, &m.to_string())
             },
+            #[cfg(feature = "file")]
             RepoError::File(f) => {
                 json_response(StatusCode::INTERNAL_SERVER_ERROR, &f.to_string())
             },
+            #[cfg(feature = "postgres")]
             RepoError::Postgres(p) => {
                 json_response(StatusCode::INTERNAL_SERVER_ERROR, &p.to_string())
             },

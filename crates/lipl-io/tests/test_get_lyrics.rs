@@ -1,5 +1,5 @@
 use lipl_io::model::{Db, Persist};
-use lipl_core::{Lyric};
+use lipl_core::{by_title, Lyric};
 
 const DIR_NAME: &str = "./tests/fs/";
 
@@ -8,7 +8,7 @@ fn test_get_lyrics() {
     let mut db = Db::new(DIR_NAME.into());
     db.load().unwrap();
     let mut lyrics: Vec<Lyric> = db.get_lyric_list();
-    lyrics.sort_by(|a, b| a.id.cmp(&b.id));
+    lyrics.sort_by(by_title);
 
     let song1 = &lyrics[0];
     let song2 = &lyrics[1];

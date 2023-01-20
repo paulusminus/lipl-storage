@@ -1,4 +1,5 @@
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use std::{cmp::Ordering};
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
@@ -53,6 +54,22 @@ pub struct Lyric {
     pub id: Uuid,
     pub title: String,
     pub parts: Vec<Vec<String>>,
+}
+
+impl HasSummary for Lyric {
+    fn summary(&self) -> Summary {
+        Summary {
+            id: self.id,
+            title: self.title.clone(),
+        }
+    }
+}
+
+pub fn by_title<T>(a: &T, b: &T) -> Ordering 
+where
+    T: HasSummary,
+{
+    a.summary().title.cmp(&b.summary().title)
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
