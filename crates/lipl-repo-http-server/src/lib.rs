@@ -14,7 +14,7 @@ use param::{LiplApp, LiplCommand};
 use clap::{Parser};
 use futures::TryFutureExt;
 
-pub async fn run() -> anyhow::Result<()> {
+pub async fn run() -> lipl_core::Result<()> {
     let cli = LiplApp::parse();
     match cli.command {
         LiplCommand::Serve(serve) => {

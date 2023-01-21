@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use futures_util::TryFutureExt;
-use lipl_core::{Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist, PostgresRepoError};
+use lipl_core::{Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist, error::PostgresRepoError};
 use lipl_util::VecExt;
 use parts::to_text;
 

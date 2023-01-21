@@ -6,10 +6,11 @@ use tracing::{info, error};
 use warp::Filter;
 
 use crate::constant;
+use crate::error::RepoError;
 use crate::message;
 use crate::filter::{get_lyric_routes, get_playlist_routes};
 
-pub async fn run(repo: Arc<dyn LiplRepo>, port: u16) -> anyhow::Result<()> 
+pub async fn run(repo: Arc<dyn LiplRepo>, port: u16) -> lipl_core::Result<()> 
 {
     let filter =
         std::env::var(constant::RUST_LOG)
@@ -42,7 +43,9 @@ pub async fn run(repo: Arc<dyn LiplRepo>, port: u16) -> anyhow::Result<()>
             else {
                 info!("{}", message::FINISHED);
             }
-        })?;
+        })
+        .map_err(RepoError::from)
+        .map_err(|e| lipl_core::Error::Warp(Box::new(e)))?;
 
     server.await;
 

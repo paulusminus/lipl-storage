@@ -15,8 +15,11 @@ pub enum RepoError {
     #[error("Model: {0}")]
     Model(#[from] lipl_core::Error),
 
-    #[error("Backend: {0}")]
-    Backend(#[from] anyhow::Error)
+    // #[error("Backend: {0}")]
+    // Backend(#[from] anyhow::Error),
+
+    #[error("Warp: {0}")]
+    Warp(#[from] warp::Error),
 }
 
 impl Reject for RepoError {}

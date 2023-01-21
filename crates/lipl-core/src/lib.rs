@@ -1,4 +1,5 @@
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
+use std::sync::Arc;
 use std::{cmp::Ordering};
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
@@ -6,25 +7,10 @@ pub use crate::uuid::Uuid;
 pub use path_ext::{PathExt};
 pub use error::Error;
 
-#[cfg(feature = "postgres")]
-pub use postgres_error::PostgresRepoError;
-
-#[cfg(feature = "file")]
-pub use file_error::FileRepoError;
-
-#[cfg(feature = "redis")]
-pub use redis_error::RedisRepoError;
-
 mod disk_format;
 pub mod error;
 pub mod ext;
-#[cfg(feature = "file")]
-mod file_error;
 mod path_ext;
-#[cfg(feature = "postgres")]
-mod postgres_error;
-#[cfg(feature = "redis")]
-mod redis_error;
 pub mod reexport;
 mod uuid;
 
@@ -43,6 +29,11 @@ pub trait LiplRepo: Send + Sync {
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist>;
     async fn delete_playlist(&self, id: Uuid) -> Result<()>;
     async fn stop(&self) -> Result<()>;
+}
+
+#[async_trait]
+pub trait ToRepo {
+    async fn to_repo(self) -> Result<Arc<dyn LiplRepo>>;
 }
 
 pub trait HasSummary {

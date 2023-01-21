@@ -12,7 +12,7 @@ use lipl_core::{
     Uuid,
     Yaml,
     RepoDb,
-    reexport::serde_yaml, by_title,
+    reexport::serde_yaml, by_title, ToRepo,
 };
 use lipl_util::VecExt;
 
@@ -20,6 +20,51 @@ use lipl_util::VecExt;
 enum Record {
     Lyric(LyricPost),
     Playlist(PlaylistPost),
+}
+
+#[derive(Clone)]
+pub struct MemoryRepoConfig {
+    include_sample_data: bool,
+}
+
+impl Default for MemoryRepoConfig {
+    fn default() -> Self {
+        Self {
+            include_sample_data: false,
+        }
+    }
+}
+
+impl std::str::FromStr for MemoryRepoConfig {
+    type Err = lipl_core::Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        if s.trim().is_empty() {
+            Ok(Self::default())
+        }
+        else {
+            s.trim().parse::<bool>()
+                .map(|b| Self { include_sample_data: b})
+                .map_err(|_| lipl_core::Error::Argument("must be false or true"))
+        }
+    }
+}
+
+#[async_trait]
+impl ToRepo for MemoryRepoConfig {
+    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+        if self.include_sample_data {
+            let repo = lipl_sample_data::repo_db();
+            Ok(
+                Arc::new(MemoryRepo::from(repo))
+            )
+        }
+        else {
+            Ok(
+                Arc::new(MemoryRepo::new(empty(), empty()))
+            )
+        }
+    }
 }
 
 #[derive(Clone)]

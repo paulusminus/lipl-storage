@@ -39,8 +39,8 @@ pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> 
             RepoError::Postgres(p) => {
                 json_response(StatusCode::INTERNAL_SERVER_ERROR, &p.to_string())
             },
-            RepoError::Backend(b) => {
-                json_response(StatusCode::INTERNAL_SERVER_ERROR, &b.to_string())
+            RepoError::Warp(w) => {
+                json_response(StatusCode::INTERNAL_SERVER_ERROR, &w.to_string())
             }
         }
     }

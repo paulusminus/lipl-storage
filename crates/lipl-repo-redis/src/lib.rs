@@ -1,8 +1,8 @@
-use lipl_core::{RedisRepoError, Lyric, Playlist, Uuid};
+use lipl_core::{error::RedisRepoError, Lyric, Playlist, Uuid};
 use parts::to_parts;
 pub use redis_repo::{RedisRepoConfig};
 
-mod redis_repo;
+pub mod redis_repo;
 
 type Result<T> = std::result::Result<T, RedisRepoError>;
 

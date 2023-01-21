@@ -56,11 +56,11 @@ pub enum Error {
 
     #[cfg(feature = "postgres")]
     #[error("Postgres: {0}")]
-    Postgres(#[from] crate::PostgresRepoError),
+    Postgres(#[from] PostgresRepoError),
 
     #[cfg(feature = "file")]
     #[error("File: {0}")]
-    File(#[from] crate::FileRepoError),
+    File(#[from] FileRepoError),
 
     #[cfg(feature = "reqwest")]
     #[error("Reqwest: {0}")]
@@ -68,11 +68,80 @@ pub enum Error {
 
     #[cfg(feature = "redis")]
     #[error("Redis: {0}")]
-    Redis(#[from] crate::RedisRepoError),
+    Redis(#[from] RedisRepoError),
 
     #[error("Not Found")]
     NotFound(Uuid),
 
     #[error("Occupied")]
     Occupied,
+
+    #[error("Warp")]
+    Warp(Box<dyn std::error::Error + Send + Sync>),
+}
+
+#[cfg(feature = "file")]
+#[derive(Error, Debug)]
+pub enum FileRepoError {
+    #[error("File {0:?} has invalid filestem")]
+    Filestem(Option<String>),
+
+    #[error("IO Error: {0}")]
+    IOError(#[from] std::io::Error),
+
+    #[error("Lyric with id {1} not found. Cannot add to playlist with id {0}")]
+    PlaylistInvalidMember(String, String),
+
+    #[error("Cannot find directory {0:?}")]
+    CannotFindDirectory(Option<String>),
+
+    #[error("Send failed")]
+    SendFailed,
+
+    #[error("Canceled")]
+    Canceled(#[from] futures::channel::oneshot::Canceled),
+
+    #[error("Parse error for {0}")]
+    Parse(String),
+
+    #[error("Join error for {0}")]
+    Join(#[from] tokio::task::JoinError),
+
+    #[error("No Path: {0}")]
+    NoPath(String),
+}
+
+impl Default for FileRepoError {
+    fn default() -> Self {
+        FileRepoError::Parse("Hallo".to_owned())
+    }
+}
+
+#[cfg(feature = "postgres")]
+#[derive(Debug, Error)]
+pub enum PostgresRepoError {
+    #[error("Postgres: {0}")]
+    Postgres(#[from] bb8_postgres::tokio_postgres::Error),
+
+    #[error("Uuid: {0}")]
+    Uuid(#[from] uuid::Error),
+
+    #[error("Connection: {0}")]
+    Connection(#[from] bb8_postgres::bb8::RunError<bb8_postgres::tokio_postgres::Error>),
+
+    #[error("No results")]
+    NoResults,
+}
+
+#[cfg(feature = "redis")]
+#[derive(Debug, Error)]
+pub enum RedisRepoError {
+    #[error("Redis: {0}")]
+    Redis(#[from] bb8_redis::redis::RedisError),
+
+    #[error("Key: {0}")]
+    Key(String),
+
+    #[error("")]
+    Run(#[from] bb8_redis::bb8::RunError<bb8_redis::redis::RedisError>)
 }

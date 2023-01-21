@@ -1,6 +1,6 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::{Pool}};
 use futures_util::{Future, TryFutureExt};
-use lipl_core::{LiplRepo, PostgresRepoError};
+use lipl_core::{LiplRepo, error::PostgresRepoError};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
@@ -8,7 +8,7 @@ mod convert;
 mod db;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
-type Result<T> = std::result::Result<T, lipl_core::PostgresRepoError>;
+type Result<T> = std::result::Result<T, lipl_core::error::PostgresRepoError>;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 

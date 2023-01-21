@@ -1044,24 +1044,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "lipl-io"
-version = "0.1.7"
-dependencies = [
- "anyhow",
- "async-trait",
- "lipl-core",
- "serde",
- "serde_yaml",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "lipl-repo-fs"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "futures",
  "lipl-core",
@@ -1076,7 +1061,6 @@ dependencies = [
 name = "lipl-repo-http-server"
 version = "0.1.7"
 dependencies = [
- "anyhow",
  "async-trait",
  "clap",
  "futures",
@@ -1099,6 +1083,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "lipl-core",
+ "lipl-sample-data",
  "lipl-util",
  "thiserror",
  "tokio",
@@ -1108,7 +1093,6 @@ dependencies = [
 name = "lipl-repo-postgres"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "async-trait",
  "bb8-postgres",
  "futures-util",
@@ -2135,18 +2119,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d967f99f534ca7e495c575c62638eebc2898a8c84c119b89e250477bc4ba16b2"
 dependencies = [
  "time-core",
-]
-
-[[package]]
-name = "timeit"
-version = "0.2.0"
-dependencies = [
- "futures",
- "proc-macro2",
- "quote",
- "syn",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

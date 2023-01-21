@@ -1,19 +1,21 @@
 use std::fmt::{Debug};
 use std::future::ready;
+use std::sync::Arc;
 
 use async_trait::{async_trait};
 use bb8_postgres::PostgresConnectionManager;
 use bb8_postgres::bb8::{Pool};
 use futures_util::{TryFutureExt};
-use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid};
-use parts::{to_text, to_parts};
+use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid, ToRepo};
+use parts::{to_text};
 use tokio_postgres::{Row, NoTls};
 
 use crate::db::crud;
 use crate::macros::query;
-pub use lipl_core::PostgresRepoError;
+pub use lipl_core::error::PostgresRepoError;
 
 mod constant;
+mod convert;
 mod db;
 pub mod pool;
 mod macros;
@@ -38,11 +40,21 @@ impl PostgresRepoConfig {
 }
 
 impl std::str::FromStr for PostgresRepoConfig {
-    type Err = anyhow::Error;
+    type Err = lipl_core::Error;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         pool::get(s)
-            .map_err(Into::into)
+            .map_err(lipl_core::Error::from)
             .map(|manager| PostgresRepoConfig { connection_string: s.into(), clear: false, manager })
+    }
+}
+
+#[async_trait]
+impl ToRepo for PostgresRepoConfig {
+    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+        let repo = PostgresRepo::new(self).await?;
+        Ok(
+            Arc::new(repo)
+        )
     }
 }
 
@@ -59,19 +71,20 @@ impl Debug for PostgresRepo {
 }
 
 impl PostgresRepo {
-    pub async fn new(postgres_repo_config: PostgresRepoConfig) -> anyhow::Result<PostgresRepo> {
+    pub async fn new(postgres_repo_config: PostgresRepoConfig) -> lipl_core::Result<PostgresRepo> {
         let pool = 
             Pool::builder()
                 .max_size(constant::POOL_MAX_SIZE)
                 .build(postgres_repo_config.manager)
+                .map_err(PostgresRepoError::from)
                 .await?;
         if postgres_repo_config.clear {
             for sql in db::DROP.iter() {
                 pool.get()
                 .map_err(PostgresRepoError::from)
                 .and_then(
-                    |pool| async move {
-                        pool
+                    |connection| async move {
+                        connection
                         .execute(*sql, &[])
                         .map_err(PostgresRepoError::from)
                         .map_ok(to_unit)
@@ -83,7 +96,15 @@ impl PostgresRepo {
         }
 
         for sql in db::CREATE {
-            pool.get().await?.execute(*sql, &[]).await?;
+            pool.get()
+                .map_err(PostgresRepoError::from)
+                .and_then(|connection| async move {
+                    connection
+                        .execute(*sql, &[])
+                        .map_err(PostgresRepoError::from)
+                        .await
+                })
+                .await?;
         };
 
         Ok(
@@ -97,7 +118,7 @@ impl PostgresRepo {
         u64,
         crud::UPSERT_LYRIC,
         crud::UPSERT_LYRIC_TYPES,
-        to_ok,
+        convert::to_ok,
         id: uuid::Uuid,
         title: String,
         text: String,
@@ -109,7 +130,7 @@ impl PostgresRepo {
         Vec<Row>,
         crud::UPSERT_PLAYLIST,
         crud::UPSERT_PLAYLIST_TYPES,
-        to_ok,
+        convert::to_ok,
         id: uuid::Uuid,
         title: String,
         members: Vec<uuid::Uuid>,
@@ -121,7 +142,7 @@ impl PostgresRepo {
         u64,
         crud::DELETE_LYRIC,
         crud::DELETE_LYRIC_TYPES,
-        to_ok,
+        convert::to_ok,
         id: uuid::Uuid,
     );
 
@@ -131,7 +152,7 @@ impl PostgresRepo {
         u64,
         crud::DELETE_PLAYLIST,
         crud::DELETE_PLAYLIST_TYPES,
-        to_ok,
+        convert::to_ok,
         id: uuid::Uuid,
     );
 
@@ -141,7 +162,7 @@ impl PostgresRepo {
         Vec<Summary>,
         crud::SELECT_LYRIC_SUMMARIES,
         crud::SELECT_LYRIC_SUMMARIES_TYPES,
-        try_convert_vec(to_summary),
+        convert::try_convert_vec(convert::to_summary),
     );
 
     query! (
@@ -150,7 +171,7 @@ impl PostgresRepo {
         Vec<Lyric>,
         crud::SELECT_LYRICS,
         crud::SELECT_LYRICS_TYPES,
-        try_convert_vec(to_lyric),
+        convert::try_convert_vec(convert::to_lyric),
     );
 
     query! (
@@ -159,7 +180,7 @@ impl PostgresRepo {
         Lyric,
         crud::SELECT_LYRIC_DETAIL,
         crud::SELECT_LYRIC_DETAIL_TYPES,
-        to_lyric,
+        convert::to_lyric,
         id: uuid::Uuid,
     );
 
@@ -169,7 +190,7 @@ impl PostgresRepo {
         Vec<Playlist>,
         crud::SELECT_PLAYLISTS,
         crud::SELECT_PLAYLISTS_TYPES,
-        try_convert_vec(to_playlist),
+        convert::try_convert_vec(convert::to_playlist),
     }
 
     query!{
@@ -178,7 +199,7 @@ impl PostgresRepo {
         Playlist,
         crud::SELECT_PLAYLIST_DETAIL,
         crud::SELECT_PLAYLIST_DETAIL_TYPES,
-        to_playlist,
+        convert::to_playlist,
         id: uuid::Uuid,
     }
 
@@ -188,78 +209,8 @@ impl PostgresRepo {
         Vec<Summary>,
         crud::SELECT_PLAYLIST_SUMMARIES,
         crud::SELECT_PLAYLIST_SUMMARIES_TYPES,
-        try_convert_vec(to_summary),
+        convert::try_convert_vec(convert::to_summary),
     );
-}
-
-fn get_id(row: &Row) -> Result<Uuid> {
-    row.try_get::<&str, uuid::Uuid>("id")
-    .map_err(Into::into)
-    .map(Uuid::from)
-}
-
-#[allow(clippy::map_identity)]
-fn get_title(row: &Row) -> Result<String> {
-    row.try_get::<&str, String>("title")
-    .map_err(Into::into)
-    .map(std::convert::identity)
-}
-
-fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
-    row.try_get::<&str, String>("parts")
-    .map_err(Into::into)
-    .map(to_parts)
-}
-
-fn get_members(row: &Row) -> Result<Vec<Uuid>> {
-    row.try_get::<&str, Vec<uuid::Uuid>>("members")
-    .map_err(Into::into)
-    .map(convert_vec(Uuid::from))
-}
-
-fn convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> Vec<U>
-where F: Fn(T) -> U + Copy
-{
-    move |v| v.into_iter().map(f).collect()
-}
-
-fn try_convert_vec<F, T, U>(f: F) -> impl Fn(Vec<T>) -> Result<Vec<U>>
-where F: Fn(T) -> Result<U> + Copy
-{
-    move |v| v.into_iter().map(f).collect()
-}
-
-fn to_lyric(row: Row) -> Result<Lyric> {
-    Ok(
-        Lyric {
-            id: get_id(&row)?,
-            title: get_title(&row)?,
-            parts: get_parts(&row)?,
-        }
-    )    
-}
-
-fn to_playlist(row: Row) -> Result<Playlist> {
-    Ok(
-        Playlist {
-            id: get_id(&row)?,
-            title: get_title(&row)?,
-            members: get_members(&row)?,
-        }
-    )
-}
-
-fn to_summary(row: Row) -> Result<Summary> {
-    Ok(
-        Summary {
-            id: get_id(&row)?,
-            title: get_title(&row)?,
-        }
-    )
-}
-
-fn to_ok<T>(t: T) -> Result<T> {
-    Ok(t)
 }
 
 

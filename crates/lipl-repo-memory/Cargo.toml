@@ -8,6 +8,7 @@ async-trait = "0.1.59"
 lipl-core = { path = "../lipl-core" }
 lipl-util = { path = "../lipl-util" }
 thiserror = "1.0.37"
+lipl-sample-data = { path = "../lipl-sample-data" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }

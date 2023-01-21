@@ -5,14 +5,14 @@ authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2021"
 
 [features]
-default = ["memory"]
+default = ["memory", "postgres", "file", "redis"]
 postgres = ["dep:lipl-repo-postgres"]
 file = ["dep:lipl-repo-fs"]
 memory = ["dep:lipl-repo-memory"]
 redis = ["dep:lipl-repo-redis"]
 
 [dependencies]
-anyhow = "1.0"
+# anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "4", features = ["cargo", "derive"] }
 lipl-repo-memory = { path = "../lipl-repo-memory", optional = true }

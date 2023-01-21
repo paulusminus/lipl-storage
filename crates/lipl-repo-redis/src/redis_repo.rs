@@ -3,8 +3,8 @@ use bb8_redis::{bb8::{Pool, PooledConnection}, RedisConnectionManager, redis::{c
 use bb8_redis::redis::{AsyncCommands};
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use parts::{to_parts, to_text};
-use std::{collections::{HashMap}, ops::DerefMut, sync::Arc};
-use lipl_core::{Lyric, Uuid, RedisRepoError, Playlist, Summary, LiplRepo, by_title};
+use std::{collections::{HashMap}, ops::DerefMut, sync::Arc, str::FromStr};
+use lipl_core::{Lyric, Uuid, error::RedisRepoError, Playlist, Summary, LiplRepo, by_title, ToRepo};
 use crate::Result;
 
 const LYRIC: &str = "lyric";
@@ -69,6 +69,7 @@ fn key_to_uuid(key: &str) -> Result<Uuid> {
         .and_then(|k| k.parse::<Uuid>().ok().ok_or(RedisRepoError::Key(key.to_owned())))
 }
 
+#[derive(Clone)]
 pub struct RedisRepoConfig<T>
 where
     T: IntoConnectionInfo,
@@ -89,7 +90,7 @@ where
         }
     }
 
-    pub async fn to_repo(self) -> Result<Arc<dyn LiplRepo>> {
+    pub async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
         let repo = RedisRepo::new(self).await?;
         Ok(Arc::new(repo))
     }
@@ -105,24 +106,49 @@ impl Default for RedisRepoConfig<String>
     }
 }
 
+impl FromStr for RedisRepoConfig<String> {
+    type Err = lipl_core::Error;
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Ok(
+            Self {
+                clear: false,
+                url: s.to_owned(),
+            }
+        )
+    }
+}
+
+#[async_trait]
+impl<T> ToRepo for RedisRepoConfig<T>
+where
+    T: IntoConnectionInfo + Send,
+{
+    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+        let repo = RedisRepo::new(self).await?;
+        Ok(
+            Arc::new(repo)
+        )
+    }
+}
+
 pub struct RedisRepo {
     pool: Pool<RedisConnectionManager>,
     delete_lyric_sha: String,
 }
 
 impl RedisRepo {
-    pub async fn new<T>(config: RedisRepoConfig<T>) -> Result<Self> 
+    pub async fn new<T>(config: RedisRepoConfig<T>) -> lipl_core::Result<Self> 
     where
         T: IntoConnectionInfo,
     {
-        let manager = bb8_redis::RedisConnectionManager::new(config.url)?;
-        let pool = bb8_redis::bb8::Pool::builder().build(manager).await?;
+        let manager = bb8_redis::RedisConnectionManager::new(config.url).map_err(RedisRepoError::from)?;
+        let pool = bb8_redis::bb8::Pool::builder().build(manager).err_into::<RedisRepoError>().await?;
 
         let pool_clone = pool.clone();
-        let mut connection = pool_clone.get().await?;
+        let mut connection = pool_clone.get().err_into::<RedisRepoError>().await?;
 
         if config.clear {
-            cmd("FLUSHALL").query_async(connection.deref_mut()).await?;
+            cmd("FLUSHALL").query_async(connection.deref_mut()).err_into::<RedisRepoError>().await?;
 
         }
 
@@ -131,6 +157,7 @@ impl RedisRepo {
                 .arg("LOAD")
                 .arg(include_str!("delete_lyric.lua"))
                 .query_async(connection.deref_mut())
+                .err_into::<RedisRepoError>()
                 .await?;
 
         Ok(

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use lipl_core::{LiplRepo, RepoDb};
 use tracing::{info};
 
-pub async fn list(repo: Arc<dyn LiplRepo>, yaml: bool) -> anyhow::Result<()>
+pub async fn list(repo: Arc<dyn LiplRepo>, yaml: bool) -> lipl_core::Result<()>
 {
     let db = RepoDb {
         lyrics: repo.get_lyrics().await?,
@@ -14,7 +14,7 @@ pub async fn list(repo: Arc<dyn LiplRepo>, yaml: bool) -> anyhow::Result<()>
     Ok(())
 }
 
-pub async fn copy(source: Arc<dyn LiplRepo>, target: Arc<dyn LiplRepo>) -> anyhow::Result<()>
+pub async fn copy(source: Arc<dyn LiplRepo>, target: Arc<dyn LiplRepo>) -> lipl_core::Result<()>
 {
     for lyric in source.get_lyrics().await? {
         info!("Copying lyric {} with id {}", lyric.title, lyric.id);

@@ -6,12 +6,12 @@ use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
 
-pub use lipl_core::FileRepoError;
+pub use lipl_core::error::FileRepoError;
 use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
-    LiplRepo, Lyric, Playlist, Summary, Uuid,
+    LiplRepo, Lyric, Playlist, Summary, Uuid, ToRepo,
 };
 use lipl_util::VecExt;
 use request::{delete_by_id, post, select, select_by_id, Request};
@@ -29,11 +29,21 @@ pub struct FileRepoConfig {
 }
 
 impl FromStr for FileRepoConfig {
-    type Err = anyhow::Error;
+    type Err = lipl_core::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         s.is_dir()
-            .map_err(Into::into)
+            .map_err(lipl_core::Error::from)
             .map(|_| FileRepoConfig { path: s.into() })
+    }
+}
+
+#[async_trait]
+impl ToRepo for FileRepoConfig {
+    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+        let repo = FileRepo::new(self.path)?;
+        Ok(
+            Arc::new(repo)
+        )
     }
 }
 
@@ -203,7 +213,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
 impl FileRepo {
     pub fn new(
         source_dir: String,
-    ) -> anyhow::Result<FileRepo> {
+    ) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
 
