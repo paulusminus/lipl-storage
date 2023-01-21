@@ -6,12 +6,11 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1"
-bb8-postgres = "0.8"
+bb8-postgres = { version = "0.8", features = ["with-uuid-1"] }
 futures-util = "0.3"
 lipl-core = { path = "../lipl-core", features = ["postgres"] }
 parts = { path = "../parts" }
 thiserror = "1.0.32"
-tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
 tracing = "0.1"
 uuid = "1"
 

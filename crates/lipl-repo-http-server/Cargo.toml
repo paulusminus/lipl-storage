@@ -5,7 +5,7 @@ authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2021"
 
 [features]
-default = ["memory", "postgres", "file", "redis"]
+default = ["memory"]
 postgres = ["dep:lipl-repo-postgres"]
 file = ["dep:lipl-repo-fs"]
 memory = ["dep:lipl-repo-memory"]

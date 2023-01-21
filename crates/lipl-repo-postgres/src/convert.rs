@@ -1,6 +1,6 @@
 use lipl_core::{Uuid, Lyric, Playlist, Summary};
 use parts::to_parts;
-use tokio_postgres::Row;
+use bb8_postgres::tokio_postgres::Row;
 
 use crate::Result;
 

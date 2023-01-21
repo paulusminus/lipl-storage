@@ -111,6 +111,7 @@ pub enum FileRepoError {
     NoPath(String),
 }
 
+#[cfg(feature = "file")]
 impl Default for FileRepoError {
     fn default() -> Self {
         FileRepoError::Parse("Hallo".to_owned())

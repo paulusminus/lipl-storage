@@ -8,7 +8,7 @@ use bb8_postgres::bb8::{Pool};
 use futures_util::{TryFutureExt};
 use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid, ToRepo};
 use parts::{to_text};
-use tokio_postgres::{Row, NoTls};
+use bb8_postgres::tokio_postgres::{Row, NoTls};
 
 use crate::db::crud;
 use crate::macros::query;

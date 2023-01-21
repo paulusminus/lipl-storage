@@ -18,7 +18,7 @@ pub const CREATE: &[&str] = &[
 ];
 
 pub mod crud {
-    use tokio_postgres::types::Type;
+    use bb8_postgres::tokio_postgres::types::Type;
 
     pub const UPSERT_LYRIC: &str = include_str!("./sql/crud/upsert_lyric.sql");
     pub const UPSERT_LYRIC_TYPES: &[Type] = &[Type::UUID, Type::TEXT, Type::TEXT];
