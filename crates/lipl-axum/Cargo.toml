@@ -4,12 +4,13 @@ version = "0.1.1"
 edition = "2021"
 
 [features]
-default = ["memory"]
+default = ["memory", "postgres"]
 postgres = ["dep:lipl-axum-postgres", "dep:lipl-core", "lipl-core?/postgres"]
 memory = ["dep:lipl-repo-memory", "dep:lipl-core"]
 
 [dependencies]
 axum = { version = "0.6", features = ["headers", "query"] }
+clap = { version = "4.1.1", features = ["derive"] }
 futures-util = "0.3.25"
 hyper = "0.14"
 lipl-axum-postgres = { path = "../lipl-axum-postgres", optional = true }

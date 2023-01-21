@@ -989,6 +989,7 @@ name = "lipl-axum"
 version = "0.1.1"
 dependencies = [
  "axum",
+ "clap",
  "futures-util",
  "hyper",
  "lipl-axum-postgres",

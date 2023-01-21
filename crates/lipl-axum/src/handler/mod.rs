@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{response::{IntoResponse, Json, Response}, extract::FromRequestParts};
 use futures_util::FutureExt;
 use hyper::StatusCode;
@@ -26,13 +28,11 @@ impl Key {
     }
 }
 
-impl<T> FromRequestParts<T> for Key 
-where
-    T: LiplRepo + Clone + Send + Sync + 'static,
+impl FromRequestParts<Arc<dyn LiplRepo>> for Key 
 {
     type Rejection = StatusCode;
 
-    fn from_request_parts<'life0,'life1,'async_trait>(parts: &'life0 mut axum::http::request::Parts, _state: &'life1 T) ->  core::pin::Pin<Box<dyn core::future::Future<Output = Result<Self, Self::Rejection> > + core::marker::Send+'async_trait>> where 'life0:'async_trait,'life1:'async_trait,Self:'async_trait {
+    fn from_request_parts<'life0,'life1,'async_trait>(parts: &'life0 mut axum::http::request::Parts, _state: &'life1 Arc<dyn LiplRepo>) ->  core::pin::Pin<Box<dyn core::future::Future<Output = Result<Self, Self::Rejection> > + core::marker::Send+'async_trait>> where 'life0:'async_trait,'life1:'async_trait,Self:'async_trait {
         async move {
             tracing::info!("Path: {}", parts.uri.path());
             parts.uri.path().split('/').last().ok_or(StatusCode::NOT_FOUND)

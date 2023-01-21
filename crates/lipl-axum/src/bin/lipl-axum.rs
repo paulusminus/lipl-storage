@@ -1,8 +1,9 @@
 use std::{net::SocketAddr};
 
 use axum::Router;
+use clap::Parser;
 use futures_util::TryFutureExt;
-use lipl_axum::{constant, create_service, exit_on_signal_int, Error};
+use lipl_axum::{constant, create_service, exit_on_signal_int, Error, LiplApp};
 
 async fn run(service: Router<()>) -> Result<(), Error> {
     let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
@@ -20,11 +21,12 @@ fn log_filter() -> String {
 
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
+    let arg = LiplApp::parse();
     tracing_subscriber::fmt()
         .with_env_filter(log_filter())
         .init();
 
-    lipl_axum::create_pool()
+    lipl_axum::create_pool(arg.postgres)
         .map_ok(create_service)
         .and_then(run)
         .await

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::{to_json_response, to_status_ok, to_error_response, Key};
 use axum::{
     Json,
@@ -10,12 +12,10 @@ use lipl_core::{LiplRepo, LyricPost};
 use super::ListQuery;
 
 /// Handler for getting all lyrics
-pub async fn list<T>(
-    State(connection): State<T>,
+pub async fn list(
+    State(connection): State<Arc<dyn LiplRepo>>,
     query: Query<ListQuery>,
 ) -> Response 
-where
-    T: LiplRepo,
 {
     if query.full == Some(true) {
         connection
@@ -32,12 +32,10 @@ where
 }
 
 /// Handler for getting a specific lyric
-pub async fn item<T>(
-    State(connection): State<T>,
+pub async fn item(
+    State(connection): State<Arc<dyn LiplRepo>>,
     key: Key,
 ) -> Response 
-where
-    T: LiplRepo,
 {
     connection
         .get_lyric(key.id)
@@ -46,12 +44,10 @@ where
 }
 
 /// Handler for posting a new lyric
-pub async fn post<T>(
-    State(connection): State<T>,
+pub async fn post(
+    State(connection): State<Arc<dyn LiplRepo>>,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response
-where
-    T: LiplRepo,
 {
     connection
         .upsert_lyric((None, lyric_post).into())
@@ -60,12 +56,10 @@ where
 }
 
 /// Handler for deleting a specific lyric
-pub async fn delete<T>(
-    State(connection): State<T>,
+pub async fn delete(
+    State(connection): State<Arc<dyn LiplRepo>>,
     key: Key,
 ) -> Response
-where
-    T: LiplRepo,
 {
         connection
             .delete_lyric(key.id)
@@ -74,13 +68,11 @@ where
 }
 
 /// Handler for changing a specific lyric
-pub async fn put<T>(
-    State(connection): State<T>,
+pub async fn put(
+    State(connection): State<Arc<dyn LiplRepo>>,
     key: Key,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response
-where
-    T: LiplRepo,
 {
     connection
         .upsert_lyric((Some(key.id), lyric_post).into())
