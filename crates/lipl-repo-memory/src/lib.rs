@@ -12,7 +12,7 @@ use lipl_core::{
     Uuid,
     Yaml,
     RepoDb,
-    reexport::serde_yaml, by_title, ToRepo,
+    reexport::serde_yaml, by_title, ToRepo, HasSummary,
 };
 use lipl_util::VecExt;
 
@@ -22,17 +22,9 @@ enum Record {
     Playlist(PlaylistPost),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct MemoryRepoConfig {
     include_sample_data: bool,
-}
-
-impl Default for MemoryRepoConfig {
-    fn default() -> Self {
-        Self {
-            include_sample_data: false,
-        }
-    }
 }
 
 impl std::str::FromStr for MemoryRepoConfig {
@@ -44,7 +36,7 @@ impl std::str::FromStr for MemoryRepoConfig {
         }
         else {
             s.trim().parse::<bool>()
-                .map(|b| Self { include_sample_data: b})
+                .map(|include_sample_data| Self { include_sample_data })
                 .map_err(|_| lipl_core::Error::Argument("must be false or true"))
         }
     }
@@ -152,18 +144,10 @@ impl Yaml for MemoryRepo {
 #[async_trait]
 impl LiplRepo for MemoryRepo {
     async fn get_lyric_summaries(&self) ->  Result<Vec<Summary>> {
-        let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
-                if let Record::Lyric(lyric_post) = record {
-                    Some(Summary { id: *key, title: lyric_post.title.clone() })
-                }
-                else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        summaries.sort_by(by_title);
-        Ok(summaries)
+        self.get_lyrics()
+            .await
+            .map(|lyrics| lyrics.map(|lyric| lyric.summary())
+        )
     }
 
     async fn get_lyrics(&self) ->  Result<Vec<Lyric>> {
@@ -220,16 +204,9 @@ impl LiplRepo for MemoryRepo {
     }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
-        let mut summaries = self.db.read().unwrap().iter().filter_map(|(key, record)| {
-            match record {
-                Record::Playlist(playlist_post) => Some(Summary { id: *key, title: playlist_post.title.clone() }),
-                _ => None
-            }
-        })
-        .collect::<Vec<_>>();
-
-        summaries.sort_by(by_title);
-        Ok(summaries)
+        self.get_playlists()
+            .await
+            .map(|playlists| playlists.map(|p| p.summary()))
     }
 
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {

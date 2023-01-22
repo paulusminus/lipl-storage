@@ -76,8 +76,11 @@ pub enum Error {
     #[error("Occupied")]
     Occupied,
 
-    #[error("Warp")]
+    #[error(transparent)]
     Warp(Box<dyn std::error::Error + Send + Sync>),
+
+    #[error(transparent)]
+    Axum(Box<dyn std::error::Error + Send + Sync>),
 }
 
 #[cfg(feature = "file")]
