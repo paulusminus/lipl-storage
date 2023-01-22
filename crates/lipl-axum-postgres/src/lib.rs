@@ -85,7 +85,7 @@ impl PostgresConnectionPool {
     }
 }
 
-pub async fn connection_pool(connection: &'static str) -> Result<PostgresConnectionPool> {
+pub async fn connection_pool(connection: &str) -> Result<PostgresConnectionPool> {
     let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls)?;
     let pool = Pool::builder().build(manager).await?;
     

@@ -24,7 +24,7 @@ enum Record {
 
 #[derive(Clone, Default)]
 pub struct MemoryRepoConfig {
-    include_sample_data: bool,
+    pub include_sample_data: bool,
 }
 
 impl std::str::FromStr for MemoryRepoConfig {

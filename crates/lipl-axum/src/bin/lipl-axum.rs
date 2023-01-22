@@ -4,9 +4,9 @@ use axum::Router;
 use clap::Parser;
 use futures_util::TryFutureExt;
 use lipl_axum::{constant, create_service, exit_on_signal_int, LiplApp};
-use lipl_core::ToRepo;
+use lipl_core::{Result};
 
-async fn run(service: Router<()>) -> lipl_core::Result<()> {
+async fn run(service: Router) -> Result<()> {
     let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
     axum::Server::bind(&addr)
     .serve(service.into_make_service())
@@ -21,14 +21,12 @@ fn log_filter() -> String {
 }
 
 #[tokio::main]
-pub async fn main() -> lipl_core::Result<()> {
+pub async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(log_filter())
         .init();
 
-    LiplApp::parse()
-        .to_repo()
-        .map_ok(create_service)
+    create_service(LiplApp::parse())
         .and_then(run)
         .await
 }

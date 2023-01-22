@@ -1,6 +1,6 @@
 use std::vec;
 
-use lipl_axum::{create_service, create_pool};
+use lipl_axum::{create_service, LiplApp};
 use lipl_core::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
 use axum::{
     body::{Body},
@@ -45,8 +45,7 @@ fn roodkapje() -> LyricPost {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_list() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let _daar_bij_die_molen: Lyric = post(&service, LYRIC, &daar_bij_die_molen()).await;
     let _roodkapje: Lyric = post(&service, LYRIC, &roodkapje()).await;
@@ -64,8 +63,7 @@ async fn lyric_list() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_post() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let lyric_post = LyricPost {
         title: "Er is er één jarig".to_owned(),
@@ -79,8 +77,7 @@ async fn lyric_post() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_post_change() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let mut lyric_post = daar_bij_die_molen();
 
@@ -97,8 +94,7 @@ async fn lyric_post_change() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn lyric_delete() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let list_before_post: Vec<Summary> = list(&service, LYRIC).await;
     assert_eq!(list_before_post.len(), 0);
@@ -117,8 +113,7 @@ async fn lyric_delete() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn playlist_list() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let playlist_post = PlaylistPost {
         title: "Alle 13 goed".to_owned(),
@@ -136,8 +131,7 @@ async fn playlist_list() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn playlist_post() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let playlist_post = PlaylistPost {
         title: "Alle 13 goed".to_owned(),
@@ -153,8 +147,7 @@ async fn playlist_post() {
 
 #[tokio::test(flavor = "current_thread")]
 async fn playlist_post_lyric_delete() {
-    let pool = create_pool(false).await.unwrap();
-    let service = create_service(pool);
+    let service = create_service(LiplApp::new_memory(false)).await.unwrap();
 
     let roodkapje: Lyric = post(&service, LYRIC, &roodkapje()).await;
     let daar_bij_die_molen: Lyric = post(&service, LYRIC, &daar_bij_die_molen()).await;
