@@ -110,6 +110,9 @@ pub enum FileRepoError {
 
     #[error("No Path: {0}")]
     NoPath(String),
+
+    #[error(transparent)]
+    Json(Box<dyn std::error::Error + Send + Sync>),
 }
 
 // #[cfg(feature = "file")]

@@ -224,23 +224,28 @@ pub enum Transaction {
 fn log_to_traction(mut f: File) -> impl FnMut(&Request) -> () {
     move |request| {
         let mut write = |transaction: Transaction| {
-            f.write_fmt(format_args!("{}\n", serde_json::to_string(&(chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true), transaction)).unwrap())).unwrap();
-            f.flush().unwrap();
+            serde_json::to_string(&(chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true), transaction))
+                .map_err(|error| FileRepoError::Json(Box::new(error)))
+                .and_then(|json| f.write_fmt(format_args!("{}\n", json)).map_err(FileRepoError::from))
+                .and_then(|_| f.flush().map_err(FileRepoError::from))                
         };
-        match request {
+        let result = match request {
             Request::LyricDelete(uuid, _) => {
-                write(Transaction::LyricDelete(*uuid));
+                write(Transaction::LyricDelete(*uuid))
             },
             Request::LyricPost(lyric, _) => {
-                write(Transaction::LyricUpsert(lyric.clone()));
+                write(Transaction::LyricUpsert(lyric.clone()))
             },
             Request::PlaylistDelete(uuid, _) => {
-                write(Transaction::PlaylistDelete(*uuid));
+                write(Transaction::PlaylistDelete(*uuid))
             },
             Request::PlaylistPost(playlist, _) => {
-                write(Transaction::PlaylistUpsert(playlist.clone()));
+                write(Transaction::PlaylistUpsert(playlist.clone()))
             },
-            _ => {},
+            _ => Ok(()),
+        };
+        if let Err(error) = result {
+            tracing::error!("Could not write to transaction log: {error}");
         }
     }
 }
