@@ -1,3 +1,5 @@
+use std::io::{BufReader, BufRead};
+
 use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
 use crate::{Lyric, Playlist, Summary, Uuid};
@@ -70,8 +72,21 @@ where
     Ok(())
 }
 
+fn line_to_transaction(line: std::io::Result<String>) -> crate::Result<Transaction> {
+    line.map_err(crate::Error::from)
+        .and_then(|s| s.parse::<Transaction>())
+}
 
-pub fn log_to_traction<W>(mut writer: W) -> impl FnMut(&Request) 
+pub fn transactions_from_log<R>(r: R) -> impl Iterator<Item = crate::Result<Transaction>>
+where
+    R: std::io::Read,
+{
+    BufReader::new(r)
+        .lines()
+        .map(line_to_transaction)
+}
+
+pub fn log_to_transaction<W>(mut writer: W) -> impl FnMut(&Request) 
 where
     W: std::io::Write,
 {

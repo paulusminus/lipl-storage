@@ -237,7 +237,7 @@ impl FileRepo {
 
             rx
             .map(Ok)
-            .inspect_ok(lipl_core::transaction::log_to_traction(log))
+            .inspect_ok(lipl_core::transaction::log_to_transaction(log))
             .try_for_each(|request| 
                 handle_request(
                     request,
