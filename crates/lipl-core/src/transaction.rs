@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use crate::{Lyric, Playlist, Summary, Uuid};
 
 pub type ResultSender<T> = futures::channel::oneshot::Sender<crate::Result<T>>;
+type OptionalTransaction = Option<Transaction>;
+type LogRecord = (String, Transaction);
 
 #[derive(Debug)]
 pub enum Request {
@@ -27,40 +29,57 @@ pub enum Transaction {
     PlaylistUpsert(Playlist),
 }
 
-fn json_error<E: std::error::Error + Send + Sync + 'static>(error: E) -> crate::Error {
-    crate::Error::Json(
-        Box::new(error)
-    )
+impl std::fmt::Display for Transaction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", serde_json::to_string(&(now(), self)).unwrap())
+    }
 }
 
-pub fn log_to_traction<W>(mut f: W) -> impl FnMut(&Request) 
+impl std::str::FromStr for Transaction {
+    type Err = crate::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str::<LogRecord>(s)
+            .map(|l| l.1)
+            .map_err(|e| crate::Error::Json(Box::new(e)))
+    }
+}
+
+impl From<&Request> for OptionalTransaction {
+    fn from(request: &Request) -> Self {
+        match request {
+            Request::LyricDelete(uuid, _) => Some(Transaction::LyricDelete(*uuid)),
+            Request::LyricPost(lyric, _) => Some(Transaction::LyricUpsert(lyric.clone())),
+            Request::PlaylistDelete(uuid, _) => Some(Transaction::PlaylistDelete(*uuid)),
+            Request::PlaylistPost(playlist, _) => Some(Transaction::PlaylistUpsert(playlist.clone())),
+            _ => None,
+        }
+    }
+}
+
+fn now() -> String {
+    chrono::Utc::now()
+        .to_rfc3339_opts(SecondsFormat::Micros, true)
+}
+
+fn write<W>(w: &mut W, json: String) -> crate::Result<()>
+where
+    W: std::io::Write,
+{
+    w.write_fmt(format_args!("{}\n", json))?;
+    w.flush()?;
+    Ok(())
+}
+
+
+pub fn log_to_traction<W>(mut writer: W) -> impl FnMut(&Request) 
 where
     W: std::io::Write,
 {
     move |request| {
-        let mut write = |transaction: Transaction| {
-            serde_json::to_string(&(chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true), transaction))
-                .map_err(json_error)
-                .and_then(|json| f.write_fmt(format_args!("{}\n", json)).map_err(crate::Error::from))
-                .and_then(|_| f.flush().map_err(crate::Error::from))
-        };
-        let result = match request {
-            Request::LyricDelete(uuid, _) => {
-                write(Transaction::LyricDelete(*uuid))
-            },
-            Request::LyricPost(lyric, _) => {
-                write(Transaction::LyricUpsert(lyric.clone()))
-            },
-            Request::PlaylistDelete(uuid, _) => {
-                write(Transaction::PlaylistDelete(*uuid))
-            },
-            Request::PlaylistPost(playlist, _) => {
-                write(Transaction::PlaylistUpsert(playlist.clone()))
-            },
-            _ => Ok(()),
-        };
-        if let Err(error) = result {
-            tracing::error!("Could not write to transaction log: {error}");
+        if let Some(transaction) = OptionalTransaction::from(request) {
+            if let Err(error) = write(&mut writer, transaction.to_string()) {
+                tracing::error!("Could not write to transaction log: {error}");
+            }
         }
     }
 }
