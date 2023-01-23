@@ -1,26 +1,11 @@
 use std::{fmt::Debug};
-
-use crate::{Uuid, Summary, Lyric, Playlist};
 use futures::channel::{mpsc, oneshot};
+use lipl_core::transaction::{Request, ResultSender};
+use lipl_core::Error;
+use crate::{Uuid};
 use crate::FileRepoError;
 
-type Result<T> = std::result::Result<T, FileRepoError>;
-type ResultSender<T> = oneshot::Sender<Result<T>>;
-
-#[derive(Debug)]
-pub enum Request {
-    LyricSummaries(ResultSender<Vec<Summary>>),
-    LyricList(ResultSender<Vec<Lyric>>),
-    LyricItem(Uuid, ResultSender<Lyric>),
-    LyricDelete(Uuid, ResultSender<()>),
-    LyricPost(Lyric, ResultSender<Lyric>),
-    PlaylistSummaries(ResultSender<Vec<Summary>>),
-    PlaylistList(ResultSender<Vec<Playlist>>),
-    PlaylistItem(Uuid, ResultSender<Playlist>),
-    PlaylistDelete(Uuid, ResultSender<()>),
-    PlaylistPost(Playlist, ResultSender<Playlist>),
-    Stop(ResultSender<()>),
-}
+type Result<T> = std::result::Result<T, Error>;
 
 fn send_failed<E>(_: E) -> FileRepoError {
     FileRepoError::SendFailed

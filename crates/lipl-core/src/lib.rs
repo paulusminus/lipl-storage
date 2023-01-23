@@ -19,6 +19,8 @@ pub use error::Error;
 mod disk_format;
 pub mod error;
 pub mod reexport;
+#[cfg(feature = "transaction")]
+pub mod transaction;
 mod uuid;
 
 pub type Result<T> = core::result::Result<T, Error>;

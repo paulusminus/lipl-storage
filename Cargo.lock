@@ -1012,16 +1012,19 @@ dependencies = [
  "bb8-redis",
  "bincode",
  "bs58",
+ "chrono",
  "etag",
  "futures",
  "lipl-util",
  "parts",
  "reqwest",
  "serde",
+ "serde_json",
  "serde_with",
  "serde_yaml",
  "thiserror",
  "tokio",
+ "tracing",
  "uuid",
 ]
 
@@ -1030,12 +1033,10 @@ name = "lipl-repo-fs"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "chrono",
  "futures",
  "lipl-core",
  "lipl-util",
  "serde",
- "serde_json",
  "tokio",
  "tokio-stream",
  "tracing",

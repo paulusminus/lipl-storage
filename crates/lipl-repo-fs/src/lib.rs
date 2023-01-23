@@ -1,11 +1,8 @@
 use std::fmt::Debug;
-use std::fs::{File, OpenOptions};
-use std::io::Write;
+use std::fs::{OpenOptions};
 use std::str::FromStr;
 use std::path::{PathBuf};
 use std::sync::Arc;
-use chrono::SecondsFormat;
-use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
@@ -15,10 +12,11 @@ use fs::IO;
 use futures::{channel::mpsc};
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
+    transaction::Request,
     LiplRepo, Lyric, Playlist, Summary, Uuid, ToRepo,
 };
 use lipl_util::VecExt;
-use request::{delete_by_id, post, select, select_by_id, Request};
+use request::{delete_by_id, post, select, select_by_id};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 
 mod constant;
@@ -80,7 +78,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
     match request {
         Request::Stop(sender) => {
             async {
-                Ok::<(), FileRepoError>(())
+                Ok::<(), lipl_core::Error>(())
             }
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed("Stop".to_string()))
@@ -93,6 +91,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 LYRIC_EXTENSION,
                 io::get_lyric_summary,
             )
+            .map_err(lipl_core::Error::from)
             .map(|v|sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed("LyricSummaries".to_string()))
             .await
@@ -103,12 +102,14 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 LYRIC_EXTENSION, 
                 io::get_lyric,
             )
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed("LyricList".to_string()))
             .await
         }
         Request::LyricItem(uuid, sender) => {
             io::get_lyric(lyric_path(&uuid))
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed(format!("LyricItem {uuid}")))
             .await
@@ -136,7 +137,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                         .await?;
                     }
                 }
-                Ok::<(), FileRepoError>(())
+                Ok::<(), lipl_core::Error>(())
             }
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed(format!("LyricDelete {uuid}")))
@@ -149,6 +150,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 lyric,
             )
             .and_then(|_| io::get_lyric(&path))
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|e| lipl_core::Error::SendFailed(format!("LyricPost {}", e.unwrap().title)))
             .await
@@ -160,6 +162,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 io::get_playlist,
             )
             .map_ok(lipl_core::to_summaries)
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
             .await
@@ -170,12 +173,14 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 YAML_EXTENSION,
                 io::get_playlist
             )
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
             .await
         }
         Request::PlaylistItem(uuid, sender) => {
             io::get_playlist(playlist_path(&uuid))
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistItem {uuid}")))
             .await
@@ -184,6 +189,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
             let path = playlist_path(&uuid);
             path
             .remove()
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistDelete {uuid}")))
             .await
@@ -206,6 +212,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                     playlist_path(&playlist.id)
                 )
             )
+            .map_err(lipl_core::Error::from)
             .map(|v| sender.send(v))
             .map_err(|e| lipl_core::Error::SendFailed(format!("PlaylistPost {}", e.unwrap().title)))
             .await
@@ -213,42 +220,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
     }
 }
 
-#[derive(Deserialize, Serialize)]
-pub enum Transaction {
-    LyricDelete(Uuid),
-    LyricUpsert(Lyric),
-    PlaylistDelete(Uuid),
-    PlaylistUpsert(Playlist),
-}
 
-fn log_to_traction(mut f: File) -> impl FnMut(&Request) -> () {
-    move |request| {
-        let mut write = |transaction: Transaction| {
-            serde_json::to_string(&(chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true), transaction))
-                .map_err(|error| FileRepoError::Json(Box::new(error)))
-                .and_then(|json| f.write_fmt(format_args!("{}\n", json)).map_err(FileRepoError::from))
-                .and_then(|_| f.flush().map_err(FileRepoError::from))                
-        };
-        let result = match request {
-            Request::LyricDelete(uuid, _) => {
-                write(Transaction::LyricDelete(*uuid))
-            },
-            Request::LyricPost(lyric, _) => {
-                write(Transaction::LyricUpsert(lyric.clone()))
-            },
-            Request::PlaylistDelete(uuid, _) => {
-                write(Transaction::PlaylistDelete(*uuid))
-            },
-            Request::PlaylistPost(playlist, _) => {
-                write(Transaction::PlaylistUpsert(playlist.clone()))
-            },
-            _ => Ok(()),
-        };
-        if let Err(error) = result {
-            tracing::error!("Could not write to transaction log: {error}");
-        }
-    }
-}
 
 impl FileRepo {
     pub fn new(
@@ -265,7 +237,7 @@ impl FileRepo {
 
             rx
             .map(Ok)
-            .inspect_ok(log_to_traction(log))
+            .inspect_ok(lipl_core::transaction::log_to_traction(log))
             .try_for_each(|request| 
                 handle_request(
                     request,
