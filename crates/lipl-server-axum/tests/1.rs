@@ -1,6 +1,6 @@
 use std::vec;
 
-use lipl_axum::{create_service, LiplApp};
+use lipl_server_axum::{create_service, LiplApp};
 use lipl_core::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
 use axum::{
     body::{Body},

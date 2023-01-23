@@ -3,7 +3,7 @@ use std::{net::SocketAddr};
 use axum::Router;
 use clap::Parser;
 use futures_util::TryFutureExt;
-use lipl_axum::{constant, create_service, exit_on_signal_int, LiplApp};
+use lipl_server_axum::{constant, create_service, exit_on_signal_int, LiplApp};
 use lipl_core::{Result};
 
 async fn run(service: Router) -> Result<()> {

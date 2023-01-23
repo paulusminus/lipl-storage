@@ -1,6 +1,18 @@
 use lipl_core::{LiplRepo, ToRepo};
 use std::{str::FromStr, sync::Arc};
 
+#[cfg(feature = "file")]
+const PREFIX_FILE: &str = "file:";
+
+#[cfg(feature = "memory")]
+const PREFIX_MEMORY: &str = "memory:";
+
+#[cfg(feature = "postgres")]
+const PREFIX_POSTGRES: &str = "postgres:";
+
+#[cfg(feature = "redis")]
+const PREFIX_REDIS: &str = "redis:";
+
 #[derive(Clone)]
 pub enum RepoConfig {
     #[cfg(feature = "postgres")]
@@ -22,32 +34,21 @@ impl RepoConfig {
             #[cfg(feature = "file")]
             RepoConfig::File(config) => {
                 config.to_repo().await
-                // let repo = lipl_repo_fs::FileRepo::new(file.path)?;
-                // Ok(Arc::new(repo))
             },
 
             #[cfg(feature = "postgres")]
             RepoConfig::Postgres(config) => {
                 config.to_repo().await
-                // let repo = lipl_repo_postgres::PostgresRepo::new(*postgres.clone()).await?;
-                // Ok(Arc::new(repo))
             },
 
             #[cfg(feature = "redis")]
             RepoConfig::Redis(config) => {
                 config.to_repo().await
-                // let repo = lipl_repo_redis::RedisRepoConfig::default().to_repo().await?;
-                // Ok(repo)
             }
 
             #[cfg(feature = "memory")]
             RepoConfig::Memory(config) => {
                 config.to_repo().await
-                // Ok(
-                //     Arc::new(
-                //         lipl_repo_memory::MemoryRepo::default()
-                //     )
-                // )
             }
         }
     }
@@ -66,9 +67,9 @@ impl FromStr for RepoConfig {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         #[cfg(feature = "file")]
-        if s.starts_with("file:") {
+        if s.starts_with(PREFIX_FILE) {
             return 
-                s.strip_prefix("file:")
+                s.strip_prefix(PREFIX_FILE)
                 .unwrap()
                 .parse::<lipl_repo_fs::FileRepoConfig>()
                 .map(Box::new)
@@ -76,9 +77,9 @@ impl FromStr for RepoConfig {
         }
 
         #[cfg(feature = "postgres")]
-        if s.starts_with("postgres:") {
+        if s.starts_with(PREFIX_POSTGRES) {
             return 
-                s.strip_prefix("postgres:")
+                s.strip_prefix(PREFIX_POSTGRES)
                     .unwrap()
                     .parse::<lipl_repo_postgres::PostgresRepoConfig>()
                     .map(Box::new)
@@ -86,9 +87,9 @@ impl FromStr for RepoConfig {
         }
 
         #[cfg(feature = "redis")]
-        if s.starts_with("redis:") {
+        if s.starts_with(PREFIX_REDIS) {
             return 
-                s.strip_prefix("redis:")
+                s.strip_prefix(PREFIX_REDIS)
                     .unwrap()
                     .parse::<lipl_repo_redis::redis_repo::RedisRepoConfig<String>>()
                     .map(Box::new)
@@ -96,15 +97,15 @@ impl FromStr for RepoConfig {
         }
 
         #[cfg(feature = "memory")]
-        if s.starts_with("memory:") {
+        if s.starts_with(PREFIX_MEMORY) {
             return
-                s.strip_prefix("memory:")
+                s.strip_prefix(PREFIX_MEMORY)
                     .unwrap()
                     .parse::<lipl_repo_memory::MemoryRepoConfig>()
                     .map(Box::new)
                     .map(RepoConfig::Memory);
         }
 
-        return Err(lipl_core::Error::Argument("Invalid argument"));
+        Err(lipl_core::Error::Argument("Invalid argument"))
     }
 }

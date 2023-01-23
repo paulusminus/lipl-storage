@@ -80,7 +80,7 @@ where
 
 impl<T> RedisRepoConfig<T>
 where
-    T: IntoConnectionInfo
+    T: IntoConnectionInfo,
 {
     #[allow(dead_code)]
     pub fn new(clear: bool, url: T) -> Self {
@@ -121,7 +121,7 @@ impl FromStr for RedisRepoConfig<String> {
 #[async_trait]
 impl<T> ToRepo for RedisRepoConfig<T>
 where
-    T: IntoConnectionInfo + Send,
+    T: IntoConnectionInfo + Send + Clone,
 {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
         let repo = RedisRepo::new(self).await?;

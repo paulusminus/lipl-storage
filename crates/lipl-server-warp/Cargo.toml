@@ -1,5 +1,5 @@
 [package]
-name = "lipl-repo-http-server"
+name = "lipl-server-warp"
 version = "0.1.7"
 authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2021"

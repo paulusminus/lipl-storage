@@ -1,10 +1,19 @@
 [package]
-name = "lipl-axum"
+name = "lipl-server-axum"
 version = "0.1.1"
 edition = "2021"
 
+[[bin]]
+name = "lipl-server-axum"
+path = "src/lipl_server_axum.rs"
+
+[[bin]]
+name = "lipl-server-axum-postgres"
+path = "src/lipl_server_axum_postgres.rs"
+required-features = ["postgres"]
+
 [features]
-default = ["memory", "postgres"]
+default = ["memory"]
 postgres = ["dep:lipl-axum-postgres", "dep:lipl-core", "lipl-core?/postgres"]
 memory = ["dep:lipl-repo-memory", "dep:lipl-core"]
 

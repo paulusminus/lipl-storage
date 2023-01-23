@@ -1,7 +1,5 @@
 use thiserror::{Error};
-
 use crate::{Uuid};
-
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -114,12 +112,12 @@ pub enum FileRepoError {
     NoPath(String),
 }
 
-#[cfg(feature = "file")]
-impl Default for FileRepoError {
-    fn default() -> Self {
-        FileRepoError::Parse("Hallo".to_owned())
-    }
-}
+// #[cfg(feature = "file")]
+// impl Default for FileRepoError {
+//     fn default() -> Self {
+//         FileRepoError::Parse("Hallo".to_owned())
+//     }
+// }
 
 #[cfg(feature = "postgres")]
 #[derive(Debug, Error)]

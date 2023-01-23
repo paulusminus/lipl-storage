@@ -1,7 +1,11 @@
 use std::fmt::Debug;
+use std::fs::{File, OpenOptions};
+use std::io::Write;
 use std::str::FromStr;
-use std::path::PathBuf;
+use std::path::{PathBuf};
 use std::sync::Arc;
+use chrono::SecondsFormat;
+use serde::{Deserialize, Serialize};
 use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
@@ -18,7 +22,6 @@ use request::{delete_by_id, post, select, select_by_id, Request};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 
 mod constant;
-// mod error;
 mod fs;
 mod io;
 mod request;
@@ -156,7 +159,7 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
                 YAML_EXTENSION,
                 io::get_playlist,
             )
-            .map_ok(lipl_core::summaries)
+            .map_ok(lipl_core::to_summaries)
             .map(|v| sender.send(v))
             .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
             .await
@@ -210,6 +213,38 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
     }
 }
 
+#[derive(Deserialize, Serialize)]
+pub enum Transaction {
+    LyricDelete(Uuid),
+    LyricUpsert(Lyric),
+    PlaylistDelete(Uuid),
+    PlaylistUpsert(Playlist),
+}
+
+fn log_to_traction(mut f: File) -> impl FnMut(&Request) -> () {
+    move |request| {
+        let mut write = |transaction: Transaction| {
+            f.write_fmt(format_args!("{}\n", serde_json::to_string(&(chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true), transaction)).unwrap())).unwrap();
+            f.flush().unwrap();
+        };
+        match request {
+            Request::LyricDelete(uuid, _) => {
+                write(Transaction::LyricDelete(*uuid));
+            },
+            Request::LyricPost(lyric, _) => {
+                write(Transaction::LyricUpsert(lyric.clone()));
+            },
+            Request::PlaylistDelete(uuid, _) => {
+                write(Transaction::PlaylistDelete(*uuid));
+            },
+            Request::PlaylistPost(playlist, _) => {
+                write(Transaction::PlaylistUpsert(playlist.clone()));
+            },
+            _ => {},
+        }
+    }
+}
+
 impl FileRepo {
     pub fn new(
         source_dir: String,
@@ -220,9 +255,12 @@ impl FileRepo {
         let join_handle = tokio::spawn(async move {
             let lyric_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), LYRIC_EXTENSION);
             let playlist_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), YAML_EXTENSION);
+            let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
+            let log = OpenOptions::new().append(true).open(transaction_log).unwrap();
 
             rx
             .map(Ok)
+            .inspect_ok(log_to_traction(log))
             .try_for_each(|request| 
                 handle_request(
                     request,

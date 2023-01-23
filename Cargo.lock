@@ -63,9 +63,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.62"
+version = "0.1.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "689894c2db1ea643a50834b999abf1c110887402542955ff5451dab8f861f9ed"
+checksum = "eff18d764974428cf3a9328e23fc5c986f5fbed46e6cd4cdf42544df5d297ec1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -265,9 +265,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16b0a3d9ed01224b22057780a37bb8c5dbfe1be8ba48678e7bf57ec4b385411f"
 dependencies = [
  "iana-time-zone",
+ "js-sys",
  "num-integer",
  "num-traits",
  "serde",
+ "time 0.1.45",
+ "wasm-bindgen",
  "winapi",
 ]
 
@@ -668,7 +671,7 @@ checksum = "c05aeb6a22b8f62540c194aac980f2115af067bfe15a0734d7277a768d396b31"
 dependencies = [
  "cfg-if",
  "libc",
- "wasi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
 ]
 
 [[package]]
@@ -985,29 +988,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
 
 [[package]]
-name = "lipl-axum"
-version = "0.1.1"
-dependencies = [
- "async-trait",
- "axum",
- "clap",
- "futures-util",
- "hyper",
- "lipl-axum-postgres",
- "lipl-core",
- "lipl-repo-memory",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
 name = "lipl-axum-postgres"
 version = "0.1.1"
 dependencies = [
@@ -1050,33 +1030,15 @@ name = "lipl-repo-fs"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "chrono",
  "futures",
  "lipl-core",
  "lipl-util",
- "thiserror",
+ "serde",
+ "serde_json",
  "tokio",
  "tokio-stream",
  "tracing",
-]
-
-[[package]]
-name = "lipl-repo-http-server"
-version = "0.1.7"
-dependencies = [
- "async-trait",
- "clap",
- "futures",
- "lipl-core",
- "lipl-repo-fs",
- "lipl-repo-memory",
- "lipl-repo-postgres",
- "lipl-repo-redis",
- "serde",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "warp",
 ]
 
 [[package]]
@@ -1128,6 +1090,49 @@ dependencies = [
  "parts",
  "quote",
  "rust-format",
+]
+
+[[package]]
+name = "lipl-server-axum"
+version = "0.1.1"
+dependencies = [
+ "async-trait",
+ "axum",
+ "clap",
+ "futures-util",
+ "hyper",
+ "lipl-axum-postgres",
+ "lipl-core",
+ "lipl-repo-memory",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "lipl-server-warp"
+version = "0.1.7"
+dependencies = [
+ "async-trait",
+ "clap",
+ "futures",
+ "lipl-core",
+ "lipl-repo-fs",
+ "lipl-repo-memory",
+ "lipl-repo-postgres",
+ "lipl-repo-redis",
+ "serde",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "warp",
 ]
 
 [[package]]
@@ -1234,7 +1239,7 @@ checksum = "e5d732bc30207a6423068df043e3d02e0735b155ad7ce1a6f76fe2baa5b158de"
 dependencies = [
  "libc",
  "log",
- "wasi",
+ "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys",
 ]
 
@@ -1893,7 +1898,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with_macros",
- "time",
+ "time 0.3.17",
 ]
 
 [[package]]
@@ -2093,6 +2098,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5516c27b78311c50bf42c071425c560ac799b11c30b31f87e3081965fe5e0180"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "time"
+version = "0.1.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
+dependencies = [
+ "libc",
+ "wasi 0.10.0+wasi-snapshot-preview1",
+ "winapi",
 ]
 
 [[package]]
@@ -2493,6 +2509,12 @@ dependencies = [
  "tower-service",
  "tracing",
 ]
+
+[[package]]
+name = "wasi"
+version = "0.10.0+wasi-snapshot-preview1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"

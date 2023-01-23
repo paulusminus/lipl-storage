@@ -1,16 +1,23 @@
+/*!
+ This crate is a depency library for other crates who wish to work with lyrics and playlists.
+
+ The main trait is LiplRepo. Other crates implement this trait to hide implementation details for creating, reading, updating and deleting
+ lyrics ands playlist from a store. All implementation except MemoryRepo implement a persistent store.
+
+ MemoryRepo is usefull for testing perposes.
+ 
+ */
+
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use std::sync::Arc;
 use std::{cmp::Ordering};
 use async_trait::{async_trait};
 use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
-pub use path_ext::{PathExt};
 pub use error::Error;
 
 mod disk_format;
 pub mod error;
-pub mod ext;
-mod path_ext;
 pub mod reexport;
 mod uuid;
 
@@ -178,18 +185,18 @@ impl HasSummary for Summary {
     }
 }
 
-pub fn summary<T>(t: &T) -> Summary
+pub fn to_summary<T>(t: &T) -> Summary
 where
     T: HasSummary,
 {
     t.summary()
 }
 
-pub fn summaries<T>(list: Vec<T>) -> Vec<Summary>
+pub fn to_summaries<T>(list: Vec<T>) -> Vec<Summary>
 where
     T: HasSummary,
 {
-    list.iter().map(summary).collect()
+    list.iter().map(to_summary).collect()
 }
 
 pub fn ids<T>(list: impl Iterator<Item=T>) -> Vec<Uuid>
