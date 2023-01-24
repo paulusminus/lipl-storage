@@ -1,11 +1,11 @@
-use std::io::{BufReader, BufRead};
+use std::{io::{BufReader, BufRead}, thread::JoinHandle, fs::{File}};
 
 use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
 use crate::{Lyric, Playlist, Summary, Uuid};
 
 pub type ResultSender<T> = futures::channel::oneshot::Sender<crate::Result<T>>;
-type OptionalTransaction = Option<Transaction>;
+pub type OptionalTransaction = Option<Transaction>;
 type LogRecord = (String, Transaction);
 
 #[derive(Debug)]
@@ -86,15 +86,23 @@ where
         .map(line_to_transaction)
 }
 
-pub fn log_to_transaction<W>(mut writer: W) -> impl FnMut(&Request) 
+pub fn log_to_transaction<W>(mut writer: W) -> impl FnMut(Transaction) -> crate::Result<()>
 where
     W: std::io::Write,
 {
-    move |request| {
-        if let Some(transaction) = OptionalTransaction::from(request) {
-            if let Err(error) = write(&mut writer, transaction.to_string()) {
-                tracing::error!("Could not write to transaction log: {error}");
-            }
-        }
+    move |transaction| {
+        write(&mut writer, transaction.to_string())
     }
+}
+
+pub fn start_log_thread(log: File) -> (JoinHandle<crate::Result<()>>, std::sync::mpsc::Sender<Transaction>) {
+    let (log_tx, log_rx) = std::sync::mpsc::channel::<Transaction>();
+    let join_handle = std::thread::spawn(move || {
+        let mut write = log_to_transaction(log);
+        while let Ok(request) = log_rx.recv() {
+            write(request)?;
+        };
+        Ok::<(), crate::Error>(())
+    });
+    (join_handle, log_tx)
 }

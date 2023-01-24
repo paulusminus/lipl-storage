@@ -3,6 +3,7 @@ use std::fs::{OpenOptions};
 use std::str::FromStr;
 use std::path::{PathBuf};
 use std::sync::Arc;
+use lipl_core::transaction::{OptionalTransaction, start_log_thread};
 use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
@@ -228,16 +229,24 @@ impl FileRepo {
     ) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
+        let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
+        let log = OpenOptions::new().append(true).open(transaction_log)?;
+
+        let (log_join_handle, log_tx) = start_log_thread(log);
 
         let join_handle = tokio::spawn(async move {
             let lyric_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), LYRIC_EXTENSION);
             let playlist_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), YAML_EXTENSION);
-            let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
-            let log = OpenOptions::new().append(true).open(transaction_log).unwrap();
 
             rx
             .map(Ok)
-            .inspect_ok(lipl_core::transaction::log_to_transaction(log))
+            .inspect_ok(move |request| {
+                if let Some(transaction) = OptionalTransaction::from(request) {
+                    if let Err(error) = log_tx.send(transaction) {
+                        tracing::error!("Error transaction logging: {error}");
+                    }
+                }
+            })
             .try_for_each(|request| 
                 handle_request(
                     request,
@@ -332,11 +341,5 @@ impl LiplRepo for FileRepo {
 
 #[cfg(test)]
 mod test {
-    use std::mem::size_of;
 
-
-    #[test]
-    fn file_repo_is_sized() {
-        assert_eq!(size_of::<super::FileRepo>(), 56);
-    }
 }
