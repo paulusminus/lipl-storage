@@ -24,7 +24,8 @@ enum Record {
 
 #[derive(Clone, Default)]
 pub struct MemoryRepoConfig {
-    pub include_sample_data: bool,
+    pub sample_data: bool,
+    pub transaction_log: Option<Arc<dyn std::io::Read + Send + Sync>>
 }
 
 impl std::str::FromStr for MemoryRepoConfig {
@@ -32,11 +33,11 @@ impl std::str::FromStr for MemoryRepoConfig {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         if s.trim().is_empty() {
-            Ok(Self::default())
+            Ok(Self { sample_data: false, transaction_log: None})
         }
         else {
             s.trim().parse::<bool>()
-                .map(|include_sample_data| Self { include_sample_data })
+                .map(|sample_data| Self { sample_data, transaction_log: None })
                 .map_err(|_| lipl_core::Error::Argument("must be false or true"))
         }
     }
@@ -45,7 +46,7 @@ impl std::str::FromStr for MemoryRepoConfig {
 #[async_trait]
 impl ToRepo for MemoryRepoConfig {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
-        if self.include_sample_data {
+        if self.sample_data {
             let repo = lipl_sample_data::repo_db();
             Ok(
                 Arc::new(MemoryRepo::from(repo))

@@ -1,8 +1,8 @@
-use std::{io::{BufReader, BufRead}, thread::JoinHandle, fs::{File}};
+use std::{io::{BufReader, BufRead}, thread::JoinHandle};
 
 use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
-use crate::{Lyric, Playlist, Summary, Uuid};
+use crate::{Lyric, Playlist, Summary, Uuid, LiplRepo};
 
 pub type ResultSender<T> = futures::channel::oneshot::Sender<crate::Result<T>>;
 pub type OptionalTransaction = Option<Transaction>;
@@ -41,8 +41,9 @@ impl std::str::FromStr for Transaction {
     type Err = crate::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         serde_json::from_str::<LogRecord>(s)
-            .map(|l| l.1)
-            .map_err(|e| crate::Error::Json(Box::new(e)))
+            .map(|(_, transaction)| transaction)
+            .map_err(Box::new)
+            .map_err(to_json_error)
     }
 }
 
@@ -56,6 +57,13 @@ impl From<&Request> for OptionalTransaction {
             _ => None,
         }
     }
+}
+
+fn to_json_error<E>(error: E) -> crate::Error
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    crate::Error::Json(Box::new(error))
 }
 
 fn now() -> String {
@@ -77,13 +85,34 @@ fn line_to_transaction(line: std::io::Result<String>) -> crate::Result<Transacti
         .and_then(|s| s.parse::<Transaction>())
 }
 
-pub fn transactions_from_log<R>(r: R) -> impl Iterator<Item = crate::Result<Transaction>>
+pub async fn build_from_log<R, DB>(r: R, db: DB) -> crate::Result<()>
 where
     R: std::io::Read,
+    DB: LiplRepo,
 {
-    BufReader::new(r)
+    let transactions = BufReader::new(r)
         .lines()
         .map(line_to_transaction)
+        .collect::<crate::Result<Vec<_>>>()?;
+    
+    for transaction in transactions {
+        match transaction {
+            Transaction::LyricDelete(id) => {
+                db.delete_lyric(id).await?;
+            },
+            Transaction::LyricUpsert(lyric) => {
+                db.upsert_lyric(lyric).await?;
+            },
+            Transaction::PlaylistDelete(id) => {
+                db.delete_playlist(id).await?;
+            },
+            Transaction::PlaylistUpsert(playlist) => {
+                db.upsert_playlist(playlist).await?;
+            }
+
+        }
+    }
+    Ok(())
 }
 
 pub fn log_to_transaction<W>(mut writer: W) -> impl FnMut(Transaction) -> crate::Result<()>
@@ -95,7 +124,10 @@ where
     }
 }
 
-pub fn start_log_thread(log: File) -> (JoinHandle<crate::Result<()>>, std::sync::mpsc::Sender<Transaction>) {
+pub fn start_log_thread<W>(log: W) -> (JoinHandle<crate::Result<()>>, std::sync::mpsc::Sender<Transaction>)
+where
+    W: std::io::Write + Send + Sync + 'static,
+{
     let (log_tx, log_rx) = std::sync::mpsc::channel::<Transaction>();
     let join_handle = std::thread::spawn(move || {
         let mut write = log_to_transaction(log);

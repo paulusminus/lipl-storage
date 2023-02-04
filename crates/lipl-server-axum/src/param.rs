@@ -46,7 +46,7 @@ pub mod app {
 
 #[cfg(not(feature = "postgres"))]
 pub mod app {
-    use std::sync::Arc;
+    use std::{sync::Arc};
     use async_trait::async_trait;
     use clap::{Parser};
     use lipl_core::{LiplRepo, ToRepo};
@@ -69,7 +69,7 @@ pub mod app {
     #[async_trait]
     impl ToRepo for LiplApp {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
-        lipl_repo_memory::MemoryRepoConfig { include_sample_data: self.memory }
+        lipl_repo_memory::MemoryRepoConfig { sample_data: self.memory, transaction_log: None }
             .to_repo()
             .await
         }

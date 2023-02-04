@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 use std::fs::{OpenOptions};
 use std::str::FromStr;
-use std::path::{PathBuf};
+use std::path::{PathBuf, Path};
 use std::sync::Arc;
-use lipl_core::transaction::{OptionalTransaction, start_log_thread};
+use lipl_core::transaction::{OptionalTransaction, start_log_thread, build_from_log};
 use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
@@ -42,7 +42,7 @@ impl FromStr for FileRepoConfig {
 #[async_trait]
 impl ToRepo for FileRepoConfig {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
-        let repo = FileRepo::new(self.path)?;
+        let repo = FileRepo::new(self.path).await?;
         Ok(
             Arc::new(repo)
         )
@@ -221,23 +221,23 @@ where P: Fn(&Uuid) -> PathBuf, Q: Fn(&Uuid) -> PathBuf
     }
 }
 
-
+fn path(source_dir: String, extension: &'static str) -> impl Fn(&Uuid) -> PathBuf {
+    move |uuid| source_dir.full_path(&uuid.to_string(), extension)
+}
 
 impl FileRepo {
-    pub fn new(
+    pub async fn new(
         source_dir: String,
     ) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
         let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
-        let log = OpenOptions::new().append(true).open(transaction_log)?;
 
-        let (log_join_handle, log_tx) = start_log_thread(log);
+        let log = OpenOptions::new().append(true).open(&transaction_log)?;
+
+        let (_log_join_handle, log_tx) = start_log_thread(log);
 
         let join_handle = tokio::spawn(async move {
-            let lyric_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), LYRIC_EXTENSION);
-            let playlist_path = |uuid: &Uuid| source_dir.clone().full_path(&uuid.to_string(), YAML_EXTENSION);
-
             rx
             .map(Ok)
             .inspect_ok(move |request| {
@@ -251,21 +251,26 @@ impl FileRepo {
                 handle_request(
                     request,
                     source_dir.clone(),
-                    lyric_path,
-                    playlist_path,
+                    path(source_dir.clone(), LYRIC_EXTENSION),
+                    path(source_dir.clone(), YAML_EXTENSION),
                 )
             )
             .await
             .is_ok()
         });
 
-        Ok(
-            FileRepo {
-                path: dir,
-                tx,
-                _join_handle: Arc::new(join_handle)
-            },
-        )
+        let file_repo = FileRepo {
+            path: dir,
+            tx,
+            _join_handle: Arc::new(join_handle),
+        };
+
+        if Path::exists(&transaction_log) {
+            let file = OpenOptions::new().read(true).open(&transaction_log)?;
+            build_from_log(file, file_repo.clone()).await?;
+        }
+
+        Ok(file_repo.clone())
     }
 
 }
