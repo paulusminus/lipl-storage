@@ -97,7 +97,7 @@ fn source_gen(hashmap: TokenStream) -> TokenStream {
 
 fn main() {
     let source_path = std::env::current_dir().unwrap().join(SOURCE_PATH);
-    let text_files = dir_entries(&source_path.to_string_lossy().to_string(), has_extension("txt")).unwrap();
+    let text_files = dir_entries(&source_path.to_string_lossy(), has_extension("txt")).unwrap();
     let playlists = 
         dir_entries(SOURCE_PATH, is_dir())
         .unwrap()
