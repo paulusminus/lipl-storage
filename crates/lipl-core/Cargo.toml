@@ -12,7 +12,7 @@ transaction = ["dep:futures", "dep:chrono", "dep:serde_json"]
 
 [dependencies]
 async-trait = "0.1"
-bb8-redis = { version = "0.12", optional = true }
+bb8-redis = { version = "0.13", optional = true }
 bb8-postgres = { version = "0.8", optional = true }
 bincode = "1"
 bs58 = "0.4"

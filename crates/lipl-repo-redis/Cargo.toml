@@ -8,7 +8,7 @@ edition = "2021"
 lipl-core = { path = "../lipl-core", features = ["redis"] }
 parts = { path = "../parts" }
 async-trait = "0.1.61"
-bb8-redis = "0.12.0"
+bb8-redis = "0.13"
 futures-util = "0.3.25"
 tracing = "0.1.37"
 
