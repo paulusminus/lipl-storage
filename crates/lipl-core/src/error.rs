@@ -148,6 +148,6 @@ pub enum RedisRepoError {
     #[error("Key: {0}")]
     Key(String),
 
-    #[error("")]
+    #[error("Run: {0}")]
     Run(#[from] bb8_redis::bb8::RunError<bb8_redis::redis::RedisError>)
 }
