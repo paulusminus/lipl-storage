@@ -14,7 +14,7 @@ required-features = ["postgres"]
 
 [features]
 default = ["memory"]
-postgres = ["dep:lipl-axum-postgres", "dep:lipl-core", "lipl-core?/postgres"]
+postgres = ["dep:lipl-repo-postgres-axum", "dep:lipl-core", "lipl-core?/postgres"]
 memory = ["dep:lipl-repo-memory", "dep:lipl-core"]
 
 [dependencies]
@@ -22,7 +22,7 @@ axum = { version = "0.6", features = ["headers", "query"] }
 clap = { version = "4.1.1", features = ["derive"] }
 futures-util = "0.3.25"
 hyper = "0.14"
-lipl-axum-postgres = { path = "../lipl-axum-postgres", optional = true }
+lipl-repo-postgres-axum = { path = "../lipl-repo-postgres-axum", optional = true }
 lipl-repo-memory = { path = "../lipl-repo-memory", optional = true }
 lipl-core = { path = "../lipl-core", optional = true }
 serde = { version = "1.0", features = ["derive"] }
