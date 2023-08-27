@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use core::str::FromStr;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use bs58::{decode, encode};
-use crate::error::{Error};
+use crate::error::Error;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
 pub struct Uuid(uuid::Uuid);
