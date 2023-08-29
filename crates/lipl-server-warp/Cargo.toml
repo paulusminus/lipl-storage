@@ -1,4 +1,5 @@
 [package]
+license = "MIT"
 name = "lipl-server-warp"
 version = "0.1.7"
 authors = ["Paul Min <info@paulmin.nl>"]

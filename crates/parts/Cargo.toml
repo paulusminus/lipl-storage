@@ -1,4 +1,5 @@
 [package]
+license = "MIT"
 name = "parts"
 version = "0.1.0"
 authors = ["Paul Min <info@paulmin.nl>"]
