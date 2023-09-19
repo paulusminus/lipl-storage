@@ -15,7 +15,7 @@ required-features = ["postgres"]
 
 [features]
 default = ["memory"]
-postgres = ["dep:lipl-repo-postgres-axum", "dep:lipl-core", "lipl-core?/postgres"]
+postgres = ["dep:lipl-repo-postgres-axum", "dep:lipl-core"]
 memory = ["dep:lipl-repo-memory", "dep:lipl-core"]
 
 [dependencies]

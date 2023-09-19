@@ -2,12 +2,10 @@ use std::str::FromStr;
 use std::path::{Path, PathBuf};
 use futures::{TryFuture, TryStreamExt};
 
-use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid};
+use lipl_core::{Error, Lyric, LyricPost, Playlist, PlaylistPost, Summary, LyricMeta, Uuid};
 use crate::fs::IO;
 
-use crate::FileRepoError;
-
-type Result<T> = std::result::Result<T, FileRepoError>;
+type Result<T> = std::result::Result<T, Error>;
 
 pub async fn get_lyric_summary<P>(path: P) -> Result<Summary> 
 where P: AsRef<Path> + Send + Sync
@@ -23,7 +21,7 @@ where
     F: FromStr<Err=lipl_core::Error>,
     G: From<(Option<Uuid>, F)>,
 {
-    s.parse::<F>().map_err(|_| FileRepoError::Parse(format!("{id}"))).map(|f| G::from((Some(id), f)))
+    s.parse::<F>().map_err(|_| Error::Parse(format!("{id}"))).map(|f| G::from((Some(id), f)))
 }
 
 pub async fn get_playlist<P>(path: P) -> Result<Playlist>
@@ -40,7 +38,7 @@ pub async fn get_list<P, T, F, Fut>(path: P, ext: &str, f: F) -> Result<Vec<T>>
 where 
     P: AsRef<Path> + Send + Sync,
     F: FnMut(PathBuf) -> Fut,
-    Fut: TryFuture<Ok=T, Error=FileRepoError>,
+    Fut: TryFuture<Ok=T, Error=Error>,
 {
     path.get_files(crate::fs::extension_filter(ext))
     .await?

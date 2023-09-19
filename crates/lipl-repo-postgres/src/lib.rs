@@ -1,18 +1,17 @@
-use std::fmt::{Debug};
+use std::fmt::Debug;
 use std::future::ready;
 use std::sync::Arc;
 
-use async_trait::{async_trait};
+use async_trait::async_trait;
 use bb8_postgres::PostgresConnectionManager;
-use bb8_postgres::bb8::{Pool};
-use futures_util::{TryFutureExt};
-use lipl_core::{Lyric, LiplRepo, Playlist, Summary, Uuid, ToRepo};
-use parts::{to_text};
+use bb8_postgres::bb8::Pool;
+use futures_util::TryFutureExt;
+use lipl_core::{Error, Lyric, LiplRepo, Playlist, Summary, Uuid, ToRepo};
+use parts::to_text;
 use bb8_postgres::tokio_postgres::{Row, NoTls};
 
 use crate::db::crud;
 use crate::macros::query;
-pub use lipl_core::error::PostgresRepoError;
 
 mod constant;
 mod convert;
@@ -20,7 +19,14 @@ mod db;
 pub mod pool;
 mod macros;
 
-type Result<T> = std::result::Result<T, PostgresRepoError>;
+type Result<T> = std::result::Result<T, Error>;
+
+fn postgres_error<E>(error: E) -> Error 
+where
+    E: std::error::Error + Send + Sync + 'static
+{
+    Error::Postgres(Box::new(error))
+}
 
 #[derive(Clone)]
 pub struct PostgresRepoConfig {
@@ -76,17 +82,17 @@ impl PostgresRepo {
             Pool::builder()
                 .max_size(constant::POOL_MAX_SIZE)
                 .build(postgres_repo_config.manager)
-                .map_err(PostgresRepoError::from)
+                .map_err(|error| Error::Connection(Box::new(error)))
                 .await?;
         if postgres_repo_config.clear {
             for sql in db::DROP.iter() {
                 pool.get()
-                .map_err(PostgresRepoError::from)
+                .map_err(|error| Error::Postgres(Box::new(error)))
                 .and_then(
                     |connection| async move {
                         connection
                         .execute(*sql, &[])
-                        .map_err(PostgresRepoError::from)
+                        .map_err(postgres_error)
                         .map_ok(to_unit)
                         .await
                     }
@@ -97,11 +103,11 @@ impl PostgresRepo {
 
         for sql in db::CREATE {
             pool.get()
-                .map_err(PostgresRepoError::from)
+                .map_err(postgres_error)
                 .and_then(|connection| async move {
                     connection
                         .execute(*sql, &[])
-                        .map_err(PostgresRepoError::from)
+                        .map_err(postgres_error)
                         .await
                 })
                 .await?;
@@ -304,7 +310,7 @@ impl LiplRepo for PostgresRepo {
 
     async fn stop(&self) -> lipl_core::Result<()>
     {
-        ready(Ok::<(), PostgresRepoError>(()))
+        ready(Ok::<(), Error>(()))
             .err_into()
             .await
     }

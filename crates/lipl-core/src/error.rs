@@ -1,5 +1,5 @@
-use thiserror::{Error};
-use crate::{Uuid};
+use thiserror::Error;
+use crate::Uuid;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -45,28 +45,14 @@ pub enum Error {
     #[error("Send failed for {0}")]
     SendFailed(String),
 
-    #[cfg(feature = "file")]
-    #[error("Canceled")]
-    Canceled(#[from] futures::channel::oneshot::Canceled),
+    #[error("Canceled future channel")]
+    Canceled(Box<dyn std::error::Error + Send + Sync>),
 
     #[error("Stopped on request")]
     Stop,
 
-    #[cfg(feature = "postgres")]
-    #[error("Postgres: {0}")]
-    Postgres(#[from] PostgresRepoError),
-
-    #[cfg(feature = "file")]
-    #[error("File: {0}")]
-    File(#[from] FileRepoError),
-
-    #[cfg(feature = "reqwest")]
     #[error("Reqwest: {0}")]
-    Reqwest(#[from] reqwest::Error),
-
-    #[cfg(feature = "redis")]
-    #[error("Redis: {0}")]
-    Redis(#[from] RedisRepoError),
+    Reqwest(Box<dyn std::error::Error + Send + Sync>),
 
     #[error("Not Found")]
     NotFound(Uuid),
@@ -82,72 +68,25 @@ pub enum Error {
 
     #[error(transparent)]
     Json(Box<dyn std::error::Error + Send + Sync>),
-}
-
-#[cfg(feature = "file")]
-#[derive(Error, Debug)]
-pub enum FileRepoError {
-    #[error("File {0:?} has invalid filestem")]
-    Filestem(Option<String>),
-
-    #[error("IO Error: {0}")]
-    IOError(#[from] std::io::Error),
-
-    #[error("Lyric with id {1} not found. Cannot add to playlist with id {0}")]
-    PlaylistInvalidMember(String, String),
-
-    #[error("Cannot find directory {0:?}")]
-    CannotFindDirectory(Option<String>),
-
-    #[error("Send failed")]
-    SendFailed,
-
-    #[error("Canceled")]
-    Canceled(#[from] futures::channel::oneshot::Canceled),
 
     #[error("Parse error for {0}")]
     Parse(String),
 
     #[error("Join error for {0}")]
-    Join(#[from] tokio::task::JoinError),
+    Join(Box<dyn std::error::Error + Send + Sync>),
 
-    #[error("No Path: {0}")]
-    NoPath(String),
-
-}
-
-// #[cfg(feature = "file")]
-// impl Default for FileRepoError {
-//     fn default() -> Self {
-//         FileRepoError::Parse("Hallo".to_owned())
-//     }
-// }
-
-#[cfg(feature = "postgres")]
-#[derive(Debug, Error)]
-pub enum PostgresRepoError {
     #[error("Postgres: {0}")]
-    Postgres(#[from] bb8_postgres::tokio_postgres::Error),
+    Postgres(Box<dyn std::error::Error + Send + Sync>),
 
-    #[error("Uuid: {0}")]
-    Uuid(#[from] uuid::Error),
-
-    #[error("Connection: {0}")]
-    Connection(#[from] bb8_postgres::bb8::RunError<bb8_postgres::tokio_postgres::Error>),
+    #[error("Postgres connection: {0}")]
+    Connection(Box<dyn std::error::Error + Send + Sync>),
 
     #[error("No results")]
     NoResults,
-}
 
-#[cfg(feature = "redis")]
-#[derive(Debug, Error)]
-pub enum RedisRepoError {
     #[error("Redis: {0}")]
-    Redis(#[from] bb8_redis::redis::RedisError),
+    Redis(Box<dyn std::error::Error + Send + Sync>),
 
     #[error("Key: {0}")]
     Key(String),
-
-    #[error("Run: {0}")]
-    Run(#[from] bb8_redis::bb8::RunError<bb8_redis::redis::RedisError>)
 }

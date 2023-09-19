@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::fs::{OpenOptions};
+use std::fs::OpenOptions;
 use std::str::FromStr;
 use std::path::{PathBuf, Path};
 use std::sync::Arc;
@@ -8,9 +8,9 @@ use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
 
-pub use lipl_core::error::FileRepoError;
+pub use lipl_core::error::Error;
 use fs::IO;
-use futures::{channel::mpsc};
+use futures::channel::mpsc;
 use futures::{FutureExt, StreamExt, TryStreamExt, TryFutureExt};
 use lipl_core::{
     transaction::Request,
@@ -62,10 +62,10 @@ impl Debug for FileRepo {
     }
 }
 
-fn check_members(playlist: &Playlist, lyric_ids: &[Uuid]) -> impl futures::Future<Output = Result<(), FileRepoError>> {
+fn check_members(playlist: &Playlist, lyric_ids: &[Uuid]) -> impl futures::Future<Output = Result<(), Error>> {
     if let Some(member) = playlist.members.iter().find(|member| !lyric_ids.contains(member))
     {
-        futures::future::ready(Err(FileRepoError::PlaylistInvalidMember(playlist.id.to_string(), member.to_string())))
+        futures::future::ready(Err(Error::PlaylistInvalidMember(playlist.id.to_string(), member.to_string())))
     }
     else {
         futures::future::ready(Ok(()))

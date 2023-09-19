@@ -1,18 +1,18 @@
-use std::ffi::{OsStr};
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 
-use async_trait::{async_trait};
+use async_trait::async_trait;
 use futures::{Stream, StreamExt, TryStreamExt, TryFutureExt};
 use futures::future::{ready, Ready};
 use tokio::fs::{read_dir, File, remove_file};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};
 
-use lipl_core::error::FileRepoError;
-use lipl_core::{Uuid};
+use lipl_core::error::Error;
+use lipl_core::Uuid;
 
-type Result<T> = std::result::Result<T, FileRepoError>;
+type Result<T> = std::result::Result<T, Error>;
 
 #[async_trait]
 pub trait IO {
@@ -90,7 +90,7 @@ where
             Ok(())
         }
         else {
-            Err(FileRepoError::CannotFindDirectory(self.as_ref().to_str().map(String::from)))
+            Err(Error::CannotFindDirectory(self.as_ref().to_str().map(String::from)))
         }
     }
 
@@ -105,9 +105,9 @@ where
         self
         .as_ref()
         .file_stem()
-        .ok_or_else(|| FileRepoError::Filestem(self.as_ref().to_str().map(String::from)))
+        .ok_or_else(|| Error::Filestem(self.as_ref().to_str().map(String::from)))
         .map(|fs| fs.to_string_lossy().to_string())
-        .and_then(|s| s.parse::<Uuid>().map_err(|_| FileRepoError::Parse(format!("Uuid from {}", self.as_ref().to_string_lossy()))))
+        .and_then(|s| s.parse::<Uuid>().map_err(|_| Error::Parse(format!("Uuid from {}", self.as_ref().to_string_lossy()))))
     }
 }
 

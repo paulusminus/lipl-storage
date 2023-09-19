@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use futures_util::TryFutureExt;
-use lipl_core::{Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist, error::PostgresRepoError};
+use lipl_core::{Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist};
 use lipl_util::VecExt;
 use parts::to_text;
 
@@ -16,9 +16,9 @@ fn error_on_count(count: u64, uuid: Uuid) -> Result<()> {
     }
 }
 
-fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(PostgresRepoError) -> lipl_core::Error {
+fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
     move |pg_error| {
-        if let PostgresRepoError::NoResults = pg_error {
+        if let Error::NoResults = pg_error {
             Error::NoKey(uuid.to_string())
         }
         else {

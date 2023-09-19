@@ -1,6 +1,6 @@
-use bb8_postgres::{PostgresConnectionManager, bb8::{Pool}};
+use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::{Future, TryFutureExt};
-use lipl_core::{LiplRepo, error::PostgresRepoError};
+use lipl_core::{Error, LiplRepo};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
@@ -8,9 +8,16 @@ mod convert;
 mod db;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
-type Result<T> = std::result::Result<T, lipl_core::error::PostgresRepoError>;
+type Result<T> = std::result::Result<T, Error>;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
+
+pub fn postgres_error<E>(error: E) -> Error
+where
+    E: std::error::Error + Send + Sync + 'static
+{
+    Error::Postgres(Box::new(error))
+}
 
 #[derive(Clone)]
 pub struct PostgresConnectionPool {
@@ -34,16 +41,16 @@ impl PostgresConnectionPool {
     ) -> impl Future<Output = Result<u64>> + 'a
     {
         async move {
-            let connection = self.inner.get().await?;
-            let statement = connection.prepare_typed(sql, types).await?;
-            let count = connection.execute(&statement, params).await?;
+            let connection = self.inner.get().await.map_err(postgres_error)?;
+            let statement = connection.prepare_typed(sql, types).await.map_err(postgres_error)?;
+            let count = connection.execute(&statement, params).await.map_err(postgres_error)?;
             Ok(count)
         }
     }
 
     async fn batch_execute(&self, sql: &str) -> Result<()> {
-        let connection = self.inner.get().await?;
-        connection.batch_execute(sql).err_into().await
+        let connection = self.inner.get().await.map_err(postgres_error)?;
+        connection.batch_execute(sql).map_err(postgres_error).await
     }
 
     fn query<'a, F, T>(
@@ -56,9 +63,9 @@ impl PostgresConnectionPool {
     where F: Fn(Row) -> Result<T> + Copy + 'a, T: Serialize,
     {
         async move {
-            let connection = self.inner.get().await?;
-            let statement = connection.prepare_typed(sql, types).await?;
-            let rows = connection.query(&statement, params).await?;
+            let connection = self.inner.get().await.map_err(postgres_error)?;
+            let statement = connection.prepare_typed(sql, types).await.map_err(postgres_error)?;
+            let rows = connection.query(&statement, params).await.map_err(postgres_error)?;
             convert::to_list(convert)(rows)
         }
     }
@@ -73,21 +80,21 @@ impl PostgresConnectionPool {
     where F: Fn(Row) -> Result<T> + Copy + 'a, T: Serialize,
     {
         async move {
-            let connection = self.inner.get().await?;
-            let statement = connection.prepare_typed(sql, types).await?;
-            if let Some(row) = connection.query_opt(&statement, params).await? {
+            let connection = self.inner.get().await.map_err(postgres_error)?;
+            let statement = connection.prepare_typed(sql, types).await.map_err(postgres_error)?;
+            if let Some(row) = connection.query_opt(&statement, params).await.map_err(postgres_error)? {
                 convert(row)
             }
             else {
-                Err(PostgresRepoError::NoResults)
+                Err(Error::NoResults)
             }
         }
     }
 }
 
 pub async fn connection_pool(connection: &str) -> Result<PostgresConnectionPool> {
-    let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls)?;
-    let pool = Pool::builder().build(manager).await?;
+    let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls).map_err(postgres_error)?;
+    let pool = Pool::builder().build(manager).await.map_err(postgres_error)?;
     
     let postgres_connection_pool = PostgresConnectionPool::from(pool);
     tracing::info!("About to execute database creation script");

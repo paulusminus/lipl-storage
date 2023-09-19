@@ -1,7 +1,7 @@
 use lipl_core::{reexport, Lyric, Summary, Uuid, Playlist};
 use lipl_util::VecExt;
 use tokio_postgres::Row;
-use crate::Result;
+use crate::{postgres_error, Result};
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Result<Vec<T>>
 where
@@ -12,24 +12,24 @@ where
 
 pub fn to_lyric(row: Row) -> Result<Lyric> {
     Ok(Lyric {
-        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID)?.into(),
-        title: row.try_get::<&str, String>(column::TITLE)?,
-        parts: parts::to_parts(row.try_get::<&str, String>(column::PARTS)?),
+        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
+        title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
+        parts: parts::to_parts(row.try_get::<&str, String>(column::PARTS).map_err(postgres_error)?),
     })
 }
 
 pub fn to_playlist(row: Row) -> Result<Playlist> {
     Ok(Playlist {
-        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID)?.into(),
-        title: row.try_get::<&str, String>(column::TITLE)?,
-        members: row.try_get::<&str, Option<Vec<reexport::uuid::Uuid>>>(column::MEMBERS)?.unwrap_or_default().map(Uuid::from),
+        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
+        title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
+        members: row.try_get::<&str, Option<Vec<reexport::uuid::Uuid>>>(column::MEMBERS).map_err(postgres_error)?.unwrap_or_default().map(Uuid::from),
     })
 }
 
 pub fn to_summary(row: Row) -> Result<Summary> {
     Ok(Summary {
-        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID)?.into(),
-        title: row.try_get::<&str, String>(column::TITLE)?,
+        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
+        title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
     })
 }
 

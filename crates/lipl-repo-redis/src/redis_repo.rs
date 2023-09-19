@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use bb8_redis::{bb8::{Pool, PooledConnection}, RedisConnectionManager, redis::{cmd, IntoConnectionInfo}};
-use bb8_redis::redis::{AsyncCommands};
+use bb8_redis::redis::AsyncCommands;
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use parts::{to_parts, to_text};
-use std::{collections::{HashMap}, ops::DerefMut, sync::Arc, str::FromStr};
-use lipl_core::{Lyric, Uuid, error::RedisRepoError, Playlist, Summary, LiplRepo, by_title, ToRepo};
-use crate::Result;
+use std::{collections::HashMap, ops::DerefMut, sync::Arc, str::FromStr};
+use lipl_core::{Lyric, Uuid, Error, Playlist, Summary, LiplRepo, by_title, ToRepo};
+use crate::{Result, redis_error};
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";
@@ -42,9 +42,9 @@ fn hashmap_to_playlist(id: Uuid) -> impl Fn(Result<HashMap<String, String>>) -> 
         .cloned()
         .unwrap_or_default()
         .split(' ')
-        .map(|key| key.parse::<Uuid>().ok().ok_or(RedisRepoError::Key(key.to_owned())))
+        .map(|key| key.parse::<Uuid>().ok().ok_or(Error::Key(key.to_owned())))
         .collect::<Result<Vec<Uuid>>>()
-        .and_then(|members| hm.get(TITLE_ATTR).ok_or(RedisRepoError::Key(id.to_string())).cloned().map(|title| (members, title)))
+        .and_then(|members| hm.get(TITLE_ATTR).ok_or(Error::Key(id.to_string())).cloned().map(|title| (members, title)))
         .map(|(members, title)| Playlist {
             id,
             title,
@@ -65,8 +65,8 @@ fn key_to_uuid(key: &str) -> Result<Uuid> {
     key.split(':')
         .collect::<Vec<&str>>()
         .get(1)
-        .ok_or(RedisRepoError::Key(key.to_owned()))
-        .and_then(|k| k.parse::<Uuid>().ok().ok_or(RedisRepoError::Key(key.to_owned())))
+        .ok_or(Error::Key(key.to_owned()))
+        .and_then(|k| k.parse::<Uuid>().ok().ok_or(Error::Key(key.to_owned())))
 }
 
 #[derive(Clone)]
@@ -141,14 +141,14 @@ impl RedisRepo {
     where
         T: IntoConnectionInfo,
     {
-        let manager = bb8_redis::RedisConnectionManager::new(config.url).map_err(RedisRepoError::from)?;
-        let pool = bb8_redis::bb8::Pool::builder().build(manager).err_into::<RedisRepoError>().await?;
+        let manager = bb8_redis::RedisConnectionManager::new(config.url).map_err(redis_error)?;
+        let pool = bb8_redis::bb8::Pool::builder().build(manager).map_err(redis_error).await?;
 
         let pool_clone = pool.clone();
-        let mut connection = pool_clone.get().err_into::<RedisRepoError>().await?;
+        let mut connection = pool_clone.get().map_err(redis_error).await?;
 
         if config.clear {
-            cmd("FLUSHALL").query_async(connection.deref_mut()).err_into::<RedisRepoError>().await?;
+            cmd("FLUSHALL").query_async(connection.deref_mut()).map_err(redis_error).await?;
 
         }
 
@@ -157,7 +157,7 @@ impl RedisRepo {
                 .arg("LOAD")
                 .arg(include_str!("delete_lyric.lua"))
                 .query_async(connection.deref_mut())
-                .err_into::<RedisRepoError>()
+                .map_err(redis_error)
                 .await?;
 
         Ok(
@@ -172,6 +172,7 @@ impl RedisRepo {
             .arg("0")
             .arg(id.to_string())
             .query_async(connection.deref_mut())
+            .map_err(redis_error)
             .await?;
         Ok(())
     }
@@ -179,7 +180,7 @@ impl RedisRepo {
     async fn connection(&self) -> Result<PooledConnection<RedisConnectionManager>> {
         self.pool
             .get()
-            .err_into()
+            .map_err(redis_error)
             .await
     }
 
@@ -190,7 +191,7 @@ impl RedisRepo {
         self.connection()
             .and_then(|mut connection| async move {
                 connection.del(f(id))
-                .err_into()
+                .map_err(redis_error)
                 .await
             })
             .await
@@ -205,7 +206,7 @@ impl RedisRepo {
         .and_then(|mut connection| async move {
             connection.hgetall(key(id))
             .map_ok(hashmap_to_summary(id))
-            .err_into()
+            .map_err(redis_error)
             .await
         })
         .await
@@ -218,7 +219,7 @@ impl RedisRepo {
         self.connection()
         .and_then(|mut connection| async move {
             connection.keys::<&str, Vec<String>>(&filter)
-            .err_into()
+            .map_err(redis_error)
             .map(convert)
             .await
         })
@@ -245,7 +246,7 @@ impl LiplRepo for RedisRepo {
         self.connection()
         .and_then(|mut connection| async move {
             connection.hgetall(lyric_key(id))
-            .err_into()
+            .map_err(redis_error)
             .map_ok(hashmap_to_lyric(id))
             .await
         })
@@ -257,7 +258,7 @@ impl LiplRepo for RedisRepo {
         self.connection()
         .and_then(|mut connection| async move {
             connection.hgetall(playlist_key(id))
-            .err_into()
+            .map_err(redis_error)
             .map(hashmap_to_playlist(id))
             .await
         })
@@ -347,7 +348,7 @@ impl LiplRepo for RedisRepo {
                 ]
             )
             .map_ok(|_| lyric)
-            .map_err(RedisRepoError::from)
+            .map_err(redis_error)
             .await    
         })
         .err_into()
@@ -366,7 +367,7 @@ impl LiplRepo for RedisRepo {
                     ]
                 )
                 .map_ok(|_| playlist)
-                .map_err(RedisRepoError::from)
+                .map_err(redis_error)
                 .await
             })
             .err_into()

@@ -2,30 +2,30 @@ use lipl_core::{Uuid, Lyric, Playlist, Summary};
 use parts::to_parts;
 use bb8_postgres::tokio_postgres::Row;
 
-use crate::Result;
+use crate::{postgres_error, Result};
 
 pub fn get_id(row: &Row) -> Result<Uuid> {
     row.try_get::<&str, uuid::Uuid>("id")
-    .map_err(Into::into)
+    .map_err(postgres_error)
     .map(Uuid::from)
 }
 
 #[allow(clippy::map_identity)]
 pub fn get_title(row: &Row) -> Result<String> {
     row.try_get::<&str, String>("title")
-    .map_err(Into::into)
+    .map_err(postgres_error)
     .map(std::convert::identity)
 }
 
 pub fn get_parts(row: &Row) -> Result<Vec<Vec<String>>> {
     row.try_get::<&str, String>("parts")
-    .map_err(Into::into)
+    .map_err(postgres_error)
     .map(to_parts)
 }
 
 pub fn get_members(row: &Row) -> Result<Vec<Uuid>> {
     row.try_get::<&str, Vec<uuid::Uuid>>("members")
-    .map_err(Into::into)
+    .map_err(postgres_error)
     .map(convert_vec(Uuid::from))
 }
 

@@ -6,7 +6,7 @@ authors = ["Paul Min <info@paulmin.nl>"]
 edition = "2021"
 
 [dependencies]
-lipl-core = { path = "../lipl-core", features = ["redis"] }
+lipl-core = { path = "../lipl-core" }
 parts = { path = "../parts" }
 async-trait = "0.1.61"
 bb8-redis = "0.13"
