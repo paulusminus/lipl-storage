@@ -90,3 +90,17 @@ pub enum Error {
     #[error("Key: {0}")]
     Key(String),
 }
+
+pub fn postgres_error<E>(error: E) -> Error 
+where
+    E: std::error::Error + Send + Sync + 'static
+{
+    Error::Postgres(Box::new(error))
+}
+
+pub fn redis_error<E>(error: E) -> Error
+where
+    E: std::error::Error + Send + Sync + 'static
+{
+    Error::Redis(Box::new(error))
+}

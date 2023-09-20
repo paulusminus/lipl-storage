@@ -1,6 +1,6 @@
-use std::ffi::{OsString};
-use std::path::{PathBuf};
-use quote::{quote};
+use std::ffi::OsString;
+use std::path::PathBuf;
+use quote::quote;
 use quote::__private::TokenStream;
 use rust_format::{Formatter, RustFmt};
 

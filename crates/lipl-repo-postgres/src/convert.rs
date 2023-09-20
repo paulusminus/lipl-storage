@@ -1,8 +1,6 @@
-use lipl_core::{Uuid, Lyric, Playlist, Summary};
+use lipl_core::{postgres_error, Uuid, Lyric, Playlist, Result, Summary};
 use parts::to_parts;
 use bb8_postgres::tokio_postgres::Row;
-
-use crate::{postgres_error, Result};
 
 pub fn get_id(row: &Row) -> Result<Uuid> {
     row.try_get::<&str, uuid::Uuid>("id")

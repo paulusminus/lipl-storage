@@ -1,17 +1,8 @@
-use lipl_core::{Error, Lyric, Playlist, Uuid};
+use lipl_core::{Lyric, Playlist, Uuid};
 use parts::to_parts;
 pub use redis_repo::RedisRepoConfig;
 
 pub mod redis_repo;
-
-type Result<T> = std::result::Result<T, Error>;
-
-pub fn redis_error<E>(error: E) -> Error
-where
-    E: std::error::Error + Send + Sync + 'static
-{
-    Error::Redis(Box::new(error))
-}
 
 pub fn new_lyric(title: &str, text: &str) -> Lyric {
     Lyric {

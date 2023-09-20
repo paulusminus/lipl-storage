@@ -15,6 +15,7 @@ fn create_lyric(text: &str) -> Lyric {
 
 #[tokio::test]
 async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
     let host = std::env::var("POSTGRES_HOST").unwrap();
     let db = std::env::var("POSTGRES_DB").unwrap();
     let user = std::env::var("POSTGRES_USER").unwrap();

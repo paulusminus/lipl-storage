@@ -14,7 +14,7 @@ use std::cmp::Ordering;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 pub use crate::uuid::Uuid;
-pub use error::Error;
+pub use error::{postgres_error, redis_error, Error};
 
 mod disk_format;
 pub mod error;

@@ -4,8 +4,7 @@ use bb8_redis::redis::AsyncCommands;
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use parts::{to_parts, to_text};
 use std::{collections::HashMap, ops::DerefMut, sync::Arc, str::FromStr};
-use lipl_core::{Lyric, Uuid, Error, Playlist, Summary, LiplRepo, by_title, ToRepo};
-use crate::{Result, redis_error};
+use lipl_core::{by_title, redis_error, Lyric, Uuid, Error, Playlist, Result, Summary, LiplRepo, ToRepo};
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";

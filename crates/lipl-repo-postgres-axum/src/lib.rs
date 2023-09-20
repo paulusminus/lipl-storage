@@ -1,6 +1,6 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::{Future, TryFutureExt};
-use lipl_core::{Error, LiplRepo};
+use lipl_core::{postgres_error, Error, LiplRepo, Result};
 use serde::Serialize;
 use tokio_postgres::{NoTls, types::{Type, ToSql}, Row};
 
@@ -8,16 +8,8 @@ mod convert;
 mod db;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
-type Result<T> = std::result::Result<T, Error>;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
-
-pub fn postgres_error<E>(error: E) -> Error
-where
-    E: std::error::Error + Send + Sync + 'static
-{
-    Error::Postgres(Box::new(error))
-}
 
 #[derive(Clone)]
 pub struct PostgresConnectionPool {

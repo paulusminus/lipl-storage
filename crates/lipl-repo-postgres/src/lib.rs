@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use bb8_postgres::PostgresConnectionManager;
 use bb8_postgres::bb8::Pool;
 use futures_util::TryFutureExt;
-use lipl_core::{Error, Lyric, LiplRepo, Playlist, Summary, Uuid, ToRepo};
+use lipl_core::{postgres_error, Error, Lyric, LiplRepo, Playlist, Result, Summary, Uuid, ToRepo};
 use parts::to_text;
 use bb8_postgres::tokio_postgres::{Row, NoTls};
 
@@ -18,15 +18,6 @@ mod convert;
 mod db;
 pub mod pool;
 mod macros;
-
-type Result<T> = std::result::Result<T, Error>;
-
-fn postgres_error<E>(error: E) -> Error 
-where
-    E: std::error::Error + Send + Sync + 'static
-{
-    Error::Postgres(Box::new(error))
-}
 
 #[derive(Clone)]
 pub struct PostgresRepoConfig {

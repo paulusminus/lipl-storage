@@ -10,9 +10,9 @@ use api::UploadClient;
 use clap::Parser;
 use futures::{Future, TryStreamExt, TryFutureExt};
 use lipl_core::{Summary, Uuid, PlaylistPost};
-use rest_api_client::{ApiClient};
+use rest_api_client::ApiClient;
 use std::time::Instant;
-use crate::model::{try_iter};
+use crate::model::try_iter;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
