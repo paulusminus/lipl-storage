@@ -4,9 +4,9 @@ description = "Models for Lipl Storage"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
+name = "lipl-core"
 repository.workspace = true
 version.workspace = true
-
 
 [features]
 transaction = ["dep:futures", "dep:chrono", "dep:serde_json"]
