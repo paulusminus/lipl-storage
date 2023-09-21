@@ -1,9 +1,12 @@
 [package]
-license = "MIT"
+authors.workspace = true
+description = "Redis storage"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 name = "lipl-repo-redis"
-version = "0.1.1"
-authors = ["Paul Min <info@paulmin.nl>"]
-edition = "2021"
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 lipl-core = { path = "../lipl-core" }

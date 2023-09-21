@@ -1,9 +1,13 @@
 [package]
-license = "MIT"
-name = "lipl-sample-data"
-version = "0.1.0"
-edition = "2021"
+authors.workspace = true
 build = "build.rs"
+description = "Lipl sample data for demo's and testing"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+name = "lipl-sample-data"
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 lipl-core = { path = "../lipl-core" }

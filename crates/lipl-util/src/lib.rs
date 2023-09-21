@@ -3,25 +3,25 @@ use std::iter::once;
 pub trait VecExt<T> {
     fn map<F, R>(self, f: F) -> Vec<R>
     where
-        F: Fn(T) -> R;
+        F: FnMut(T) -> R;
     fn add_one(self, t: T) -> Vec<T>;
     fn without(self, t: &T) -> Vec<T> where T: PartialEq;
     fn try_map<F, R, E: std::error::Error>(self, f: F) -> Result<Vec<R>, E>
     where
-        F: Fn(T) -> Result<R, E>;
+        F: FnMut(T) -> Result<R, E>;
 }
 
 impl<T> VecExt<T> for Vec<T> {
     fn map<F, R>(self, f: F) -> Vec<R>
     where
-        F: Fn(T) -> R,
+        F: FnMut(T) -> R,
     {
         self.into_iter().map(f).collect()
     }
 
     fn try_map<F, R, E: std::error::Error>(self, f: F) -> Result<Vec<R>, E>
     where
-        F: Fn(T) -> Result<R, E>,
+        F: FnMut(T) -> Result<R, E>,
     {
         self.into_iter().map(f).collect::<Result<Vec<R>, E>>()
     }

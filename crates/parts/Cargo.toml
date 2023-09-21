@@ -1,9 +1,12 @@
 [package]
-license = "MIT"
+authors.workspace = true
+description = "String to parts and vice versa"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 name = "parts"
-version = "0.1.0"
-authors = ["Paul Min <info@paulmin.nl>"]
-edition = "2021"
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 regex = "1.4"

@@ -104,3 +104,10 @@ where
 {
     Error::Redis(Box::new(error))
 }
+
+pub fn reqwest_error<E>(error: E) -> Error
+where
+    E: std::error::Error + Send + Sync + 'static
+{
+    Error::Redis(Box::new(error))
+}

@@ -148,7 +148,6 @@ impl RedisRepo {
 
         if config.clear {
             cmd("FLUSHALL").query_async(connection.deref_mut()).map_err(redis_error).await?;
-
         }
 
         let delete_lyric_sha: String = 

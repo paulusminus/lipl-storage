@@ -1,9 +1,12 @@
 [package]
-license = "MIT"
+authors.workspace = true
+description = "Warp webserver json api"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 name = "lipl-server-warp"
-version = "0.1.7"
-authors = ["Paul Min <info@paulmin.nl>"]
-edition = "2021"
+repository.workspace = true
+version.workspace = true
 
 [features]
 default = ["memory"]

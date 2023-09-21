@@ -1,8 +1,12 @@
 [package]
-license = "MIT"
+authors.workspace = true
+description = "Axum webserver json api"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 name = "lipl-server-axum"
-version = "0.1.1"
-edition = "2021"
+repository.workspace = true
+version.workspace = true
 
 [[bin]]
 name = "lipl-server-axum"

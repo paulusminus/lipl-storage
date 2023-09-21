@@ -1,8 +1,12 @@
 [package]
-license = "MIT"
+authors.workspace = true
+description = "Filesystem Storage"
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
 name = "lipl-repo-fs"
-version = "0.1.0"
-edition = "2021"
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 async-trait = "0.1"

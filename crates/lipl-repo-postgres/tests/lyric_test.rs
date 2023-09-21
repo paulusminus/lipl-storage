@@ -15,12 +15,21 @@ fn create_lyric(text: &str) -> Lyric {
 
 #[tokio::test]
 async fn test_lyric() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv::dotenv().ok();
-    let host = std::env::var("POSTGRES_HOST").unwrap();
-    let db = std::env::var("POSTGRES_DB").unwrap();
-    let user = std::env::var("POSTGRES_USER").unwrap();
-    let password = std::env::var("POSTGRES_PASSWORD").unwrap();
-    let repo_config = format!("host={host} user={user} password={password} dbname={db}").parse::<PostgresRepoConfig>()?.clear(true);
+    let repo_config = match std::env::var("GITHUB_TOKEN") {
+        Ok(_) => {
+            let host = std::env::var("POSTGRES_HOST").unwrap();
+            let db = std::env::var("POSTGRES_DB").unwrap();
+            let user = std::env::var("POSTGRES_USER").unwrap();
+            let password = std::env::var("POSTGRES_PASSWORD").unwrap();
+            format!("host={host} user={user} password={password} dbname={db}").parse::<PostgresRepoConfig>()?.clear(true)
+        }
+        Err(_) => {
+            dotenv::from_filename("local.env").ok();
+            let host = std::env::var("POSTGRES_HOST").unwrap();
+            let db = std::env::var("POSTGRES_DB").unwrap();
+            format!("host={host} dbname={db}").parse::<PostgresRepoConfig>()?.clear(true)
+        }
+    };
     let repo = PostgresRepo::new(repo_config).await?;
 
     let lyric1 = create_lyric(ROODKAPJE);
