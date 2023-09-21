@@ -4,7 +4,7 @@ description = "In Memory Storage for testing"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
-name = "lipl-repo-memory"
+name = "lipl-storage-memory"
 repository.workspace = true
 version.workspace = true
 

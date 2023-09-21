@@ -1,10 +1,10 @@
 [package]
 authors.workspace = true
-description = "Axum json api with postgres storage"
+description = "Postgres storage backend for Axum"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
-name = "lipl-repo-postgres-axum"
+name = "lipl-storage-postgres-axum"
 repository.workspace = true
 version.workspace = true
 

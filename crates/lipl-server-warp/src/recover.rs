@@ -28,16 +28,8 @@ pub fn json_response(code: StatusCode, message: &str) -> Result<impl Reply, Infa
 pub async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
     if let Some(e) = err.find::<RepoError>() {
         match e {
-            RepoError::Model(m) => {
-                json_response(StatusCode::NOT_FOUND, &m.to_string())
-            },
-            #[cfg(feature = "file")]
-            RepoError::File(f) => {
-                json_response(StatusCode::INTERNAL_SERVER_ERROR, &f.to_string())
-            },
-            #[cfg(feature = "postgres")]
-            RepoError::Postgres(p) => {
-                json_response(StatusCode::INTERNAL_SERVER_ERROR, &p.to_string())
+            RepoError::Backend(b) => {
+                json_response(StatusCode::INTERNAL_SERVER_ERROR, &b.to_string())
             },
             RepoError::Warp(w) => {
                 json_response(StatusCode::INTERNAL_SERVER_ERROR, &w.to_string())

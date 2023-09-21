@@ -4,7 +4,7 @@ pub mod app {
     use async_trait::async_trait;
     use clap::{ArgGroup, Parser};
     use lipl_core::{LiplRepo, ToRepo};
-    use lipl_repo_memory::MemoryRepoConfig;
+    use lipl_storage_memory::MemoryRepoConfig;
 
     #[derive(Parser)]
     #[command(author, version, about, long_about = None)]
@@ -26,7 +26,7 @@ pub mod app {
     impl ToRepo for LiplApp {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
         if let Some(postgres) = self.postgres {
-            let pool = lipl_axum_postgres::connection_pool(&postgres).await?;
+            let pool = lipl_storage_postgres_axum::connection_pool(&postgres).await?;
             Ok(
                 Arc::new(pool)
             )    
@@ -34,7 +34,7 @@ pub mod app {
         }
         else {
             let memory = self.memory.unwrap();
-            MemoryRepoConfig { include_sample_data: memory }
+            MemoryRepoConfig { sample_data: memory, transaction_log: None }
                 .to_repo()
                 .await
         }

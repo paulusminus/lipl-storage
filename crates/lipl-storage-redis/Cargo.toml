@@ -4,7 +4,7 @@ description = "Redis storage"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
-name = "lipl-repo-redis"
+name = "lipl-storage-redis"
 repository.workspace = true
 version.workspace = true
 

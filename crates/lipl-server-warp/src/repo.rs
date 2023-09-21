@@ -16,16 +16,16 @@ const PREFIX_REDIS: &str = "redis:";
 #[derive(Clone)]
 pub enum RepoConfig {
     #[cfg(feature = "postgres")]
-    Postgres(Box<lipl_repo_postgres::PostgresRepoConfig>),
+    Postgres(Box<lipl_storage_postgres::PostgresRepoConfig>),
 
     #[cfg(feature = "file")]
-    File(Box<lipl_repo_fs::FileRepoConfig>),
+    File(Box<lipl_storage_fs::FileRepoConfig>),
 
     #[cfg(feature = "redis")]
-    Redis(Box<lipl_repo_redis::redis_repo::RedisRepoConfig<String>>),
+    Redis(Box<lipl_storage_redis::redis_repo::RedisRepoConfig<String>>),
 
     #[cfg(feature = "memory")]
-    Memory(Box<lipl_repo_memory::MemoryRepoConfig>),
+    Memory(Box<lipl_storage_memory::MemoryRepoConfig>),
 }
 
 impl RepoConfig {
@@ -71,7 +71,7 @@ impl FromStr for RepoConfig {
             return 
                 s.strip_prefix(PREFIX_FILE)
                 .unwrap()
-                .parse::<lipl_repo_fs::FileRepoConfig>()
+                .parse::<lipl_storage_fs::FileRepoConfig>()
                 .map(Box::new)
                 .map(RepoConfig::File);
         }
@@ -81,7 +81,7 @@ impl FromStr for RepoConfig {
             return 
                 s.strip_prefix(PREFIX_POSTGRES)
                     .unwrap()
-                    .parse::<lipl_repo_postgres::PostgresRepoConfig>()
+                    .parse::<lipl_storage_postgres::PostgresRepoConfig>()
                     .map(Box::new)
                     .map(RepoConfig::Postgres);
         }
@@ -91,7 +91,7 @@ impl FromStr for RepoConfig {
             return 
                 s.strip_prefix(PREFIX_REDIS)
                     .unwrap()
-                    .parse::<lipl_repo_redis::redis_repo::RedisRepoConfig<String>>()
+                    .parse::<lipl_storage_redis::redis_repo::RedisRepoConfig<String>>()
                     .map(Box::new)
                     .map(RepoConfig::Redis);
         }
@@ -101,7 +101,7 @@ impl FromStr for RepoConfig {
             return
                 s.strip_prefix(PREFIX_MEMORY)
                     .unwrap()
-                    .parse::<lipl_repo_memory::MemoryRepoConfig>()
+                    .parse::<lipl_storage_memory::MemoryRepoConfig>()
                     .map(Box::new)
                     .map(RepoConfig::Memory);
         }

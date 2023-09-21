@@ -4,7 +4,7 @@ description = "Filesystem Storage"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
-name = "lipl-repo-fs"
+name = "lipl-storage-fs"
 repository.workspace = true
 version.workspace = true
 
