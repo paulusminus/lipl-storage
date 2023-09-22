@@ -14,7 +14,7 @@ macro_rules! query {
             let query_result = client.$action(&statement, &[$(&$param_name,)*]).await.map_err(postgres_error)?;
             let result = $f(query_result)?;
             Ok(result)
-        } 
+        }
     };
 }
 

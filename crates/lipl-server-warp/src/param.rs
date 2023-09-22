@@ -1,5 +1,5 @@
-use clap::{command, Subcommand, Parser};
-use crate::repo::{RepoConfig};
+use crate::repo::RepoConfig;
+use clap::{command, Parser, Subcommand};
 
 #[derive(Parser)]
 pub struct ServeCommand {
@@ -38,4 +38,3 @@ pub enum LiplCommand {
     Copy(CopyCommand),
     List(ListCommand),
 }
-

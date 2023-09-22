@@ -1,5 +1,5 @@
-use lipl_core::{postgres_error, reexport, Lyric, Result, Summary, Uuid, Playlist};
 use lipl_core::vec_ext::VecExt;
+use lipl_core::{postgres_error, reexport, Lyric, Playlist, Result, Summary, Uuid};
 use tokio_postgres::Row;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Result<Vec<T>>
@@ -11,24 +11,46 @@ where
 
 pub fn to_lyric(row: Row) -> Result<Lyric> {
     Ok(Lyric {
-        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
-        title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
-        parts: lipl_core::parts::to_parts(row.try_get::<&str, String>(column::PARTS).map_err(postgres_error)?),
+        id: row
+            .try_get::<&str, reexport::uuid::Uuid>(column::ID)
+            .map_err(postgres_error)?
+            .into(),
+        title: row
+            .try_get::<&str, String>(column::TITLE)
+            .map_err(postgres_error)?,
+        parts: lipl_core::parts::to_parts(
+            row.try_get::<&str, String>(column::PARTS)
+                .map_err(postgres_error)?,
+        ),
     })
 }
 
 pub fn to_playlist(row: Row) -> Result<Playlist> {
     Ok(Playlist {
-        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
-        title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
-        members: row.try_get::<&str, Option<Vec<reexport::uuid::Uuid>>>(column::MEMBERS).map_err(postgres_error)?.unwrap_or_default().map(Uuid::from),
+        id: row
+            .try_get::<&str, reexport::uuid::Uuid>(column::ID)
+            .map_err(postgres_error)?
+            .into(),
+        title: row
+            .try_get::<&str, String>(column::TITLE)
+            .map_err(postgres_error)?,
+        members: row
+            .try_get::<&str, Option<Vec<reexport::uuid::Uuid>>>(column::MEMBERS)
+            .map_err(postgres_error)?
+            .unwrap_or_default()
+            .map(Uuid::from),
     })
 }
 
 pub fn to_summary(row: Row) -> Result<Summary> {
     Ok(Summary {
-        id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
-        title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
+        id: row
+            .try_get::<&str, reexport::uuid::Uuid>(column::ID)
+            .map_err(postgres_error)?
+            .into(),
+        title: row
+            .try_get::<&str, String>(column::TITLE)
+            .map_err(postgres_error)?,
     })
 }
 

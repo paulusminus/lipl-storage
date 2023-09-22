@@ -25,25 +25,26 @@ pub mod crud {
 
     pub const UPSERT_PLAYLIST: &str = include_str!("./sql/crud/upsert_playlist.sql");
     pub const UPSERT_PLAYLIST_TYPES: &[Type] = &[Type::UUID, Type::TEXT, Type::UUID_ARRAY];
-    
+
     pub const DELETE_LYRIC: &str = include_str!("./sql/crud/delete_lyric.sql");
     pub const DELETE_LYRIC_TYPES: &[Type] = &[Type::UUID];
-    
+
     pub const DELETE_PLAYLIST: &str = include_str!("./sql/crud/delete_playlist.sql");
     pub const DELETE_PLAYLIST_TYPES: &[Type] = &[Type::UUID];
-    
+
     pub const SELECT_LYRICS: &str = include_str!("./sql/crud/select_lyrics.sql");
     pub const SELECT_LYRICS_TYPES: &[Type] = &[];
 
     pub const SELECT_LYRIC_SUMMARIES: &str = include_str!("./sql/crud/select_lyric_summaries.sql");
     pub const SELECT_LYRIC_SUMMARIES_TYPES: &[Type] = &[];
-    
+
     pub const SELECT_LYRIC_DETAIL: &str = include_str!("./sql/crud/select_lyric_detail.sql");
     pub const SELECT_LYRIC_DETAIL_TYPES: &[Type] = &[Type::UUID];
-    
-    pub const SELECT_PLAYLIST_SUMMARIES: &str = include_str!("./sql/crud/select_playlist_summaries.sql");
+
+    pub const SELECT_PLAYLIST_SUMMARIES: &str =
+        include_str!("./sql/crud/select_playlist_summaries.sql");
     pub const SELECT_PLAYLIST_SUMMARIES_TYPES: &[Type] = &[];
-    
+
     pub const SELECT_PLAYLISTS: &str = include_str!("./sql/crud/select_playlists.sql");
     pub const SELECT_PLAYLISTS_TYPES: &[Type] = &[];
 

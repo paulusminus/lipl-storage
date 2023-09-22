@@ -1,33 +1,26 @@
-use core::str::FromStr;
 use core::fmt::{Display, Formatter};
-use core::str::Lines;
 use core::iter::once;
+use core::str::FromStr;
+use core::str::Lines;
 
-use crate::vec_ext::VecExt;
-use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Playlist};
 use crate::error::Error;
+use crate::vec_ext::VecExt;
+use crate::{Etag, Lyric, LyricMeta, LyricPost, Playlist, PlaylistPost};
 
 const YAML_PREFIX: &str = "---";
 
-fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, serde_yaml::Error>
-{
-    let next = 
-        lines
+fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, serde_yaml::Error> {
+    let next = lines
         .by_ref()
-        .skip_while(
-            |l| l.trim().is_empty()
-        )
-        .take_while(
-            |l| !l.trim().is_empty()
-        )
+        .skip_while(|l| l.trim().is_empty())
+        .take_while(|l| !l.trim().is_empty())
         .map(|s| s.trim())
         .map(String::from)
         .collect::<Vec<_>>();
 
     if next.is_empty() {
         Ok(acc)
-    }
-    else if next.first().map(|s| s.trim()) == Some(YAML_PREFIX) {
+    } else if next.first().map(|s| s.trim()) == Some(YAML_PREFIX) {
         let new = next.without(&YAML_PREFIX.to_owned());
         let meta: LyricMeta = serde_yaml::from_str(&new.join("\n"))?;
         lines_to_lyric_post(
@@ -35,16 +28,15 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, se
                 title: meta.title,
                 parts: acc.parts,
             },
-            lines
+            lines,
         )
-    }
-    else {
+    } else {
         lines_to_lyric_post(
             LyricPost {
                 title: acc.title,
                 parts: acc.parts.into_iter().chain(once(next)).collect::<Vec<_>>(),
             },
-            lines
+            lines,
         )
     }
 }
@@ -64,7 +56,12 @@ impl Display for Lyric {
             hash: self.etag(),
         };
         let yaml = serde_yaml::to_string(&lyric_meta).unwrap();
-        let parts_string: String = self.parts.iter().map(|p| p.join("  \n")).collect::<Vec<_>>().join("\n\n");
+        let parts_string: String = self
+            .parts
+            .iter()
+            .map(|p| p.join("  \n"))
+            .collect::<Vec<_>>()
+            .join("\n\n");
         write!(f, "{YAML_PREFIX}\n{yaml}{YAML_PREFIX}\n\n{parts_string}")
     }
 }
@@ -72,8 +69,7 @@ impl Display for Lyric {
 impl FromStr for PlaylistPost {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_yaml::from_str::<PlaylistPost>(s)
-        .map_err(Into::into)
+        serde_yaml::from_str::<PlaylistPost>(s).map_err(Into::into)
     }
 }
 
@@ -96,8 +92,7 @@ fn non_empty_line(s: &&str) -> bool {
 impl FromStr for LyricMeta {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let yaml = 
-            s
+        let yaml = s
             .lines()
             .skip_while(empty_line)
             .take_while(non_empty_line)
@@ -113,12 +108,11 @@ impl FromStr for LyricMeta {
 #[cfg(test)]
 mod tests {
 
-    use std::vec;
     use super::{Lyric, LyricMeta, LyricPost, PlaylistPost};
-    use crate::{Uuid};
+    use crate::Uuid;
+    use std::vec;
 
-
-    fn hertog_jan_lyric() -> Lyric { 
+    fn hertog_jan_lyric() -> Lyric {
         Lyric {
             id: "T2NPjHifDf1E1UfZZA6TDB".parse::<Uuid>().unwrap(),
             title: "Hertog Jan".to_owned(),
@@ -139,7 +133,7 @@ mod tests {
                     "Zilv'ren veren op zijn hoed".to_owned(),
                     "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
                     "'t Antwerpen op de straten".to_owned(),
-                    "Lere leerzen aan zijn voet".to_owned(),   
+                    "Lere leerzen aan zijn voet".to_owned(),
                 ],
                 vec![
                     "Och Turnhout, stedeke schone".to_owned(),
@@ -203,8 +197,8 @@ mod tests {
                     "Harba lorifa, zong den Hertog, harba lorifa".to_owned(),
                     "En op Sint Jan geklommen".to_owned(),
                     "Daar staat hij dag en nacht".to_owned(),
-                ]
-            ]
+                ],
+            ],
         }
     }
 
@@ -221,9 +215,18 @@ mod tests {
         let playlist_post: PlaylistPost = PLAYLIST_TEXT.parse().unwrap();
         assert_eq!(playlist_post.title, PLAYLIST_TITLE.to_owned());
         assert_eq!(playlist_post.members.len(), 3);
-        assert_eq!(playlist_post.members[0].to_string(), PLAYLIST_MEMBER1.to_owned());
-        assert_eq!(playlist_post.members[1].to_string(), PLAYLIST_MEMBER2.to_owned());
-        assert_eq!(playlist_post.members[2].to_string(), PLAYLIST_MEMBER3.to_owned());
+        assert_eq!(
+            playlist_post.members[0].to_string(),
+            PLAYLIST_MEMBER1.to_owned()
+        );
+        assert_eq!(
+            playlist_post.members[1].to_string(),
+            PLAYLIST_MEMBER2.to_owned()
+        );
+        assert_eq!(
+            playlist_post.members[2].to_string(),
+            PLAYLIST_MEMBER3.to_owned()
+        );
     }
 
     #[test]
@@ -239,14 +242,20 @@ mod tests {
     fn lyric_post_parse_equals_display() {
         let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
         let uuid = HERTOG_JAN_ID.to_owned().parse::<Uuid>().unwrap();
-        let lyric = Lyric::from((Some(uuid), lyric_post, ));
-        assert_eq!(lyric.to_string().as_str(), hertog_jan_lyric().to_string().as_str());
+        let lyric = Lyric::from((Some(uuid), lyric_post));
+        assert_eq!(
+            lyric.to_string().as_str(),
+            hertog_jan_lyric().to_string().as_str()
+        );
     }
 
     #[test]
     fn lyric_meta_parse() {
         let lyric_meta: LyricMeta = hertog_jan_lyric().to_string().parse().unwrap();
         assert_eq!(lyric_meta.title, HERTOG_JAN_TITLE.to_owned());
-        assert_eq!(lyric_meta.hash, Some("\"2530-189459479300553739784561073837696755448\"".to_owned()));
+        assert_eq!(
+            lyric_meta.hash,
+            Some("\"2530-189459479300553739784561073837696755448\"".to_owned())
+        );
     }
 }

@@ -14,7 +14,6 @@ pub enum RepoError {
 
     // #[error("Model: {0}")]
     // Model(#[from] lipl_core::Error),
-
     #[error("Backend: {0}")]
     Backend(#[from] lipl_core::Error),
 

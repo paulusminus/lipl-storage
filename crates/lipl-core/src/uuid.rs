@@ -1,11 +1,13 @@
+use crate::error::Error;
+use bs58::{decode, encode};
 use core::default::Default;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 use core::str::FromStr;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
-use bs58::{decode, encode};
-use crate::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay)]
+#[derive(
+    Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, DeserializeFromStr, SerializeDisplay,
+)]
 pub struct Uuid(uuid::Uuid);
 
 impl Uuid {
@@ -28,8 +30,7 @@ impl std::fmt::Debug for Uuid {
 }
 
 fn bytes_to_uuid(bytes: Vec<u8>) -> Result<uuid::Uuid, Error> {
-    uuid::Uuid::from_slice(&bytes)
-    .map_err(Error::from)
+    uuid::Uuid::from_slice(&bytes).map_err(Error::from)
 }
 
 impl FromStr for Uuid {

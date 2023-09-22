@@ -1,29 +1,27 @@
 use std::sync::Arc;
 
-use super::{to_json_response, to_status_ok, to_error_response, Key};
+use super::ListQuery;
+use super::{to_error_response, to_json_response, to_status_ok, Key};
 use axum::{
-    Json,
     extract::{Query, State},
     http::StatusCode,
-    response::{Response},
+    response::Response,
+    Json,
 };
 use futures_util::TryFutureExt;
 use lipl_core::{LiplRepo, LyricPost};
-use super::ListQuery;
 
 /// Handler for getting all lyrics
 pub async fn list(
     State(connection): State<Arc<dyn LiplRepo>>,
     query: Query<ListQuery>,
-) -> Response 
-{
+) -> Response {
     if query.full == Some(true) {
         connection
             .get_lyrics()
             .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
             .await
-    }
-    else {
+    } else {
         connection
             .get_lyric_summaries()
             .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
@@ -32,11 +30,7 @@ pub async fn list(
 }
 
 /// Handler for getting a specific lyric
-pub async fn item(
-    State(connection): State<Arc<dyn LiplRepo>>,
-    key: Key,
-) -> Response 
-{
+pub async fn item(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Response {
     connection
         .get_lyric(key.id)
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
@@ -47,8 +41,7 @@ pub async fn item(
 pub async fn post(
     State(connection): State<Arc<dyn LiplRepo>>,
     Json(lyric_post): Json<LyricPost>,
-) -> Response
-{
+) -> Response {
     connection
         .upsert_lyric((None, lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::CREATED))
@@ -56,15 +49,11 @@ pub async fn post(
 }
 
 /// Handler for deleting a specific lyric
-pub async fn delete(
-    State(connection): State<Arc<dyn LiplRepo>>,
-    key: Key,
-) -> Response
-{
-        connection
-            .delete_lyric(key.id)
-            .map_ok_or_else(to_error_response, to_status_ok)
-            .await
+pub async fn delete(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Response {
+    connection
+        .delete_lyric(key.id)
+        .map_ok_or_else(to_error_response, to_status_ok)
+        .await
 }
 
 /// Handler for changing a specific lyric
@@ -72,8 +61,7 @@ pub async fn put(
     State(connection): State<Arc<dyn LiplRepo>>,
     key: Key,
     Json(lyric_post): Json<LyricPost>,
-) -> Response
-{
+) -> Response {
     connection
         .upsert_lyric((Some(key.id), lyric_post).into())
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))

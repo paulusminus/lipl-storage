@@ -1,6 +1,6 @@
 use futures_util::future::try_join_all;
-use lipl_storage_redis::{RedisRepoConfig, new_lyric, new_playlist};
 use lipl_core::Result;
+use lipl_storage_redis::{new_lyric, new_playlist, RedisRepoConfig};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
@@ -9,23 +9,28 @@ async fn main() -> Result<()> {
     let db = RedisRepoConfig::default().to_repo().await?;
 
     let lyrics = try_join_all([
-        db.upsert_lyric(
-            new_lyric("Roodkapje", "Zeg roodkapje waar ga je hene")
-        ),
-        db.upsert_lyric(
-            new_lyric("Daar bij die molen", "Ik zie de molen al versierd")
-        ),
-        db.upsert_lyric(
-            new_lyric("Daar bij de waterkant", "Ik heb je voor het eerst ontmoet. Daar bij de waterkant")
-        ),
-        db.upsert_lyric(
-            new_lyric("Sofietje", "Zij dronk ranja met een rietje. Mijn sofietje. Op een Amsterdams terras")
-        ),
+        db.upsert_lyric(new_lyric("Roodkapje", "Zeg roodkapje waar ga je hene")),
+        db.upsert_lyric(new_lyric(
+            "Daar bij die molen",
+            "Ik zie de molen al versierd",
+        )),
+        db.upsert_lyric(new_lyric(
+            "Daar bij de waterkant",
+            "Ik heb je voor het eerst ontmoet. Daar bij de waterkant",
+        )),
+        db.upsert_lyric(new_lyric(
+            "Sofietje",
+            "Zij dronk ranja met een rietje. Mijn sofietje. Op een Amsterdams terras",
+        )),
     ])
     .await?;
 
-    let playlist = 
-        db.upsert_playlist(new_playlist("Alles", lyrics.iter().map(|lyric| lyric.id).collect())).await?;
+    let playlist = db
+        .upsert_playlist(new_playlist(
+            "Alles",
+            lyrics.iter().map(|lyric| lyric.id).collect(),
+        ))
+        .await?;
 
     for playlist in db.get_playlist_summaries().await? {
         tracing::info!("{playlist}");
@@ -47,4 +52,3 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-

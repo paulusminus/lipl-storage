@@ -1,12 +1,15 @@
 use std::sync::Arc;
 
-use axum::{response::{IntoResponse, Json, Response}, extract::FromRequestParts};
+use axum::{
+    extract::FromRequestParts,
+    response::{IntoResponse, Json, Response},
+};
 use futures_util::FutureExt;
 use hyper::StatusCode;
 use lipl_core::LiplRepo;
 use serde::{Deserialize, Serialize};
 
-use crate::{error::ErrorReport};
+use crate::error::ErrorReport;
 
 pub mod lyric;
 pub mod playlist;
@@ -22,20 +25,39 @@ pub struct Key {
 
 impl Key {
     pub fn new(id: lipl_core::Uuid) -> Self {
-        Self {
-            id,
-        }
+        Self { id }
     }
 }
 
-impl FromRequestParts<Arc<dyn LiplRepo>> for Key 
-{
+impl FromRequestParts<Arc<dyn LiplRepo>> for Key {
     type Rejection = StatusCode;
 
-    fn from_request_parts<'life0,'life1,'async_trait>(parts: &'life0 mut axum::http::request::Parts, _state: &'life1 Arc<dyn LiplRepo>) ->  core::pin::Pin<Box<dyn core::future::Future<Output = Result<Self, Self::Rejection> > + core::marker::Send+'async_trait>> where 'life0:'async_trait,'life1:'async_trait,Self:'async_trait {
+    fn from_request_parts<'life0, 'life1, 'async_trait>(
+        parts: &'life0 mut axum::http::request::Parts,
+        _state: &'life1 Arc<dyn LiplRepo>,
+    ) -> core::pin::Pin<
+        Box<
+            dyn core::future::Future<Output = Result<Self, Self::Rejection>>
+                + core::marker::Send
+                + 'async_trait,
+        >,
+    >
+    where
+        'life0: 'async_trait,
+        'life1: 'async_trait,
+        Self: 'async_trait,
+    {
         async move {
-            parts.uri.path().split('/').last().ok_or(StatusCode::NOT_FOUND)
-                .and_then(|s| s.parse::<lipl_core::Uuid>().map_err(|_| StatusCode::NOT_FOUND))
+            parts
+                .uri
+                .path()
+                .split('/')
+                .last()
+                .ok_or(StatusCode::NOT_FOUND)
+                .and_then(|s| {
+                    s.parse::<lipl_core::Uuid>()
+                        .map_err(|_| StatusCode::NOT_FOUND)
+                })
                 .map(Key::new)
         }
         .boxed()
@@ -43,17 +65,23 @@ impl FromRequestParts<Arc<dyn LiplRepo>> for Key
 }
 
 pub(crate) fn to_json_response<T>(status_code: StatusCode) -> impl Fn(T) -> Response
-where T: Serialize
+where
+    T: Serialize,
 {
     move |t| (status_code, Json(t)).into_response()
 }
 
 pub(crate) fn to_error_response(error: lipl_core::Error) -> Response {
     match error {
-        lipl_core::Error::NoKey(_) => (StatusCode::NOT_FOUND, Json(ErrorReport::from(error))).into_response(),
-        _ => (StatusCode::INTERNAL_SERVER_ERROR, Json(ErrorReport::from(error))).into_response()
+        lipl_core::Error::NoKey(_) => {
+            (StatusCode::NOT_FOUND, Json(ErrorReport::from(error))).into_response()
+        }
+        _ => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorReport::from(error)),
+        )
+            .into_response(),
     }
-    
 }
 
 pub(crate) fn to_status_ok<T>(_: T) -> Response {

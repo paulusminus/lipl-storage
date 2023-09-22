@@ -5,7 +5,9 @@ pub trait VecExt<T> {
     where
         F: FnMut(T) -> R;
     fn add_one(self, t: T) -> Vec<T>;
-    fn without(self, t: &T) -> Vec<T> where T: PartialEq;
+    fn without(self, t: &T) -> Vec<T>
+    where
+        T: PartialEq;
     fn try_map<F, R, E: std::error::Error>(self, f: F) -> Result<Vec<R>, E>
     where
         F: FnMut(T) -> Result<R, E>;
@@ -27,19 +29,14 @@ impl<T> VecExt<T> for Vec<T> {
     }
 
     fn add_one(self, t: T) -> Vec<T> {
-        self
-            .into_iter()
-            .chain(
-                once(t)
-            )
-            .collect()
+        self.into_iter().chain(once(t)).collect()
     }
 
-    fn without(self, element: &T) -> Vec<T> where T: PartialEq {
-        self
-            .into_iter()
-            .filter(|t| t != element)
-            .collect()
+    fn without(self, element: &T) -> Vec<T>
+    where
+        T: PartialEq,
+    {
+        self.into_iter().filter(|t| t != element).collect()
     }
 }
 

@@ -1,8 +1,11 @@
-use std::{io::{BufReader, BufRead}, thread::JoinHandle};
+use std::{
+    io::{BufRead, BufReader},
+    thread::JoinHandle,
+};
 
+use crate::{LiplRepo, Lyric, Playlist, Summary, Uuid};
 use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
-use crate::{Lyric, Playlist, Summary, Uuid, LiplRepo};
 
 pub type ResultSender<T> = futures::channel::oneshot::Sender<crate::Result<T>>;
 pub type OptionalTransaction = Option<Transaction>;
@@ -53,7 +56,9 @@ impl From<&Request> for OptionalTransaction {
             Request::LyricDelete(uuid, _) => Some(Transaction::LyricDelete(*uuid)),
             Request::LyricPost(lyric, _) => Some(Transaction::LyricUpsert(lyric.clone())),
             Request::PlaylistDelete(uuid, _) => Some(Transaction::PlaylistDelete(*uuid)),
-            Request::PlaylistPost(playlist, _) => Some(Transaction::PlaylistUpsert(playlist.clone())),
+            Request::PlaylistPost(playlist, _) => {
+                Some(Transaction::PlaylistUpsert(playlist.clone()))
+            }
             _ => None,
         }
     }
@@ -67,8 +72,7 @@ where
 }
 
 fn now() -> String {
-    chrono::Utc::now()
-        .to_rfc3339_opts(SecondsFormat::Micros, true)
+    chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true)
 }
 
 fn write<W>(w: &mut W, json: String) -> crate::Result<()>
@@ -94,22 +98,21 @@ where
         .lines()
         .map(line_to_transaction)
         .collect::<crate::Result<Vec<_>>>()?;
-    
+
     for transaction in transactions {
         match transaction {
             Transaction::LyricDelete(id) => {
                 db.delete_lyric(id).await?;
-            },
+            }
             Transaction::LyricUpsert(lyric) => {
                 db.upsert_lyric(lyric).await?;
-            },
+            }
             Transaction::PlaylistDelete(id) => {
                 db.delete_playlist(id).await?;
-            },
+            }
             Transaction::PlaylistUpsert(playlist) => {
                 db.upsert_playlist(playlist).await?;
             }
-
         }
     }
     Ok(())
@@ -119,12 +122,15 @@ pub fn log_to_transaction<W>(mut writer: W) -> impl FnMut(Transaction) -> crate:
 where
     W: std::io::Write,
 {
-    move |transaction| {
-        write(&mut writer, transaction.to_string())
-    }
+    move |transaction| write(&mut writer, transaction.to_string())
 }
 
-pub fn start_log_thread<W>(log: W) -> (JoinHandle<crate::Result<()>>, std::sync::mpsc::Sender<Transaction>)
+pub fn start_log_thread<W>(
+    log: W,
+) -> (
+    JoinHandle<crate::Result<()>>,
+    std::sync::mpsc::Sender<Transaction>,
+)
 where
     W: std::io::Write + Send + Sync + 'static,
 {
@@ -133,7 +139,7 @@ where
         let mut write = log_to_transaction(log);
         while let Ok(request) = log_rx.recv() {
             write(request)?;
-        };
+        }
         Ok::<(), crate::Error>(())
     });
     (join_handle, log_tx)

@@ -1,13 +1,14 @@
 use std::vec;
 
-use lipl_server_axum::{create_service, LiplApp};
-use lipl_core::{Lyric, LyricPost, Summary, Playlist, PlaylistPost, Uuid};
 use axum::{
-    body::{Body},
-    http::{Request, StatusCode}, Router,
+    body::Body,
+    http::{Request, StatusCode},
+    Router,
 };
-use serde::{Serialize, de::DeserializeOwned};
-use tower::{ServiceExt};
+use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
+use lipl_server_axum::{create_service, LiplApp};
+use serde::{de::DeserializeOwned, Serialize};
+use tower::ServiceExt;
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";
@@ -16,19 +17,17 @@ const PREFIX: &str = "/api/v1/";
 fn daar_bij_die_molen() -> LyricPost {
     LyricPost {
         title: "Daar bij die molen".to_owned(),
-        parts: vec![
-            vec![
-                "Daar bij die molen, die mooie molen".to_owned(),
-                "Daar woont het meiseje waar ik zo veel van hou".to_owned(),
-                "Daar bij die molen, die mooie molen".to_owned(),
-                "Daar bij die molen, die mooie molen".to_owned(),
-            ]
-        ],
+        parts: vec![vec![
+            "Daar bij die molen, die mooie molen".to_owned(),
+            "Daar woont het meiseje waar ik zo veel van hou".to_owned(),
+            "Daar bij die molen, die mooie molen".to_owned(),
+            "Daar bij die molen, die mooie molen".to_owned(),
+        ]],
     }
 }
 
 fn roodkapje() -> LyricPost {
-    LyricPost { 
+    LyricPost {
         title: "Roodkapje".to_owned(),
         parts: vec![
             vec![
@@ -38,8 +37,8 @@ fn roodkapje() -> LyricPost {
             vec![
                 "'k ga naar grootmoeder koekjes brengen in het bos, in het bos".to_owned(),
                 "'k ga naar grootmoeder koekjes brengen in het bos".to_owned(),
-            ]
-        ]
+            ],
+        ],
     }
 }
 
@@ -51,14 +50,8 @@ async fn lyric_list() {
     let _roodkapje: Lyric = post(&service, LYRIC, &roodkapje()).await;
 
     let lyrics: Vec<Summary> = list(&service, LYRIC).await;
-    assert_eq!(
-        lyrics[0].title,
-        "Daar bij die molen".to_owned(),
-    );
-    assert_eq!(
-        lyrics[1].title,
-        "Roodkapje".to_owned()
-    );
+    assert_eq!(lyrics[0].title, "Daar bij die molen".to_owned(),);
+    assert_eq!(lyrics[1].title, "Roodkapje".to_owned());
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -88,7 +81,7 @@ async fn lyric_post_change() {
 
     lyric_post.title = "Daar bij dat molengedrag".to_owned();
     let lyric_changed: Lyric = put(&service, LYRIC, id.clone(), &lyric_post).await;
-    
+
     assert_eq!(lyric_changed.title, lyric_post.title);
 }
 
@@ -122,11 +115,8 @@ async fn playlist_list() {
 
     let _playlist: Playlist = post(&service, PLAYLIST, &playlist_post).await;
 
-    let playlists: Vec<Summary> = list(&service, PLAYLIST).await; 
-    assert_eq!(
-        playlists[0].title,
-        "Alle 13 goed".to_owned()
-    );
+    let playlists: Vec<Summary> = list(&service, PLAYLIST).await;
+    assert_eq!(playlists[0].title, "Alle 13 goed".to_owned());
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -171,8 +161,8 @@ async fn list<R: DeserializeOwned>(service: &Router<()>, name: &'static str) -> 
         .clone()
         .oneshot(
             Request::get(format!("{PREFIX}{name}"))
-            .body(Body::empty())
-            .unwrap()
+                .body(Body::empty())
+                .unwrap(),
         )
         .await
         .unwrap();
@@ -187,8 +177,8 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
         .clone()
         .oneshot(
             Request::get(format!("{PREFIX}{name}/{uuid}"))
-            .body(Body::empty())
-            .unwrap()
+                .body(Body::empty())
+                .unwrap(),
         )
         .await
         .unwrap();
@@ -200,28 +190,31 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
 
 async fn delete(service: &Router<()>, name: &'static str, id: String) {
     let response = service
-    .clone()
-    .oneshot(
-        Request::delete(format!("{PREFIX}{name}/{id}"))
-        .body(Body::empty())
-        .unwrap()
-    )
-    .await
-    .unwrap();
+        .clone()
+        .oneshot(
+            Request::delete(format!("{PREFIX}{name}/{id}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
 
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-async fn post<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, name: &str, t: &T) -> R {
+async fn post<'a, T: Serialize, R: DeserializeOwned>(
+    service: &'a Router<()>,
+    name: &str,
+    t: &T,
+) -> R {
     let body = serde_json::to_string(t).unwrap();
-    let response =
-        service
+    let response = service
         .clone()
         .oneshot(
             Request::post(format!("{}{}", PREFIX, name.to_string()))
-            .header("Content-Type", "application/json")
-            .body(body.into())
-            .unwrap()
+                .header("Content-Type", "application/json")
+                .body(body.into())
+                .unwrap(),
         )
         .await
         .unwrap();
@@ -233,16 +226,20 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, na
     r
 }
 
-async fn put<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router<()>, name: &str, id: String, t: &T) -> R {
+async fn put<'a, T: Serialize, R: DeserializeOwned>(
+    service: &'a Router<()>,
+    name: &str,
+    id: String,
+    t: &T,
+) -> R {
     let body = serde_json::to_string(t).unwrap();
-    let response =
-        service
+    let response = service
         .clone()
         .oneshot(
             Request::put(format!("{PREFIX}{name}/{id}"))
-            .header("Content-Type", "application/json")
-            .body(body.into())
-            .unwrap()
+                .header("Content-Type", "application/json")
+                .body(body.into())
+                .unwrap(),
         )
         .await
         .unwrap();

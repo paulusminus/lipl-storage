@@ -27,27 +27,22 @@ impl From<String> for Markdown {
 
 fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
     let parts = to_parts(text);
-    if 
-        !parts.is_empty()
-        && !parts[0].is_empty()
-        && parts[0][0] == *yaml_separator
-    {
+    if !parts.is_empty() && !parts[0].is_empty() && parts[0][0] == *yaml_separator {
         Markdown {
             frontmatter: Some(
                 parts[0]
-                .clone()
-                .into_iter()
-                .filter(|s| s != yaml_separator)
-                .collect::<Vec<_>>()
-                .join("\n")
+                    .clone()
+                    .into_iter()
+                    .filter(|s| s != yaml_separator)
+                    .collect::<Vec<_>>()
+                    .join("\n"),
             ),
             parts: parts[1..].to_vec(),
         }
-    }
-    else {
+    } else {
         Markdown {
             frontmatter: None,
-            parts
+            parts,
         }
     }
 }
@@ -66,21 +61,19 @@ fn to_lines(s: &str) -> Vec<String> {
 
 pub fn to_parts(s: String) -> Vec<Vec<String>> {
     DOUBLE_LINE_REGEX
-    .split(&s)
-    .map(to_lines)
-    .filter(|p| !p.is_empty())
-    .collect()
+        .split(&s)
+        .map(to_lines)
+        .filter(|p| !p.is_empty())
+        .collect()
 }
 
 pub fn to_text(parts: &[Vec<String>]) -> String {
     parts
-    .iter()
-    .map(|lines| lines.join("\n"))
-    .collect::<Vec<String>>()
-    .join("\n\n")
+        .iter()
+        .map(|lines| lines.join("\n"))
+        .collect::<Vec<String>>()
+        .join("\n\n")
 }
-
-
 
 #[cfg(test)]
 mod test {
@@ -112,7 +105,6 @@ mod test {
         assert_eq!(&result[1][0], "Wat fijn");
         assert_eq!(result[1].len(), 1);
     }
-
 
     #[test]
     fn test_parse_markdown() {

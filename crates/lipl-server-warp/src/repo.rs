@@ -32,24 +32,16 @@ impl RepoConfig {
     pub async fn build_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
         match self {
             #[cfg(feature = "file")]
-            RepoConfig::File(config) => {
-                config.to_repo().await
-            },
+            RepoConfig::File(config) => config.to_repo().await,
 
             #[cfg(feature = "postgres")]
-            RepoConfig::Postgres(config) => {
-                config.to_repo().await
-            },
+            RepoConfig::Postgres(config) => config.to_repo().await,
 
             #[cfg(feature = "redis")]
-            RepoConfig::Redis(config) => {
-                config.to_repo().await
-            }
+            RepoConfig::Redis(config) => config.to_repo().await,
 
             #[cfg(feature = "memory")]
-            RepoConfig::Memory(config) => {
-                config.to_repo().await
-            }
+            RepoConfig::Memory(config) => config.to_repo().await,
         }
     }
 }
@@ -68,8 +60,8 @@ impl FromStr for RepoConfig {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         #[cfg(feature = "file")]
         if s.starts_with(PREFIX_FILE) {
-            return 
-                s.strip_prefix(PREFIX_FILE)
+            return s
+                .strip_prefix(PREFIX_FILE)
                 .unwrap()
                 .parse::<lipl_storage_fs::FileRepoConfig>()
                 .map(Box::new)
@@ -78,32 +70,32 @@ impl FromStr for RepoConfig {
 
         #[cfg(feature = "postgres")]
         if s.starts_with(PREFIX_POSTGRES) {
-            return 
-                s.strip_prefix(PREFIX_POSTGRES)
-                    .unwrap()
-                    .parse::<lipl_storage_postgres::PostgresRepoConfig>()
-                    .map(Box::new)
-                    .map(RepoConfig::Postgres);
+            return s
+                .strip_prefix(PREFIX_POSTGRES)
+                .unwrap()
+                .parse::<lipl_storage_postgres::PostgresRepoConfig>()
+                .map(Box::new)
+                .map(RepoConfig::Postgres);
         }
 
         #[cfg(feature = "redis")]
         if s.starts_with(PREFIX_REDIS) {
-            return 
-                s.strip_prefix(PREFIX_REDIS)
-                    .unwrap()
-                    .parse::<lipl_storage_redis::redis_repo::RedisRepoConfig<String>>()
-                    .map(Box::new)
-                    .map(RepoConfig::Redis);
+            return s
+                .strip_prefix(PREFIX_REDIS)
+                .unwrap()
+                .parse::<lipl_storage_redis::redis_repo::RedisRepoConfig<String>>()
+                .map(Box::new)
+                .map(RepoConfig::Redis);
         }
 
         #[cfg(feature = "memory")]
         if s.starts_with(PREFIX_MEMORY) {
-            return
-                s.strip_prefix(PREFIX_MEMORY)
-                    .unwrap()
-                    .parse::<lipl_storage_memory::MemoryRepoConfig>()
-                    .map(Box::new)
-                    .map(RepoConfig::Memory);
+            return s
+                .strip_prefix(PREFIX_MEMORY)
+                .unwrap()
+                .parse::<lipl_storage_memory::MemoryRepoConfig>()
+                .map(Box::new)
+                .map(RepoConfig::Memory);
         }
 
         Err(lipl_core::Error::Argument("Invalid argument"))

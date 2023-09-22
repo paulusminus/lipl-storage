@@ -1,20 +1,20 @@
 /*!
- This crate is a depency library for other crates who wish to work with lyrics and playlists.
+This crate is a depency library for other crates who wish to work with lyrics and playlists.
 
- The main trait is LiplRepo. Other crates implement this trait to hide implementation details for creating, reading, updating and deleting
- lyrics ands playlist from a store. All implementation except MemoryRepo implement a persistent store.
+The main trait is LiplRepo. Other crates implement this trait to hide implementation details for creating, reading, updating and deleting
+lyrics ands playlist from a store. All implementation except MemoryRepo implement a persistent store.
 
- MemoryRepo is usefull for testing perposes.
- 
- */
+MemoryRepo is usefull for testing perposes.
 
-use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
-use std::sync::Arc;
-use std::cmp::Ordering;
-use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+*/
+
 pub use crate::uuid::Uuid;
+use async_trait::async_trait;
+use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 pub use error::{postgres_error, redis_error, Error};
+use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
+use std::sync::Arc;
 
 mod disk_format;
 pub mod error;
@@ -67,7 +67,7 @@ impl HasSummary for Lyric {
     }
 }
 
-pub fn by_title<T>(a: &T, b: &T) -> Ordering 
+pub fn by_title<T>(a: &T, b: &T) -> Ordering
 where
     T: HasSummary,
 {
@@ -102,7 +102,10 @@ impl From<LyricPost> for Lyric {
 
 impl From<Lyric> for LyricPost {
     fn from(lyric: Lyric) -> Self {
-        Self { title: lyric.title, parts: lyric.parts }
+        Self {
+            title: lyric.title,
+            parts: lyric.parts,
+        }
     }
 }
 
@@ -172,7 +175,7 @@ impl From<(Option<Uuid>, LyricMeta)> for Summary {
     fn from(tuple: (Option<Uuid>, LyricMeta)) -> Self {
         Summary {
             id: tuple.0.unwrap_or_default(),
-            title: tuple.1.title
+            title: tuple.1.title,
         }
     }
 }
@@ -203,7 +206,7 @@ where
     list.iter().map(to_summary).collect()
 }
 
-pub fn ids<T>(list: impl Iterator<Item=T>) -> Vec<Uuid>
+pub fn ids<T>(list: impl Iterator<Item = T>) -> Vec<Uuid>
 where
     T: HasSummary,
 {
@@ -220,7 +223,7 @@ impl From<&Lyric> for LyricMeta {
     fn from(l: &Lyric) -> Self {
         LyricMeta {
             title: l.title.clone(),
-            hash: l.etag()
+            hash: l.etag(),
         }
     }
 }
@@ -232,9 +235,9 @@ pub trait Etag {
 impl<T: Serialize> Etag for T {
     fn etag(&self) -> Option<String> {
         bincode::serialize(self)
-        .map(|bytes| etag::EntityTag::const_from_data(&bytes))
-        .map(|etag| etag.to_string())
-        .ok()
+            .map(|bytes| etag::EntityTag::const_from_data(&bytes))
+            .map(|etag| etag.to_string())
+            .ok()
     }
 }
 
@@ -248,14 +251,17 @@ impl From<(Vec<Lyric>, Vec<Playlist>)> for RepoDb {
     fn from(tuple: (Vec<Lyric>, Vec<Playlist>)) -> Self {
         Self {
             lyrics: tuple.0,
-            playlists: tuple.1
+            playlists: tuple.1,
         }
     }
 }
 
 impl RepoDb {
     pub fn find_lyric_by_title(&self, title: &str) -> Option<Lyric> {
-        self.lyrics.iter().find(|lyric| lyric.title == *title).cloned()
+        self.lyrics
+            .iter()
+            .find(|lyric| lyric.title == *title)
+            .cloned()
     }
 
     pub fn to_yaml(&self) -> Result<String> {
@@ -266,38 +272,28 @@ impl RepoDb {
 
 impl std::fmt::Display for RepoDb {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        let lyrics = 
-            core::iter::once("Lyrics:".to_owned())
-            .chain(
-                self
-                .lyrics
+        let lyrics = core::iter::once("Lyrics:".to_owned()).chain(
+            self.lyrics
                 .iter()
-                .map(|lyric| 
-                    format!(" - {}, {} parts", lyric.title, lyric.parts.len()
-                )
-            )
-            .chain(
-                core::iter::once("".to_owned()),
-            )
-            .chain(
-                core::iter::once(
-                    "Playlists:".to_owned(),
-                )
-            )
-            .chain(
-                self
-                .playlists
-                .iter()
-                .map(|playlist| 
-                    format!(" - {}", playlist.title)
-                )
-            )
+                .map(|lyric| format!(" - {}, {} parts", lyric.title, lyric.parts.len()))
+                .chain(core::iter::once("".to_owned()))
+                .chain(core::iter::once("Playlists:".to_owned()))
+                .chain(
+                    self.playlists
+                        .iter()
+                        .map(|playlist| format!(" - {}", playlist.title)),
+                ),
         );
         write!(f, "{}", lyrics.collect::<Vec<_>>().join("\n"))
     }
 }
 
 pub trait Yaml {
-    fn load<R>(r: R) -> Result<Self> where R: std::io::Read, Self: Sized;
-    fn save<W>(&self, w: W) -> Result<()> where W: std::io::Write;
+    fn load<R>(r: R) -> Result<Self>
+    where
+        R: std::io::Read,
+        Self: Sized;
+    fn save<W>(&self, w: W) -> Result<()>
+    where
+        W: std::io::Write;
 }

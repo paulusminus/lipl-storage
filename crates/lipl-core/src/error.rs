@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::Uuid;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -91,23 +91,23 @@ pub enum Error {
     Key(String),
 }
 
-pub fn postgres_error<E>(error: E) -> Error 
+pub fn postgres_error<E>(error: E) -> Error
 where
-    E: std::error::Error + Send + Sync + 'static
+    E: std::error::Error + Send + Sync + 'static,
 {
     Error::Postgres(Box::new(error))
 }
 
 pub fn redis_error<E>(error: E) -> Error
 where
-    E: std::error::Error + Send + Sync + 'static
+    E: std::error::Error + Send + Sync + 'static,
 {
     Error::Redis(Box::new(error))
 }
 
 pub fn reqwest_error<E>(error: E) -> Error
 where
-    E: std::error::Error + Send + Sync + 'static
+    E: std::error::Error + Send + Sync + 'static,
 {
     Error::Redis(Box::new(error))
 }
