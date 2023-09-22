@@ -35,9 +35,7 @@ async fn main() {
 
     assert_eq!(db.get_lyric_summaries().await.unwrap().len(), 4);
 
-    db.delete_lyric(lyrics[2].id)
-        .await
-        .unwrap();
+    db.delete_lyric(lyrics[2].id).await.unwrap();
 
     assert_eq!(db.get_lyric_summaries().await.unwrap().len(), 3);
 }

@@ -47,19 +47,11 @@ async fn test_lyric() {
     let posted_lyric3 = repo.upsert_lyric(lyric3.clone()).await.unwrap();
     assert_eq!(lyric3.id, posted_lyric3.id);
 
-    let mut count = repo.get_lyric_summaries()
-        .await
-        .unwrap()
-        .len();
+    let mut count = repo.get_lyric_summaries().await.unwrap().len();
     assert_eq!(count, 3);
 
-    repo.delete_lyric(posted_lyric2.id)
-        .await
-        .unwrap();
-    count = repo.get_lyric_summaries()
-        .await
-        .unwrap()
-        .len();
+    repo.delete_lyric(posted_lyric2.id).await.unwrap();
+    count = repo.get_lyric_summaries().await.unwrap().len();
     assert_eq!(count, 2);
 
     let summaries: Vec<String> = repo
@@ -100,14 +92,10 @@ async fn test_lyric() {
     )
         .into();
 
-    let playlist_posted = repo.upsert_playlist(playlist.clone())
-        .await
-        .unwrap();
+    let playlist_posted = repo.upsert_playlist(playlist.clone()).await.unwrap();
     assert_eq!(playlist_posted.members, vec![lyric3.id, lyric1.id]);
 
-    let playlist_retrieved1 = repo.get_playlist(playlist.id)
-        .await
-        .unwrap();
+    let playlist_retrieved1 = repo.get_playlist(playlist.id).await.unwrap();
     assert_eq!(playlist_retrieved1.members, vec![lyric3.id, lyric1.id]);
 
     let mut playlist2 = playlist.clone();
