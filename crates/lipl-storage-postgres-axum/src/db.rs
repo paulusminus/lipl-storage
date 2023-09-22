@@ -19,7 +19,7 @@ fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
         if let Error::NoResults = pg_error {
             Error::NoKey(uuid.to_string())
         } else {
-            pg_error.into()
+            pg_error
         }
     }
 }
