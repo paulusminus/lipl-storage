@@ -18,10 +18,12 @@ pub use error::{postgres_error, redis_error, Error};
 
 mod disk_format;
 pub mod error;
+pub mod parts;
 pub mod reexport;
 #[cfg(feature = "transaction")]
 pub mod transaction;
 mod uuid;
+pub mod vec_ext;
 
 pub type Result<T> = core::result::Result<T, Error>;
 

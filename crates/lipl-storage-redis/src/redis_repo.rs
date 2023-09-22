@@ -2,9 +2,8 @@ use async_trait::async_trait;
 use bb8_redis::{bb8::{Pool, PooledConnection}, RedisConnectionManager, redis::{cmd, IntoConnectionInfo}};
 use bb8_redis::redis::AsyncCommands;
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
-use parts::{to_parts, to_text};
 use std::{collections::HashMap, ops::DerefMut, sync::Arc, str::FromStr};
-use lipl_core::{by_title, redis_error, Lyric, Uuid, Error, Playlist, Result, Summary, LiplRepo, ToRepo};
+use lipl_core::{parts::{to_parts, to_text}, by_title, redis_error, Lyric, Uuid, Error, Playlist, Result, Summary, LiplRepo, ToRepo};
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";

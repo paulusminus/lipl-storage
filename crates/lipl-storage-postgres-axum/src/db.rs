@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use futures_util::TryFutureExt;
-use lipl_core::{Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist};
-use lipl_util::VecExt;
-use parts::to_text;
+use lipl_core::{parts::to_text, Error, LiplRepo, Lyric, Result, Summary, Uuid, Playlist};
+use lipl_core::vec_ext::VecExt;
 
 use super::convert;
 use crate::PostgresConnectionPool;

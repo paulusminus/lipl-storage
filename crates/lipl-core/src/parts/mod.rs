@@ -1,12 +1,12 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-mod from_async_reader;
-mod from_reader;
-mod st;
-pub use st::to_parts_async;
-pub use from_async_reader::from_async_reader;
-pub use from_reader::parts_from_reader;
+// mod from_async_reader;
+// mod from_reader;
+// mod st;
+// pub use st::to_parts_async;
+// pub use from_async_reader::from_async_reader;
+// pub use from_reader::parts_from_reader;
 
 const DOUBLE_LINE: &str = r"\n\s*\n";
 
@@ -129,6 +129,4 @@ mod test {
         assert!(result.parts.is_empty());
         assert_eq!(result.frontmatter, Some("yaml: is_fine".to_owned()))
     }
-
-
 }

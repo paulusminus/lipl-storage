@@ -87,8 +87,7 @@ fn create_lyrics(lyric_files: &[PathBuf], playlists: Vec<(String, Vec<String>)>)
 
 fn source_gen(hashmap: TokenStream) -> TokenStream {
     quote! {
-        use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, RepoDb};
-        use parts::{to_parts};
+        use lipl_core::{parts::to_parts, Lyric, LyricPost, Playlist, PlaylistPost, RepoDb};
  
         /// This function returns all lyrics from a directory read at build time.
         #hashmap

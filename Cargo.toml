@@ -1,6 +1,16 @@
 [workspace]
 resolver = "2"
-members = ["crates/*"]
+members = [
+    "crates/lipl-core",
+    "crates/lipl-sample-data",
+    "crates/lipl-server-axum",
+    "crates/lipl-server-warp",
+    "crates/lipl-storage-fs",
+    "crates/lipl-storage-memory",
+    "crates/lipl-storage-postgres",
+    "crates/lipl-storage-postgres-axum",
+    "crates/lipl-storage-redis"
+]
 
 [workspace.package]
 authors = ["Paul Min"]

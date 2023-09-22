@@ -10,7 +10,6 @@ version.workspace = true
 
 [dependencies]
 lipl-core = { version = "0.2.0", path = "../lipl-core" }
-parts = { version = "0.2.0", path = "../parts" }
 async-trait = "0.1.61"
 bb8-redis = "0.13"
 futures-util = "0.3.25"

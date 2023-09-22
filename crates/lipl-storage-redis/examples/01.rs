@@ -1,5 +1,5 @@
 use futures_util::future::try_join_all;
-use lipl_repo_redis::{RedisRepoConfig, new_lyric, new_playlist};
+use lipl_storage_redis::{RedisRepoConfig, new_lyric, new_playlist};
 use lipl_core::Result;
 
 #[tokio::main(flavor = "current_thread")]

@@ -1,5 +1,5 @@
 use lipl_core::{postgres_error, reexport, Lyric, Result, Summary, Uuid, Playlist};
-use lipl_util::VecExt;
+use lipl_core::vec_ext::VecExt;
 use tokio_postgres::Row;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Result<Vec<T>>
@@ -13,7 +13,7 @@ pub fn to_lyric(row: Row) -> Result<Lyric> {
     Ok(Lyric {
         id: row.try_get::<&str, reexport::uuid::Uuid>(column::ID).map_err(postgres_error)?.into(),
         title: row.try_get::<&str, String>(column::TITLE).map_err(postgres_error)?,
-        parts: parts::to_parts(row.try_get::<&str, String>(column::PARTS).map_err(postgres_error)?),
+        parts: lipl_core::parts::to_parts(row.try_get::<&str, String>(column::PARTS).map_err(postgres_error)?),
     })
 }
 

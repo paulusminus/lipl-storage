@@ -16,7 +16,7 @@ use lipl_core::{
     transaction::Request,
     LiplRepo, Lyric, Playlist, Summary, Uuid, ToRepo,
 };
-use lipl_util::VecExt;
+use lipl_core::vec_ext::VecExt;
 use request::{delete_by_id, post, select, select_by_id};
 use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 

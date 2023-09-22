@@ -2,7 +2,7 @@ use lipl_core::LyricPost;
 use futures::TryStream;
 use futures::stream::iter;
 use crate::{fs, Result, error::Error};
-use parts::{to_parts};
+use lipl_core::parts::to_parts;
 
 impl From<fs::Entry> for LyricPost {
     fn from(entry: fs::Entry) -> Self {

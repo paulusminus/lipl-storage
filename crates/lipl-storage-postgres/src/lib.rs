@@ -6,8 +6,7 @@ use async_trait::async_trait;
 use bb8_postgres::PostgresConnectionManager;
 use bb8_postgres::bb8::Pool;
 use futures_util::TryFutureExt;
-use lipl_core::{postgres_error, Error, Lyric, LiplRepo, Playlist, Result, Summary, Uuid, ToRepo};
-use parts::to_text;
+use lipl_core::{parts::to_text, postgres_error, Error, Lyric, LiplRepo, Playlist, Result, Summary, Uuid, ToRepo};
 use bb8_postgres::tokio_postgres::{Row, NoTls};
 
 use crate::db::crud;

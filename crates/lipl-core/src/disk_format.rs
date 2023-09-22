@@ -1,11 +1,11 @@
-use core::str::{FromStr};
+use core::str::FromStr;
 use core::fmt::{Display, Formatter};
 use core::str::Lines;
 use core::iter::once;
 
-use lipl_util::VecExt;
+use crate::vec_ext::VecExt;
 use crate::{Etag, Lyric, LyricMeta, LyricPost, PlaylistPost, Playlist};
-use crate::error::{Error};
+use crate::error::Error;
 
 const YAML_PREFIX: &str = "---";
 

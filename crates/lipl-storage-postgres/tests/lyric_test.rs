@@ -1,5 +1,5 @@
 use lipl_core::{LiplRepo, LyricPost, Lyric, Playlist, PlaylistPost};
-use lipl_repo_postgres::{PostgresRepoConfig, PostgresRepo};
+use lipl_storage_postgres::{PostgresRepoConfig, PostgresRepo};
 
 const ROODKAPJE: &str = include_str!("./Roodkapje.md");
 const MOLEN: &str = include_str!("./Molen.md");

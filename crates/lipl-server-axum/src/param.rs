@@ -69,7 +69,7 @@ pub mod app {
     #[async_trait]
     impl ToRepo for LiplApp {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
-        lipl_repo_memory::MemoryRepoConfig { sample_data: self.memory, transaction_log: None }
+        lipl_storage_memory::MemoryRepoConfig { sample_data: self.memory, transaction_log: None }
             .to_repo()
             .await
         }

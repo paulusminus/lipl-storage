@@ -14,7 +14,7 @@ use lipl_core::{
     RepoDb,
     reexport::serde_yaml, by_title, ToRepo, HasSummary,
 };
-use lipl_util::VecExt;
+use lipl_core::vec_ext::VecExt;
 
 #[derive(Clone)]
 enum Record {

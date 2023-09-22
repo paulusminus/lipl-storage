@@ -1,6 +1,6 @@
-use std::{fmt::{Display}, time::Instant};
-use lipl_repo_fs::{FileRepo};
-use lipl_core::{LiplRepo};
+use std::{fmt::Display, time::Instant};
+use lipl_storage_fs::FileRepo;
+use lipl_core::LiplRepo;
 
 pub fn print<D>(d: D) 
 where 
