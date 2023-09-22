@@ -24,15 +24,14 @@ async fn test_lyric() {
             .parse::<PostgresRepoConfig>()
             .unwrap()
             .clear(true)
-        }
-        else {
-            dotenv::from_filename("local.env").ok();
-            let host = std::env::var("POSTGRES_HOST").unwrap();
-            let db = std::env::var("POSTGRES_DB").unwrap();
-            format!("host={host} dbname={db}")
-                .parse::<PostgresRepoConfig>()
-                .unwrap()
-                .clear(true)
+    } else {
+        dotenv::from_filename("local.env").ok();
+        let host = std::env::var("POSTGRES_HOST").unwrap();
+        let db = std::env::var("POSTGRES_DB").unwrap();
+        format!("host={host} dbname={db}")
+            .parse::<PostgresRepoConfig>()
+            .unwrap()
+            .clear(true)
     };
     let repo = PostgresRepo::new(repo_config).await.unwrap();
 
