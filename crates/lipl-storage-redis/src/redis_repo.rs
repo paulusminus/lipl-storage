@@ -109,7 +109,7 @@ where
 impl Default for RedisRepoConfig<String> {
     fn default() -> Self {
         Self {
-            clear: false,
+            clear: true,
             url: "redis://127.0.0.1/".to_owned(),
         }
     }

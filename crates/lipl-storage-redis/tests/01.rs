@@ -1,12 +1,9 @@
 use futures_util::future::try_join_all;
-use lipl_core::Result;
 use lipl_storage_redis::{new_lyric, new_playlist, RedisRepoConfig};
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() -> Result<()> {
-    tracing_subscriber::fmt().init();
-
-    let db = RedisRepoConfig::default().to_repo().await?;
+#[tokio::test(flavor = "current_thread")]
+async fn main() {
+    let db = RedisRepoConfig::default().to_repo().await.unwrap();
 
     let lyrics = try_join_all([
         db.upsert_lyric(new_lyric("Roodkapje", "Zeg roodkapje waar ga je hene")),
@@ -23,32 +20,24 @@ async fn main() -> Result<()> {
             "Zij dronk ranja met een rietje. Mijn sofietje. Op een Amsterdams terras",
         )),
     ])
-    .await?;
+    .await
+    .unwrap();
 
-    let playlist = db
+    let _playlist = db
         .upsert_playlist(new_playlist(
             "Alles",
             lyrics.iter().map(|lyric| lyric.id).collect(),
         ))
-        .await?;
+        .await
+        .unwrap();
 
-    for playlist in db.get_playlist_summaries().await? {
-        tracing::info!("{playlist}");
-    }
+    assert_eq!(db.get_playlist_summaries().await.unwrap().len(), 1);
 
-    for lyric in db.get_lyric_summaries().await? {
-        tracing::info!("{lyric}");
-    }
+    assert_eq!(db.get_lyric_summaries().await.unwrap().len(), 4);
 
-    tracing::info!("About to remove lyric with id {}", lyrics[2].id);
-    db.delete_lyric(lyrics[2].id).await?;
+    db.delete_lyric(lyrics[2].id)
+        .await
+        .unwrap();
 
-    for lyric in db.get_lyric_summaries().await? {
-        tracing::info!("{lyric}");
-    }
-
-    let modified_playlist = db.get_playlist(playlist.id).await?;
-    tracing::info!("Playlist: {}", modified_playlist);
-
-    Ok(())
+    assert_eq!(db.get_lyric_summaries().await.unwrap().len(), 3);
 }
