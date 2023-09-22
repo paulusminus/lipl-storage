@@ -11,7 +11,7 @@ version.workspace = true
 
 [dependencies]
 lipl-core = { path = "../lipl-core" }
-parts = { path = "../parts" }
+parts = { version = "0.2.0", path = "../parts" }
 
 [build-dependencies]
 quote = "1.0.21"

@@ -19,11 +19,11 @@ redis = ["dep:lipl-storage-redis"]
 # anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "4", features = ["cargo", "derive"] }
-lipl-storage-memory = { path = "../lipl-storage-memory", optional = true }
-lipl-core = { path = "../lipl-core" }
+lipl-storage-memory = { version = "0.2.0", path = "../lipl-storage-memory", optional = true }
+lipl-core = { version = "0.2.0", path = "../lipl-core" }
 lipl-storage-fs = { version = "0.2", path = "../lipl-storage-fs", optional = true }
-lipl-storage-postgres = { path = "../lipl-storage-postgres", optional = true }
-lipl-storage-redis = { path = "../lipl-storage-redis", optional = true }
+lipl-storage-postgres = { version = "0.2.0", path = "../lipl-storage-postgres", optional = true }
+lipl-storage-redis = { version = "0.2.0", path = "../lipl-storage-redis", optional = true }
 serde = "1.0"
 thiserror = "1.0.32"
 tokio = { version = "1.0", features = ["macros", "rt", "signal", "sync"] }
