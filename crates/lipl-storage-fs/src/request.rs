@@ -12,7 +12,7 @@ fn send_failed<E: std::error::Error>(error: E) -> Error {
 }
 
 fn canceled(error: Canceled) -> Error {
-    Error::Canceled(Box::new(error))
+    Error::Canceled(error.into())
 }
 
 pub async fn select<T>(
