@@ -12,7 +12,7 @@ use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
 use fs::IO;
 use futures::channel::mpsc;
 use futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
-pub use lipl_core::error::Error;
+pub use lipl_core::error::{Error, ErrorExtension};
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{transaction::Request, LiplRepo, Lyric, Playlist, Summary, ToRepo, Uuid};
 use request::{delete_by_id, post, select, select_by_id};
@@ -95,21 +95,21 @@ where
         }
         Request::LyricSummaries(sender) => {
             io::get_list(&source_dir, LYRIC_EXTENSION, io::get_lyric_summary)
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed("LyricSummaries".to_string()))
                 .await
         }
         Request::LyricList(sender) => {
             io::get_list(&source_dir, LYRIC_EXTENSION, io::get_lyric)
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed("LyricList".to_string()))
                 .await
         }
         Request::LyricItem(uuid, sender) => {
             io::get_lyric(lyric_path(&uuid))
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed(format!("LyricItem {uuid}")))
                 .await
@@ -140,7 +140,7 @@ where
             let path = lyric_path(&lyric.id);
             io::post_item(&path, lyric)
                 .and_then(|_| io::get_lyric(&path))
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|e| {
                     lipl_core::Error::SendFailed(format!("LyricPost {}", e.unwrap().title))
@@ -150,21 +150,21 @@ where
         Request::PlaylistSummaries(sender) => {
             io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist)
                 .map_ok(lipl_core::to_summaries)
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
                 .await
         }
         Request::PlaylistList(sender) => {
             io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist)
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
                 .await
         }
         Request::PlaylistItem(uuid, sender) => {
             io::get_playlist(playlist_path(&uuid))
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistItem {uuid}")))
                 .await
@@ -172,7 +172,7 @@ where
         Request::PlaylistDelete(uuid, sender) => {
             let path = playlist_path(&uuid);
             path.remove()
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistDelete {uuid}")))
                 .await
@@ -183,7 +183,7 @@ where
                 .and_then(|ids| check_members(&playlist, &ids))
                 .and_then(|_| io::post_item(playlist_path(&playlist.id), playlist.clone()))
                 .and_then(|_| io::get_playlist(playlist_path(&playlist.id)))
-                .map_err(lipl_core::Error::from)
+                .err_into()
                 .map(|v| sender.send(v))
                 .map_err(|e| {
                     lipl_core::Error::SendFailed(format!("PlaylistPost {}", e.unwrap().title))

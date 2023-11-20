@@ -111,3 +111,16 @@ where
 {
     Error::Redis(Box::new(error))
 }
+
+pub trait ErrorExtension<T> {
+    fn into_lipl_err(self) -> Result<T, Error>;
+}
+
+impl<T, E> ErrorExtension<T> for Result<T, E>
+where
+    E: Into<Error>,
+{
+    fn into_lipl_err(self) -> Result<T, Error> {
+        self.map_err(|e| e.into())
+    }
+}

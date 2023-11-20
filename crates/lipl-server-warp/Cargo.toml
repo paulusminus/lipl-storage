@@ -16,7 +16,6 @@ memory = ["dep:lipl-storage-memory"]
 redis = ["dep:lipl-storage-redis"]
 
 [dependencies]
-# anyhow = "1.0"
 async-trait = "0.1"
 clap = { version = "4", features = ["cargo", "derive"] }
 lipl-storage-memory = { version = "0.2.0", path = "../lipl-storage-memory", optional = true }

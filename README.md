@@ -38,18 +38,3 @@ Storage and retrievel with the help of a postgres client connected to a postgres
 
 Http server that handles requests for storage and retrieval of lyric(s) and playlist(s).
 
-# lipl-upload
-
-Executable binary that reads a collection of text files and sends them to a http server for storage.
-
-# lipl-util
-
-Vec extensions.
-
-# parts
-
-String utilities.
-
-# rest-api-client
-
-Generic rest api client. 
