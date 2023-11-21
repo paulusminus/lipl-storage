@@ -11,6 +11,7 @@ version.workspace = true
 [[bin]]
 name = "lipl-server-axum"
 path = "src/lipl_server_axum.rs"
+required-features = ["fs", "memory"]
 
 [[bin]]
 name = "lipl-server-axum-postgres"
@@ -21,6 +22,7 @@ required-features = ["postgres"]
 default = ["memory"]
 postgres = ["dep:lipl-storage-postgres-axum", "dep:lipl-core"]
 memory = ["dep:lipl-storage-memory", "dep:lipl-core"]
+fs = ["dep:lipl-storage-fs", "dep:lipl-core"]
 
 [dependencies]
 axum = { version = "0.6", features = ["headers", "query"] }
@@ -29,6 +31,7 @@ futures-util = "0.3"
 hyper = "0.14"
 lipl-storage-postgres-axum = { version = "0.2.0", path = "../lipl-storage-postgres-axum", optional = true }
 lipl-storage-memory = { version = "0.2.0", path = "../lipl-storage-memory", optional = true }
+lipl-storage-fs = { version = "0.2.0", path = "../lipl-storage-fs", optional = true }
 lipl-core = { version = "0.2.0", path = "../lipl-core", optional = true }
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"

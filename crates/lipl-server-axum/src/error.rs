@@ -1,3 +1,5 @@
+use std::{env::VarError, str::ParseBoolError};
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -23,6 +25,15 @@ impl<E: std::error::Error> From<E> for ErrorReport {
 pub enum Error {
     #[error("Hyper: {0}")]
     Hyper(#[from] hyper::Error),
+
+    #[error("Environment: {0}")]
+    Environment(#[from] VarError),
+
+    #[error("Invalid configuration from environment")]
+    InvalidConfiguration,
+
+    #[error("Environment parse: {0}")]
+    EnvironmentParse(#[from] ParseBoolError),
 
     #[cfg(feature = "postgres")]
     #[error("Postgres: {0}")]

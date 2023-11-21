@@ -1,10 +1,10 @@
 use std::net::SocketAddr;
 
 use axum::Router;
-use clap::Parser;
+// use clap::Parser;
 use futures_util::TryFutureExt;
 use lipl_core::Result;
-use lipl_server_axum::{constant, create_service, exit_on_signal_int, LiplApp};
+use lipl_server_axum::{constant, create_service, exit_on_signal_int, environment};
 
 async fn run(service: Router) -> Result<()> {
     let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
@@ -25,5 +25,13 @@ pub async fn main() -> Result<()> {
         .with_env_filter(log_filter())
         .init();
 
-    create_service(LiplApp::parse()).and_then(run).await
+    match environment::repo_type() {
+        Ok(repo_config) => {
+            create_service(repo_config).and_then(run).await
+        }
+        Err(error) => {
+            tracing::error!("Failed to get configuration from environment: {error}");
+            Err(lipl_core::error::Error::Stop)
+        }
+    }
 }

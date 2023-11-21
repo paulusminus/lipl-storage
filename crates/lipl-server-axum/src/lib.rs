@@ -12,6 +12,7 @@ pub use crate::param::app::LiplApp;
 
 pub mod constant;
 mod error;
+pub mod environment;
 mod handler;
 mod message;
 mod param;
