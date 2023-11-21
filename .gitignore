@@ -1,4 +1,5 @@
 .env
 data/
+data_lipl/
 target/
 Cargo.lock

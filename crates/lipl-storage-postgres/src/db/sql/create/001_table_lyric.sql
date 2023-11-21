@@ -1,6 +1,0 @@
-CREATE TABLE IF NOT EXISTS lyric (
-    id UUID PRIMARY KEY,
-    title VARCHAR UNIQUE NOT NULL,
-    sub_title VARCHAR,
-    parts VARCHAR
-);

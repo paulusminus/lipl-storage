@@ -13,6 +13,11 @@ name = "lipl-server-axum"
 path = "src/lipl_server_axum.rs"
 required-features = ["fs", "memory"]
 
+[[example]]
+name = "convert"
+path = "examples/convert.rs"
+required-features = ["fs", "memory"]
+
 [[bin]]
 name = "lipl-server-axum-postgres"
 path = "src/lipl_server_axum_postgres.rs"
@@ -26,7 +31,7 @@ fs = ["dep:lipl-storage-fs", "dep:lipl-core"]
 
 [dependencies]
 axum = { version = "0.6", features = ["headers", "query"] }
-clap = { version = "4", features = ["derive"] }
+# clap = { version = "4", features = ["derive"] }
 futures-util = "0.3"
 hyper = "0.14"
 lipl-storage-postgres-axum = { version = "0.2.0", path = "../lipl-storage-postgres-axum", optional = true }

@@ -1,13 +1,17 @@
 use std::net::SocketAddr;
 
 use axum::Router;
-// use clap::Parser;
 use futures_util::TryFutureExt;
 use lipl_core::Result;
 use lipl_server_axum::{constant, create_service, environment, exit_on_signal_int};
 
 async fn run(service: Router) -> Result<()> {
-    let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
+    let localhost = if constant::USE_IPV6 {
+        constant::IPV6_LOCALHOST
+    } else {
+        constant::IPV4_LOCALHOST
+    };
+    let addr = SocketAddr::from((localhost, constant::PORT));
     axum::Server::bind(&addr)
         .serve(service.into_make_service())
         .with_graceful_shutdown(exit_on_signal_int())

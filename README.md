@@ -33,8 +33,3 @@ Sample data that can be used to play a demo.
 # lipl-server-axum
 
 Storage and retrievel with the help of a postgres client connected to a postgres db.
-
-# lipl-server-warp
-
-Http server that handles requests for storage and retrieval of lyric(s) and playlist(s).
-

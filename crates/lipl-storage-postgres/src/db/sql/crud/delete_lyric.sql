@@ -1,1 +1,0 @@
-DELETE FROM lyric WHERE id = $1;

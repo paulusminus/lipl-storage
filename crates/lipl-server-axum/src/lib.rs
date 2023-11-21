@@ -8,14 +8,14 @@ use tower_http::trace::TraceLayer;
 
 pub use crate::error::Error;
 use crate::handler::{lyric, playlist};
-pub use crate::param::app::LiplApp;
+// pub use crate::param::app::LiplApp;
 
 pub mod constant;
 pub mod environment;
 mod error;
 mod handler;
 mod message;
-mod param;
+// mod param;
 
 pub type Result<T> = std::result::Result<T, Error>;
 

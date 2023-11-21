@@ -1,4 +1,0 @@
-CREATE TABLE IF NOT EXISTS playlist (
-    id UUID PRIMARY KEY,
-    title VARCHAR UNIQUE NOT NULL
-);
