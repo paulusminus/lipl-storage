@@ -1,7 +1,7 @@
-use lipl_core::transaction::{build_from_log, start_log_thread, OptionalTransaction};
+use lipl_core::transaction::{start_log_thread, OptionalTransaction};
 use std::fmt::Debug;
 use std::fs::OpenOptions;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
@@ -203,7 +203,7 @@ impl FileRepo {
         let (tx, rx) = mpsc::channel::<Request>(10);
         let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
 
-        let log = OpenOptions::new().append(true).open(&transaction_log)?;
+        let log = OpenOptions::new().append(true).open(transaction_log)?;
 
         let (_log_join_handle, log_tx) = start_log_thread(log);
 
@@ -234,10 +234,10 @@ impl FileRepo {
             _join_handle: Arc::new(join_handle),
         };
 
-        if Path::exists(&transaction_log) {
-            let file = OpenOptions::new().read(true).open(&transaction_log)?;
-            build_from_log(file, file_repo.clone()).await?;
-        }
+        // if Path::exists(&transaction_log) {
+        //     let file = OpenOptions::new().read(true).open(&transaction_log)?;
+        //     build_from_log(file, file_repo.clone()).await?;
+        // }
 
         Ok(file_repo.clone())
     }

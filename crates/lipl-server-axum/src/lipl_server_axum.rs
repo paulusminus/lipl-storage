@@ -4,7 +4,7 @@ use axum::Router;
 // use clap::Parser;
 use futures_util::TryFutureExt;
 use lipl_core::Result;
-use lipl_server_axum::{constant, create_service, exit_on_signal_int, environment};
+use lipl_server_axum::{constant, create_service, environment, exit_on_signal_int};
 
 async fn run(service: Router) -> Result<()> {
     let addr = SocketAddr::from((constant::LOCALHOST, constant::PORT));
@@ -26,9 +26,7 @@ pub async fn main() -> Result<()> {
         .init();
 
     match environment::repo_type() {
-        Ok(repo_config) => {
-            create_service(repo_config).and_then(run).await
-        }
+        Ok(repo_config) => create_service(repo_config).and_then(run).await,
         Err(error) => {
             tracing::error!("Failed to get configuration from environment: {error}");
             Err(lipl_core::error::Error::Stop)

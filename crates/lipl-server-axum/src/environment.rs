@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 /// Configure repo from environment
-
-use crate::{Result, Error, ToRepo};
+use crate::{Error, Result, ToRepo};
 
 pub enum RepoType {
     #[cfg(feature = "postgres")]
@@ -15,7 +14,7 @@ pub enum RepoType {
 
 #[async_trait::async_trait]
 impl ToRepo for RepoType {
-    async fn to_repo(self) ->  lipl_core::Result<Arc<dyn lipl_core::LiplRepo>> {
+    async fn to_repo(self) -> lipl_core::Result<Arc<dyn lipl_core::LiplRepo>> {
         match self {
             #[cfg(feature = "postgres")]
             Self::Postgres(connection) => {
@@ -24,11 +23,18 @@ impl ToRepo for RepoType {
             }
             #[cfg(feature = "memory")]
             Self::Memory(include_sample) => {
-                lipl_storage_memory::MemoryRepoConfig { sample_data: include_sample, transaction_log: None}.to_repo().await
+                lipl_storage_memory::MemoryRepoConfig {
+                    sample_data: include_sample,
+                    transaction_log: None,
+                }
+                .to_repo()
+                .await
             }
             #[cfg(feature = "fs")]
             Self::Fs(data_dir) => {
-                lipl_storage_fs::FileRepoConfig { path: data_dir}.to_repo().await
+                lipl_storage_fs::FileRepoConfig { path: data_dir }
+                    .to_repo()
+                    .await
             }
         }
     }
@@ -48,11 +54,10 @@ pub fn repo_type() -> Result<RepoType> {
         if s.trim().to_lowercase() == "postgres" {
             return postgres_connection().map(RepoType::Postgres);
         }
-        
+
         #[cfg(feature = "fs")]
         if s.trim().to_lowercase() == "fs" {
             return file_path().map(RepoType::Fs);
-            
         }
 
         #[cfg(feature = "memory")]
