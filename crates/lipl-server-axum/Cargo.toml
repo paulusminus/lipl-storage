@@ -9,14 +9,9 @@ repository.workspace = true
 version.workspace = true
 
 [[bin]]
-name = "lipl-server-axum"
-path = "src/lipl_server_axum.rs"
-required-features = ["fs", "memory"]
-
-[[example]]
-name = "convert"
-path = "examples/convert.rs"
-required-features = ["fs", "memory"]
+name = "lipl-server-axum-fs"
+path = "src/lipl_server_axum_fs.rs"
+required-features = ["fs"]
 
 [[bin]]
 name = "lipl-server-axum-postgres"
@@ -25,7 +20,7 @@ required-features = ["postgres"]
 
 [features]
 default = ["memory"]
-postgres = ["dep:lipl-storage-postgres-axum", "dep:lipl-core"]
+postgres = ["dep:lipl-storage-postgres", "dep:lipl-core"]
 memory = ["dep:lipl-storage-memory", "dep:lipl-core"]
 fs = ["dep:lipl-storage-fs", "dep:lipl-core"]
 
@@ -34,7 +29,7 @@ axum = { version = "0.6", features = ["headers", "query"] }
 # clap = { version = "4", features = ["derive"] }
 futures-util = "0.3"
 hyper = "0.14"
-lipl-storage-postgres-axum = { version = "0.2.0", path = "../lipl-storage-postgres-axum", optional = true }
+lipl-storage-postgres = { version = "0.2.0", path = "../lipl-storage-postgres", optional = true }
 lipl-storage-memory = { version = "0.2.0", path = "../lipl-storage-memory", optional = true }
 lipl-storage-fs = { version = "0.2.0", path = "../lipl-storage-fs", optional = true }
 lipl-core = { version = "0.2.0", path = "../lipl-core", optional = true }

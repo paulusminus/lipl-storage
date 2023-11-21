@@ -6,7 +6,7 @@ members = [
     "crates/lipl-server-axum",
     "crates/lipl-storage-fs",
     "crates/lipl-storage-memory",
-    "crates/lipl-storage-postgres-axum",
+    "crates/lipl-storage-postgres",
     "crates/lipl-storage-redis"
 ]
 

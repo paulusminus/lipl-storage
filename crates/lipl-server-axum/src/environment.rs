@@ -18,7 +18,7 @@ impl ToRepo for RepoType {
         match self {
             #[cfg(feature = "postgres")]
             Self::Postgres(connection) => {
-                let pool = lipl_storage_postgres_axum::connection_pool(&connection).await?;
+                let pool = lipl_storage_postgres::connection_pool(&connection).await?;
                 Ok(Arc::new(pool))
             }
             #[cfg(feature = "memory")]

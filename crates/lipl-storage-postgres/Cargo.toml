@@ -4,7 +4,7 @@ description = "Postgres storage backend for Axum"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
-name = "lipl-storage-postgres-axum"
+name = "lipl-storage-postgres"
 repository.workspace = true
 version.workspace = true
 
