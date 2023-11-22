@@ -36,7 +36,7 @@ Storage on a postgres db.
 
 ```bash
 export LIPL_STORAGE_REPO_TYPE=postgres
-export LIPL_STORAGE_POSTGRES_CONNECTION="host=/var/run/postgresql db=lipl"
+export LIPL_STORAGE_POSTGRES_CONNECTION="host=/var/run/postgresql dbname=lipl"
 ```
 
 ## lipl-storage-redis

@@ -9,18 +9,18 @@ repository.workspace = true
 version.workspace = true
 
 [[bin]]
-name = "lipl-server-axum-fs"
-path = "src/main.rs"
+name = "lipl-storage-fs"
+path = "src/main.fs.rs"
 required-features = ["fs"]
 
 [[bin]]
-name = "lipl-server-axum-postgres"
-path = "src/main.rs"
+name = "lipl-storage-postgres"
+path = "src/main.postgres.rs"
 required-features = ["postgres"]
 
 [[bin]]
-name = "lipl-server-axum-redis"
-path = "src/main.rs"
+name = "lipl-storage-redis"
+path = "src/main.redis.rs"
 required-features = ["redis"]
 
 [features]
