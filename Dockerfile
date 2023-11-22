@@ -10,4 +10,4 @@ ENV RUST_LOG trace
 
 RUN mkdir -p lipl
 
-ENTRYPOINT [ "lipl-server-axum-fs" ]
+ENTRYPOINT [ "lipl-storage-fs" ]
