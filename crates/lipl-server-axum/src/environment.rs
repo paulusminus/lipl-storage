@@ -41,8 +41,8 @@ impl ToRepo for RepoType {
             #[cfg(feature = "redis")]
             Self::Redis(connection) => {
                 lipl_storage_redis::redis_repo::RedisRepoConfig::new(false, connection)
-                .to_repo()
-                .await
+                    .to_repo()
+                    .await
             }
         }
     }

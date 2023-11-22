@@ -203,7 +203,10 @@ impl FileRepo {
         let (tx, rx) = mpsc::channel::<Request>(10);
         let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
 
-        let log = OpenOptions::new().append(true).create(true).open(transaction_log)?;
+        let log = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(transaction_log)?;
 
         let (_log_join_handle, log_tx) = start_log_thread(log);
 

@@ -1,4 +1,4 @@
-use std::net::{SocketAddr, IpAddr};
+use std::net::{IpAddr, SocketAddr};
 
 use axum::Router;
 use futures_util::TryFutureExt;
@@ -7,9 +7,9 @@ use lipl_server_axum::{constant, create_service, environment, exit_on_signal_int
 
 async fn run(service: Router) -> Result<()> {
     let localhost = if constant::USE_IPV6 {
-        IpAddr::from([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        IpAddr::from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     } else {
-        IpAddr::from([0,0,0,0])
+        IpAddr::from([0, 0, 0, 0])
     };
     let addr = SocketAddr::from((localhost, constant::PORT));
     axum::Server::bind(&addr)
