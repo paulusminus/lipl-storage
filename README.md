@@ -1,35 +1,61 @@
-# Lipl
+# Lipl Storage
 
-A collection of crates that can be used to create a binary executable that handles the storage and retrieval of lyrics and playlists.
+A collection of crates that can be used to create a binary executable that handles the storage and retrieval of lyrics and playlists. Configuration of the storage backend is done through environment variables.
 
-# lipl-axum-postgres
-
-Storage backend for a axum web server
-
-# lipl-core
+## lipl-core
 
 Models and LiplRepo trait. The latter is used to hide implementation details for the backend.
 
-# lipl-repo-fs
+## lipl-storage-fs
 
-Storage and retrieval with the help of the filesystem.
+Storage on the filesystem.
 
-# lipl-repo-memory
+### Configuration example
 
-Non persistent storage and retrievel through internal memory. 
+```bash
+export LIPL_STORAGE_REPO_TYPE=fs
+export LIPL_STORAGE_FS_DIR=/home/paul/lipl_data/
+```
 
-# lipl-repo-postgres
+## lipl-storage-memory
 
-Storage and retrieval with the help of postgres client connecting to a postgres db.
+Non persistent storage on internal memory. 
 
-# lipl-repo-redis
+### Configuration example
 
-Storage and retrieval with the help of redis client connection to a redis server.
+```bash
+export LIPL_STORAGE_REPO_TYPE=memory
+export LIPL_STORAGE_MEMORY_SAMPLE=true
+```
 
-# lipl-sample-data
+## lipl-storage-postgres
 
-Sample data that can be used to play a demo.
+Storage on a postgres db.
 
-# lipl-server-axum
+### Configuration example
 
-Storage and retrievel with the help of a postgres client connected to a postgres db.
+```bash
+export LIPL_STORAGE_REPO_TYPE=postgres
+export LIPL_STORAGE_POSTGRES_CONNECTION="host=/var/run/postgresql db=lipl"
+```
+
+## lipl-storage-redis
+
+Storage on a redis server.
+
+### Example configuration
+
+```bash
+export LIPL_STORAGE_REPO_TYPE=redis
+export LIPL_STORAGE_REDIS_CONNECTION=redis://127.0.0.1/
+```
+
+## lipl-sample-data
+
+Sample data that can be used to play a demo or for testing.
+
+## lipl-server-axum
+
+The server component handles web requests. There are two binaries, lipl-server-axum-fs and lipl-server-axum-postgres.
+
+Use the binary for the storage you want.

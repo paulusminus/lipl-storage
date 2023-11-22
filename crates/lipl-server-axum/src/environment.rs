@@ -10,6 +10,8 @@ pub enum RepoType {
     Memory(bool),
     #[cfg(feature = "fs")]
     Fs(String),
+    #[cfg(feature = "redis")]
+    Redis(String),
 }
 
 #[async_trait::async_trait]
@@ -35,6 +37,12 @@ impl ToRepo for RepoType {
                 lipl_storage_fs::FileRepoConfig { path: data_dir }
                     .to_repo()
                     .await
+            }
+            #[cfg(feature = "redis")]
+            Self::Redis(connection) => {
+                lipl_storage_redis::redis_repo::RedisRepoConfig::new(false, connection)
+                .to_repo()
+                .await
             }
         }
     }
@@ -65,6 +73,11 @@ pub fn repo_type() -> Result<RepoType> {
             return include_sample_data().map(RepoType::Memory);
         }
 
+        #[cfg(feature = "redis")]
+        if s.trim().to_lowercase() == "redis" {
+            return redis_connection().map(RepoType::Redis);
+        }
+
         Err(Error::InvalidConfiguration)
     })
 }
@@ -72,6 +85,11 @@ pub fn repo_type() -> Result<RepoType> {
 #[cfg(feature = "postgres")]
 fn postgres_connection() -> Result<String> {
     var("LIPL_STORAGE_POSTGRES_CONNECTION")
+}
+
+#[cfg(feature = "redis")]
+fn redis_connection() -> Result<String> {
+    var("LIPL_STORAGE_REDIS_CONNECTION")
 }
 
 #[cfg(feature = "fs")]
