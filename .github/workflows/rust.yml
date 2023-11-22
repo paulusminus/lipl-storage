@@ -52,8 +52,8 @@ jobs:
         POSTGRES_HOST: localhost
         POSTGRES_DB: postgres
     - name: Build fs version
-      run: cargo build --release --verbose --bin lipl-storage-fs -p lipl-server-axum --features "fs"
+      run: cargo build --release --verbose --bin lipl-storage-fs -p lipl-storage-server --features "fs"
     - name: Build redis version
-      run: cargo build --release --verbose --bin lipl-storage-redis -p lipl-server-axum --features "redis"
+      run: cargo build --release --verbose --bin lipl-storage-redis -p lipl-storage-server --features "redis"
     - name: Build postgres version
-      run: cargo build --release --verbose --bin lipl-storage-postgres -p lipl-server-axum --features "postgres"
+      run: cargo build --release --verbose --bin lipl-storage-postgres -p lipl-storage-server --features "postgres"
