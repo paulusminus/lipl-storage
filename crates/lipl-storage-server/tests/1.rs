@@ -6,7 +6,7 @@ use axum::{
     Router,
 };
 use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
-use lipl_server_axum::{create_service, environment::RepoType};
+use lipl_storage_server::{create_service, environment::RepoType};
 use serde::{de::DeserializeOwned, Serialize};
 use tower::ServiceExt;
 

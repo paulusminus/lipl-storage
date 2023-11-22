@@ -3,7 +3,7 @@ use std::net::{IpAddr, SocketAddr};
 use axum::Router;
 use futures_util::TryFutureExt;
 use lipl_core::Result;
-use lipl_server_axum::{constant, create_service, environment, exit_on_signal_int};
+use lipl_storage_server::{constant, create_service, environment, exit_on_signal_int};
 
 async fn run(service: Router) -> Result<()> {
     let localhost = if constant::USE_IPV6 {
