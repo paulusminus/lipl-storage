@@ -4,7 +4,7 @@ description = "Axum webserver json api"
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
-name = "lipl-server-axum"
+name = "lipl-storage-server"
 repository.workspace = true
 version.workspace = true
 

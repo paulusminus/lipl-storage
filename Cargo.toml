@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "crates/lipl-core",
     "crates/lipl-sample-data",
-    "crates/lipl-server-axum",
+    "crates/lipl-storage-server",
     "crates/lipl-storage-fs",
     "crates/lipl-storage-memory",
     "crates/lipl-storage-postgres",

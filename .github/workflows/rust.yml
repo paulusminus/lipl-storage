@@ -51,5 +51,9 @@ jobs:
         POSTGRES_PASSWORD: postgres
         POSTGRES_HOST: localhost
         POSTGRES_DB: postgres
-    - name: Build
-      run: cargo build --release --verbose --all-features
+    - name: Build fs version
+      run: cargo build --release --verbose --bin lipl-storage-fs -p lipl-server-axum --features "fs"
+    - name: Build redis version
+      run: cargo build --release --verbose --bin lipl-storage-redis -p lipl-server-axum --features "redis"
+    - name: Build postgres version
+      run: cargo build --release --verbose --bin lipl-storage-postgres -p lipl-server-axum --features "postgres"
