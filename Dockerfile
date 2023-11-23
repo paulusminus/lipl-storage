@@ -6,7 +6,7 @@ COPY target/x86_64-unknown-linux-musl/release/lipl-storage-fs /usr/bin/
 
 ENV LIPL_STORAGE_REPO_TYPE fs
 ENV LIPL_STORAGE_FS_DIR lipl
-ENV RUST_LOG trace
+ENV RUST_LOG info
 
 RUN mkdir -p lipl
 
