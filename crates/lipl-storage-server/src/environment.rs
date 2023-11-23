@@ -65,7 +65,7 @@ pub fn repo_type() -> Result<RepoType> {
 
         #[cfg(feature = "fs")]
         if s.trim().to_lowercase() == "fs" {
-            return file_path().map(RepoType::Fs);
+            return Ok(RepoType::Fs(file_path()));
         }
 
         #[cfg(feature = "memory")]
@@ -93,6 +93,6 @@ fn redis_connection() -> Result<String> {
 }
 
 #[cfg(feature = "fs")]
-fn file_path() -> Result<String> {
-    var("LIPL_STORAGE_FS_DIR")
+fn file_path() -> String {
+    var("LIPL_STORAGE_FS_DIR").unwrap_or(".".to_owned())
 }

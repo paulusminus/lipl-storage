@@ -1,0 +1,13 @@
+[Unit]
+Description=Lipl Storage Api Endpoint
+After=network-online.target
+After=local-fs.target
+
+[Container]
+Image=docker.io/paulusminus/lipl-storage
+PublishPort=3000:3000
+Environment=RUST_LOG=debug,hyper=info,tower_http::trace::on_request=info
+Volume=lipl-storage-fs:/lipl
+
+[Install]
+WantedBy=multi-user.target default.target

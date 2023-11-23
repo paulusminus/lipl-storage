@@ -1,3 +1,6 @@
+[![Rust](https://github.com/paulusminus/lipl-storage/actions/workflows/rust.yml/badge.svg)](https://github.com/paulusminus/lipl-storage/actions/workflows/rust.yml)
+[![Docker](https://github.com/paulusminus/lipl-storage/actions/workflows/docker.yml/badge.svg)](https://github.com/paulusminus/lipl-storage/actions/workflows/docker.yml)
+
 # Lipl Storage
 
 A collection of crates that can be used to create a binary executable that handles the storage and retrieval of lyrics and playlists. Configuration of the storage backend is done through environment variables.
@@ -54,8 +57,8 @@ export LIPL_STORAGE_REDIS_CONNECTION=redis://127.0.0.1/
 
 Sample data that can be used to play a demo or for testing.
 
-## lipl-server-axum
+## lipl-storage-server
 
-The server component handles web requests. There are two binaries, lipl-server-axum-fs and lipl-server-axum-postgres.
+The server component handles web requests. There are three binaries, lipl-storage-fs, lipl-storage-postgres and lipl-storage-redis.
 
-Use the binary for the storage you want.
+Use the binary for the storage type you want. The OCI image uses lipl-storage-fs.
