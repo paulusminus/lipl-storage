@@ -4,8 +4,12 @@ use futures_util::TryFutureExt;
 use lipl_core::ToRepo;
 use tokio::signal::unix::{signal, SignalKind};
 use tower::ServiceBuilder;
+use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::compression::CompressionLayer;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tower_http::trace::{
+    DefaultMakeSpan, DefaultOnBodyChunk, DefaultOnEos, DefaultOnFailure, DefaultOnRequest,
+    DefaultOnResponse, TraceLayer,
+};
 use tracing::Level;
 
 pub use crate::error::Error;
@@ -18,6 +22,22 @@ mod handler;
 mod message;
 
 pub type Result<T> = std::result::Result<T, Error>;
+
+#[inline]
+fn logging() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
+    TraceLayer::new_for_http()
+        .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+        .on_response(DefaultOnResponse::new().level(Level::INFO))
+        .on_request(DefaultOnRequest::default())
+        .on_body_chunk(DefaultOnBodyChunk::default())
+        .on_eos(DefaultOnEos::default())
+        .on_failure(DefaultOnFailure::default())
+}
+
+#[inline]
+fn compression() -> CompressionLayer {
+    CompressionLayer::new().br(true).gzip(true)
+}
 
 #[cfg(windows)]
 #[inline]
@@ -33,6 +53,7 @@ pub async fn exit_on_signal_int() {
 }
 
 #[cfg(unix)]
+#[inline]
 pub async fn exit_on_signal_int() {
     let mut wait_on_term_stream = signal(SignalKind::terminate()).unwrap();
     let mut wait_on_term_int = signal(SignalKind::interrupt()).unwrap();
@@ -76,11 +97,8 @@ where
                 )
                 .layer(
                     ServiceBuilder::new()
-                        .layer(
-                            TraceLayer::new_for_http()
-                                .on_response(DefaultOnResponse::new().level(Level::INFO)),
-                        )
-                        .layer(CompressionLayer::new().br(true).gzip(true))
+                        .layer(logging())
+                        .layer(compression())
                         .into_inner(),
                 )
                 .with_state(state)
