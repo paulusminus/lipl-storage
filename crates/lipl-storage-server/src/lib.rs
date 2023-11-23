@@ -5,7 +5,8 @@ use lipl_core::ToRepo;
 use tokio::signal::unix::{signal, SignalKind};
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tracing::Level;
 
 pub use crate::error::Error;
 use crate::handler::{lyric, playlist};
@@ -75,7 +76,10 @@ where
                 )
                 .layer(
                     ServiceBuilder::new()
-                        .layer(TraceLayer::new_for_http())
+                        .layer(
+                            TraceLayer::new_for_http()
+                                .on_response(DefaultOnResponse::new().level(Level::INFO)),
+                        )
                         .layer(CompressionLayer::new().br(true).gzip(true))
                         .into_inner(),
                 )
