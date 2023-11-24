@@ -28,7 +28,7 @@ fn main() {
                 feature,
             ])
             .status()
-            .expect(&format!("Failed to run build for feature {feature}"));
+            .unwrap_or_else(|_| panic!("Failed to run build for feature {feature}"));
 
             // println!("status: {}", output.status);
             // std::io::stdout().write_all(&output.stdout).expect("Cannot write to standard out");
