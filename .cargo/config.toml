@@ -1,2 +1,5 @@
 [build]
 target = "x86_64-unknown-linux-musl"
+
+[alias]
+build-bins = "run --release -p build-bins"

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/build-bins",
     "crates/lipl-core",
     "crates/lipl-sample-data",
     "crates/lipl-storage-server",
