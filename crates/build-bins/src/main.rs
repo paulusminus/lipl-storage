@@ -1,4 +1,4 @@
-use std::{process::Command, path::Path};
+use std::{path::Path, process::Command};
 
 const FEATURES: [&str; 3] = ["fs", "postgres", "redis"];
 const EXECUTABLE: &str = "cargo";
@@ -30,8 +30,8 @@ fn main() {
             .status()
             .unwrap_or_else(|_| panic!("Failed to run build for feature {feature}"));
 
-            // println!("status: {}", output.status);
-            // std::io::stdout().write_all(&output.stdout).expect("Cannot write to standard out");
-            // std::io::stderr().write_all(&output.stderr).expect("Cannot write to standard err");
+        // println!("status: {}", output.status);
+        // std::io::stdout().write_all(&output.stdout).expect("Cannot write to standard out");
+        // std::io::stderr().write_all(&output.stderr).expect("Cannot write to standard err");
     }
 }
