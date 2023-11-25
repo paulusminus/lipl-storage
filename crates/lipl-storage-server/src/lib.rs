@@ -3,6 +3,7 @@ use axum::Router;
 use futures_util::TryFutureExt;
 use lipl_core::ToRepo;
 use tokio::signal::unix::{signal, SignalKind};
+use tower::layer::util::{Identity, Stack};
 use tower::ServiceBuilder;
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::compression::CompressionLayer;
@@ -25,7 +26,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 pub async fn router_from_environment() -> Result<Router> {
     futures_util::future::ready(environment::repo_type())
-        .and_then(|repo_type| create_service(repo_type).err_into())
+        .and_then(|repo_type| create_router(repo_type).err_into())
         .await
 }
 
@@ -78,7 +79,14 @@ pub async fn exit_on_signal_int() {
     }
 }
 
-pub async fn create_service<T>(t: T) -> lipl_core::Result<Router>
+#[allow(clippy::type_complexity)]
+pub fn create_services() -> ServiceBuilder<
+    Stack<CompressionLayer, Stack<TraceLayer<SharedClassifier<ServerErrorsAsFailures>>, Identity>>,
+> {
+    ServiceBuilder::new().layer(logging()).layer(compression())
+}
+
+pub async fn create_router<T>(t: T) -> lipl_core::Result<Router>
 where
     T: ToRepo,
 {
@@ -100,12 +108,6 @@ where
                                 .delete(playlist::delete)
                                 .put(playlist::put),
                         ),
-                )
-                .layer(
-                    ServiceBuilder::new()
-                        .layer(logging())
-                        .layer(compression())
-                        .into_inner(),
                 )
                 .with_state(state)
         })

@@ -10,9 +10,9 @@ version.workspace = true
 
 [dependencies]
 async-trait = "0.1.59"
-lipl-core = { version = "0.3.0", path = "../lipl-core" }
+lipl-core = { version = "0.4.0", path = "../lipl-core" }
 thiserror = "1.0.37"
-lipl-sample-data = { version = "0.3.0", path = "../lipl-sample-data" }
+lipl-sample-data = { version = "0.4.0", path = "../lipl-sample-data" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }

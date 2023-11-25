@@ -35,10 +35,6 @@ pub enum Error {
     #[error("Environment parse: {0}")]
     EnvironmentParse(#[from] ParseBoolError),
 
-    #[cfg(feature = "postgres")]
-    #[error("Postgres: {0}")]
-    Postgres(#[from] lipl_core::error::Error),
-
     #[error("Core: {0}")]
     Core(#[from] lipl_core::Error),
 }
