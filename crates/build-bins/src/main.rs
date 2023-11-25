@@ -1,4 +1,7 @@
-use std::{path::Path, process::Command};
+use std::{
+    path::Path,
+    process::{exit, Command},
+};
 
 const FEATURES: [&str; 3] = ["fs", "postgres", "redis"];
 const EXECUTABLE: &str = "cargo";
@@ -16,7 +19,7 @@ fn main() {
     cwd_to_workspace_root().expect("Cannot change working directory to workspace root");
     for feature in FEATURES {
         let bin_name = String::from("lipl-storage-") + feature;
-        Command::new(EXECUTABLE)
+        let status = Command::new(EXECUTABLE)
             .args([
                 "build",
                 "--release",
@@ -30,8 +33,14 @@ fn main() {
             .status()
             .unwrap_or_else(|_| panic!("Failed to run build for feature {feature}"));
 
-        // println!("status: {}", output.status);
-        // std::io::stdout().write_all(&output.stdout).expect("Cannot write to standard out");
-        // std::io::stderr().write_all(&output.stderr).expect("Cannot write to standard err");
+        if !status.success() {
+            eprintln!(
+                "Failed to build bin for feature {feature}: Status {}",
+                status
+            );
+            if let Some(code) = status.code() {
+                exit(code);
+            }
+        }
     }
 }

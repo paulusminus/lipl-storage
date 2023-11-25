@@ -58,23 +58,26 @@ fn include_sample_data() -> Result<bool> {
 
 pub fn repo_type() -> Result<RepoType> {
     var("LIPL_STORAGE_REPO_TYPE").and_then(|s| {
+        let repo_type = s.trim().to_lowercase();
+        let r = repo_type.as_str();
+
         #[cfg(feature = "postgres")]
-        if s.trim().to_lowercase() == "postgres" {
+        if r == "postgres" {
             return postgres_connection().map(RepoType::Postgres);
         }
 
         #[cfg(feature = "fs")]
-        if s.trim().to_lowercase() == "fs" {
+        if r == "fs" {
             return Ok(RepoType::Fs(file_path()));
         }
 
         #[cfg(feature = "memory")]
-        if s.trim().to_lowercase() == "memory" {
+        if r == "memory" {
             return include_sample_data().map(RepoType::Memory);
         }
 
         #[cfg(feature = "redis")]
-        if s.trim().to_lowercase() == "redis" {
+        if r == "redis" {
             return redis_connection().map(RepoType::Redis);
         }
 

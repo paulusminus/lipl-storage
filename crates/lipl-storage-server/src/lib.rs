@@ -23,6 +23,12 @@ mod message;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+pub async fn router_from_environment() -> Result<Router> {
+    futures_util::future::ready(environment::repo_type())
+        .and_then(|repo_type| create_service(repo_type).err_into())
+        .await
+}
+
 #[inline]
 fn logging() -> TraceLayer<SharedClassifier<ServerErrorsAsFailures>> {
     TraceLayer::new_for_http()

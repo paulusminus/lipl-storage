@@ -38,6 +38,9 @@ pub enum Error {
     #[cfg(feature = "postgres")]
     #[error("Postgres: {0}")]
     Postgres(#[from] lipl_core::error::Error),
+
+    #[error("Core: {0}")]
+    Core(#[from] lipl_core::Error),
 }
 
 impl IntoResponse for Error {
