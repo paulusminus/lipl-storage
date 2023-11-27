@@ -31,7 +31,7 @@ fs = ["dep:lipl-storage-fs", "dep:lipl-core"]
 redis = ["dep:lipl-storage-redis", "dep:lipl-core"]
 
 [dependencies]
-axum = { version = "0.6", features = ["headers", "query"] }
+axum = { version = "0.7", features = ["headers", "query"] }
 futures-util = "0.3"
 hyper = "0.14"
 lipl-storage-postgres = { version = "0.4.0", path = "../lipl-storage-postgres", optional = true }
