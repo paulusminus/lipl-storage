@@ -5,6 +5,7 @@ use axum::{
     http::{Request, StatusCode},
     Router,
 };
+use http_body_util::BodyExt;
 use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
 use lipl_storage_server::{create_router, environment::RepoType};
 use serde::{de::DeserializeOwned, Serialize};
@@ -171,8 +172,8 @@ async fn list<R: DeserializeOwned>(service: &Router<()>, name: &'static str) -> 
         .await
         .unwrap();
 
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let r: Vec<R> = serde_json::from_slice(&body).unwrap();
+    let b = response.into_body().collect().await.unwrap().to_bytes();
+    let r: Vec<R> = serde_json::from_slice(&b).unwrap();
     r
 }
 
@@ -187,8 +188,8 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
         .await
         .unwrap();
 
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let r: R = serde_json::from_slice(&body).unwrap();
+    let b = response.into_body().collect().await.unwrap().to_bytes();
+    let r: R = serde_json::from_slice(&b).unwrap();
     r
 }
 
@@ -217,7 +218,7 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(
         .oneshot(
             Request::post(format!("{}{}", PREFIX, name.to_string()))
                 .header("Content-Type", "application/json")
-                .body(body.into())
+                .body(body)
                 .unwrap(),
         )
         .await
@@ -225,8 +226,8 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(
 
     assert_eq!(response.status(), StatusCode::CREATED);
 
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let r: R = serde_json::from_slice(&body).unwrap();
+    let b = response.into_body().collect().await.unwrap().to_bytes();
+    let r: R = serde_json::from_slice(&b).unwrap();
     r
 }
 
@@ -242,7 +243,7 @@ async fn put<'a, T: Serialize, R: DeserializeOwned>(
         .oneshot(
             Request::put(format!("{PREFIX}{name}/{id}"))
                 .header("Content-Type", "application/json")
-                .body(body.into())
+                .body(body)
                 .unwrap(),
         )
         .await
@@ -250,7 +251,7 @@ async fn put<'a, T: Serialize, R: DeserializeOwned>(
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let r: R = serde_json::from_slice(&body).unwrap();
+    let b = response.into_body().collect().await.unwrap().to_bytes();
+    let r: R = serde_json::from_slice(&b).unwrap();
     r
 }

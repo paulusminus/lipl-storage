@@ -3,7 +3,8 @@ use std::net::{IpAddr, SocketAddr};
 use axum::Router;
 use futures_util::TryFutureExt;
 use lipl_core::Result;
-use lipl_storage_server::{constant, create_services, exit_on_signal_int, router_from_environment};
+use lipl_storage_server::{constant, create_services, router_from_environment};
+use tokio::net::TcpListener;
 
 async fn run(router: Router) -> Result<()> {
     let localhost = if constant::USE_IPV6 {
@@ -12,15 +13,16 @@ async fn run(router: Router) -> Result<()> {
         IpAddr::from([0, 0, 0, 0])
     };
     let addr = SocketAddr::from((localhost, constant::PORT));
-    axum::Server::bind(&addr)
-        .serve(
-            router
-                .layer(create_services().into_inner())
-                .into_make_service(),
-        )
-        .with_graceful_shutdown(exit_on_signal_int())
-        .map_err(|error| lipl_core::Error::Axum(Box::new(error)))
-        .await
+    let listener = TcpListener::bind(addr).await?;
+
+    axum::serve(
+        listener,
+        router
+            .layer(create_services().into_inner())
+            .into_make_service(),
+    )
+    .await // .with_graceful_shutdown(exit_on_signal_int())
+    .map_err(|error| lipl_core::Error::Axum(Box::new(error)))
 }
 
 fn log_filter() -> String {
