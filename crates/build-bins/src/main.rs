@@ -31,7 +31,7 @@ fn main() {
                 feature,
             ])
             .status()
-            .expect(format!("Failed to run build for feature {feature}").as_str());
+            .unwrap_or_else(|_| panic!("Failed to run build for feature {feature}"));
 
         if !status.success() {
             eprintln!(
