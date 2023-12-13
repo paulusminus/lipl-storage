@@ -8,7 +8,7 @@ const EXECUTABLE: &str = "cargo";
 
 /// Change to workspace root.
 ///
-/// Assumed this xtask is located in `[WORKSPACE]/crates/xtask-build-man`.
+/// Assumed this xtask is located in `[WORKSPACE]/crates/build-bins`.
 fn cwd_to_workspace_root() -> std::io::Result<()> {
     let pkg_root = std::env!("CARGO_MANIFEST_DIR");
     let ws_root = Path::new(pkg_root).join("..").join("..");
@@ -18,7 +18,7 @@ fn cwd_to_workspace_root() -> std::io::Result<()> {
 fn main() {
     cwd_to_workspace_root().expect("Cannot change working directory to workspace root");
     for feature in FEATURES {
-        let bin_name = String::from("lipl-storage-") + feature;
+        let bin_name = format!("lipl-storage-{feature}");
         let status = Command::new(EXECUTABLE)
             .args([
                 "build",
@@ -31,7 +31,7 @@ fn main() {
                 feature,
             ])
             .status()
-            .unwrap_or_else(|_| panic!("Failed to run build for feature {feature}"));
+            .expect(format!("Failed to run build for feature {feature}").as_str());
 
         if !status.success() {
             eprintln!(
