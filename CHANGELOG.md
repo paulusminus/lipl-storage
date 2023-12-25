@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Bump bb8_redis
 - Include Cargo.lock for caching on Github Actions
+- cargo update
 
 ## Fix
 - Clippy warning in package build-bins
