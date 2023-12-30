@@ -3,7 +3,7 @@ use std::net::{IpAddr, SocketAddr};
 use axum::Router;
 use futures_util::TryFutureExt;
 use lipl_core::Result;
-use lipl_storage_server::{constant, create_services, router_from_environment};
+use lipl_storage_server::{constant, create_services, exit_on_signal_int, router_from_environment};
 use tokio::net::TcpListener;
 
 async fn run(router: Router) -> Result<()> {
@@ -21,6 +21,7 @@ async fn run(router: Router) -> Result<()> {
             .layer(create_services().into_inner())
             .into_make_service(),
     )
+    .with_graceful_shutdown(exit_on_signal_int())
     .await // .with_graceful_shutdown(exit_on_signal_int())
     .map_err(|error| lipl_core::Error::Axum(Box::new(error)))
 }
