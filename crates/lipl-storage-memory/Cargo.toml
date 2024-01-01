@@ -9,7 +9,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-async-trait = "0.1.59"
+async-trait = "0.1.76"
 lipl-core = { version = "0.4", path = "../lipl-core" }
 thiserror = "1.0.52"
 lipl-sample-data = { version = "0.4", path = "../lipl-sample-data" }
