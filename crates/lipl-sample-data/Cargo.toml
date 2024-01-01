@@ -13,5 +13,5 @@ version.workspace = true
 lipl-core = { path = "../lipl-core" }
 
 [build-dependencies]
-quote = "1.0.21"
+quote = "1.0.34"
 rust-format = { version = "0.3.4", features = ["token_stream"] }
