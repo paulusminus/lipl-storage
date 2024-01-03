@@ -815,7 +815,7 @@ checksum = "302d7ab3130588088d277783b1e2d2e10c9e9e4a16dd9050e6ec93fb3e7048f4"
 
 [[package]]
 name = "lipl-core"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "async-trait",
  "bincode",
@@ -837,7 +837,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "lipl-core",
  "quote",
@@ -846,7 +846,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "async-trait",
  "futures",
@@ -859,7 +859,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -870,7 +870,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -897,7 +897,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "async-trait",
  "axum",
