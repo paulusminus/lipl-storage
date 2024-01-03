@@ -54,4 +54,4 @@ jobs:
         POSTGRES_HOST: localhost
         POSTGRES_DB: postgres
     - name: Build fs postgres and redis version
-      run: cargo build-bins
+      run: cargo build --release --verbose -p lipl-storage-server

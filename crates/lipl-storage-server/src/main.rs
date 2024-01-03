@@ -1,4 +1,7 @@
-use std::{net::{IpAddr, SocketAddr}, process::exit};
+use std::{
+    net::{IpAddr, SocketAddr},
+    process::exit,
+};
 
 use axum::Router;
 use futures_util::TryFutureExt;
