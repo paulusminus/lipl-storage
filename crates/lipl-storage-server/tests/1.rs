@@ -19,7 +19,6 @@ async fn router() -> Router {
     create_router(RepoType::Memory(false)).await.unwrap()
 }
 
-
 fn daar_bij_die_molen() -> LyricPost {
     LyricPost {
         title: "Daar bij die molen".to_owned(),
