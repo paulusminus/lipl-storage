@@ -53,5 +53,7 @@ jobs:
         POSTGRES_PASSWORD: postgres
         POSTGRES_HOST: localhost
         POSTGRES_DB: postgres
+        LIPL_USERNAME: ${{ secrets.LIPL_USERNAME }}
+        LIPL_PASSWORD: ${{ secrets.LIPL_PASSWORD }}
     - name: Build fs postgres and redis version
       run: cargo build --release --verbose -p lipl-storage-server
