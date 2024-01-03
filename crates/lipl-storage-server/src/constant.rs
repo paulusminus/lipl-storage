@@ -1,6 +1,6 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-pub const PREFIX: &str = "/api/v1";
+pub const PREFIX: &str = "/lipl/api/v1";
 pub const DEFAULT_LOG_FILTER: &str = "info,tower_http=debug,tokio_postgres=warn";
 pub const PG_CONNECTION: &str = "host=/run/postgresql dbname=test user=paul";
 pub const RUST_LOG: &str = "RUST_LOG";
