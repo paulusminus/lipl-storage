@@ -8,27 +8,12 @@ name = "lipl-storage-server"
 repository.workspace = true
 version.workspace = true
 
-[[bin]]
-name = "lipl-storage-fs"
-path = "src/main.fs.rs"
-required-features = ["fs"]
-
-[[bin]]
-name = "lipl-storage-postgres"
-path = "src/main.postgres.rs"
-required-features = ["postgres"]
-
-[[bin]]
-name = "lipl-storage-redis"
-path = "src/main.redis.rs"
-required-features = ["redis"]
-
 [features]
-default = ["memory"]
-postgres = ["dep:lipl-storage-postgres", "dep:lipl-core"]
-memory = ["dep:lipl-storage-memory", "dep:lipl-core"]
-fs = ["dep:lipl-storage-fs", "dep:lipl-core"]
-redis = ["dep:lipl-storage-redis", "dep:lipl-core"]
+default = ["memory", "postgres", "fs", "redis"]
+postgres = ["dep:lipl-storage-postgres"]
+memory = ["dep:lipl-storage-memory"]
+fs = ["dep:lipl-storage-fs"]
+redis = ["dep:lipl-storage-redis"]
 
 [dependencies]
 async-trait = "0.1"
@@ -39,7 +24,7 @@ lipl-storage-postgres = { version = "0.4", path = "../lipl-storage-postgres", op
 lipl-storage-memory = { version = "0.4", path = "../lipl-storage-memory", optional = true }
 lipl-storage-fs = { version = "0.4", path = "../lipl-storage-fs", optional = true }
 lipl-storage-redis = { version = "0.4", path = "../lipl-storage-redis", optional = true }
-lipl-core = { version = "0.4", path = "../lipl-core", optional = true }
+lipl-core = { version = "0.4", path = "../lipl-core" }
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
