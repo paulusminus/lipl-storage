@@ -8,3 +8,5 @@ pub const USE_IPV6: bool = false;
 pub const PORT: u16 = 3000;
 pub const IPV4_LOCALHOST: IpAddr = IpAddr::V4(Ipv4Addr::LOCALHOST);
 pub const IPV6_LOCALHOST: IpAddr = IpAddr::V6(Ipv6Addr::LOCALHOST);
+pub const BASIC_AUTH_USERNAME: &str = "paul";
+pub const BASIC_AUTH_PASSWORD: &str = "CumGranoSalis";

@@ -1,3 +1,5 @@
+use std::env::VarError;
+
 use crate::Uuid;
 use thiserror::Error;
 
@@ -64,7 +66,7 @@ pub enum Error {
     Warp(Box<dyn std::error::Error + Send + Sync>),
 
     #[error(transparent)]
-    Axum(Box<dyn std::error::Error + Send + Sync>),
+    Axum(std::io::Error),
 
     #[error(transparent)]
     Json(Box<dyn std::error::Error + Send + Sync>),
@@ -89,6 +91,9 @@ pub enum Error {
 
     #[error("Key: {0}")]
     Key(String),
+
+    #[error("Environment variable: {0}")]
+    Var(#[from] VarError),
 }
 
 pub fn postgres_error<E>(error: E) -> Error

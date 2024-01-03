@@ -20,13 +20,11 @@ async fn run(router: Router) -> Result<()> {
 
     axum::serve(
         listener,
-        router
-            .layer(create_services().into_inner())
-            .into_make_service(),
+        router.layer(create_services()).into_make_service(),
     )
     .with_graceful_shutdown(exit_on_signal_int())
     .await
-    .map_err(|error| lipl_core::Error::Axum(Box::new(error)))
+    .map_err(lipl_core::Error::Axum)
 }
 
 fn log_filter() -> String {

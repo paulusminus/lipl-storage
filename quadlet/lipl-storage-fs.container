@@ -8,6 +8,8 @@ Image=docker.io/paulusminus/lipl-storage
 PublishPort=3000:3000
 Volume=lipl-storage-fs:/lipl
 AutoUpdate=registry
+Secret=lipl-username,type=env,target=LIPL_USERNAME
+Secret=lipl-password,type=env,target=LIPL_PASSWORD
 
 [Install]
 WantedBy=default.target

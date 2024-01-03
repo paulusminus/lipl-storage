@@ -1,6 +1,7 @@
 use axum::routing::get;
 use axum::Router;
 use futures_util::TryFutureExt;
+use hyper::StatusCode;
 use lipl_core::ToRepo;
 use tokio::signal::unix::{signal, SignalKind};
 use tower::layer::util::{Identity, Stack};
@@ -11,6 +12,7 @@ use tower_http::trace::{
     DefaultMakeSpan, DefaultOnBodyChunk, DefaultOnEos, DefaultOnFailure, DefaultOnRequest,
     DefaultOnResponse, TraceLayer,
 };
+use tower_http::validate_request::ValidateRequestHeaderLayer;
 use tracing::Level;
 
 pub use crate::error::Error;
@@ -86,13 +88,21 @@ pub fn create_services() -> ServiceBuilder<
     ServiceBuilder::new().layer(logging()).layer(compression())
 }
 
+async fn health() -> StatusCode {
+    StatusCode::OK
+}
+
 pub async fn create_router<T>(t: T) -> lipl_core::Result<Router>
 where
     T: ToRepo,
 {
+    let username = std::env::var("LIPL_USERNAME")?;
+    let password = std::env::var("LIPL_PASSWORD")?;
+
     t.to_repo()
         .map_ok(|state| {
             Router::new()
+                .route(&format!("{}/health", constant::PREFIX), get(health))
                 .nest(
                     constant::PREFIX,
                     Router::new()
@@ -107,9 +117,10 @@ where
                             get(playlist::item)
                                 .delete(playlist::delete)
                                 .put(playlist::put),
-                        ),
+                        )
+                        .layer(ValidateRequestHeaderLayer::basic(&username, &password))
+                        .with_state(state),
                 )
-                .with_state(state)
         })
         .await
 }

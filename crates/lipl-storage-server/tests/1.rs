@@ -5,6 +5,7 @@ use axum::{
     http::{Request, StatusCode},
     Router,
 };
+use base64::{engine::general_purpose, Engine};
 use http_body_util::BodyExt;
 use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
 use lipl_storage_server::{create_router, environment::RepoType};
@@ -13,10 +14,19 @@ use tower::ServiceExt;
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";
+const HEALTH: &str = "health";
 const PREFIX: &str = "/lipl/api/v1/";
 
 async fn router() -> Router {
     create_router(RepoType::Memory(false)).await.unwrap()
+}
+
+fn basic_authentication_header() -> String {
+    let username = std::env::var("LIPL_USERNAME").unwrap();
+    let password = std::env::var("LIPL_PASSWORD").unwrap();
+    let authentication = format!("{username}:{password}");
+    let encoded = general_purpose::STANDARD_NO_PAD.encode(authentication);
+    format!("Basic {encoded}")
 }
 
 fn daar_bij_die_molen() -> LyricPost {
@@ -45,6 +55,15 @@ fn roodkapje() -> LyricPost {
             ],
         ],
     }
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn health_check() {
+    let service = router().await;
+
+    let status = health(&service, HEALTH).await;
+
+    assert_eq!(status, StatusCode::OK);
 }
 
 #[tokio::test(flavor = "current_thread")]
@@ -161,11 +180,26 @@ async fn playlist_post_lyric_delete() {
     assert_eq!(playlist.members, vec![daar_bij_die_molen.id]);
 }
 
+async fn health(service: &Router<()>, name: &'static str) -> StatusCode {
+    let response = service
+        .clone()
+        .oneshot(
+            Request::get(format!("{PREFIX}{name}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    response.status()
+}
+
 async fn list<R: DeserializeOwned>(service: &Router<()>, name: &'static str) -> Vec<R> {
     let response = service
         .clone()
         .oneshot(
             Request::get(format!("{PREFIX}{name}"))
+                .header("Authorization", basic_authentication_header())
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -182,6 +216,7 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
         .clone()
         .oneshot(
             Request::get(format!("{PREFIX}{name}/{uuid}"))
+                .header("Authorization", basic_authentication_header())
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -198,6 +233,7 @@ async fn delete(service: &Router<()>, name: &'static str, id: String) {
         .clone()
         .oneshot(
             Request::delete(format!("{PREFIX}{name}/{id}"))
+                .header("Authorization", basic_authentication_header())
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -218,6 +254,7 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(
         .oneshot(
             Request::post(format!("{}{}", PREFIX, name.to_string()))
                 .header("Content-Type", "application/json")
+                .header("Authorization", basic_authentication_header())
                 .body(body)
                 .unwrap(),
         )
@@ -243,6 +280,7 @@ async fn put<'a, T: Serialize, R: DeserializeOwned>(
         .oneshot(
             Request::put(format!("{PREFIX}{name}/{id}"))
                 .header("Content-Type", "application/json")
+                .header("Authorization", basic_authentication_header())
                 .body(body)
                 .unwrap(),
         )
