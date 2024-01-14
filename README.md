@@ -59,6 +59,4 @@ Sample data that can be used to play a demo or for testing.
 
 ## lipl-storage-server
 
-The server component handles web requests. There are three binaries, lipl-storage-fs, lipl-storage-postgres and lipl-storage-redis.
-
-Use the binary for the storage type you want. The OCI image uses lipl-storage-fs.
+The server component handles web requests. 
