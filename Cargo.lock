@@ -815,7 +815,7 @@ checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
 
 [[package]]
 name = "lipl-core"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "async-trait",
  "bincode",
@@ -837,7 +837,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "lipl-core",
  "quote",
@@ -846,7 +846,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "async-trait",
  "futures",
@@ -859,7 +859,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -870,7 +870,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -884,7 +884,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -897,7 +897,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "async-trait",
  "axum",
@@ -1459,9 +1459,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.12.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2593d31f82ead8df961d8bd23a64c2ccf2eb5dd34b0a34bfb4dd54011c72009e"
+checksum = "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
 
 [[package]]
 name = "socket2"
@@ -1839,9 +1839,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.6.1"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e395fcf16a7a3d8127ec99782007af141946b4795001f876d54fb0d55978560"
+checksum = "f00cc9702ca12d3c81455259621e676d0f7251cec66a21e98fe2e9a37db93b2a"
 dependencies = [
  "getrandom",
 ]
