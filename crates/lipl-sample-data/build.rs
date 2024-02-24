@@ -32,24 +32,22 @@ where
 }
 
 fn create_lyrics(lyric_files: &[PathBuf], playlists: Vec<(String, Vec<String>)>) -> TokenStream {
-    let playlist_paths = playlists
-        .iter()
-        .map(|(playlist_title, member_titles)| {
-            quote!(
-                Playlist::from(
-                    (
-                        None,
-                        PlaylistPost {
-                            title: #playlist_title.to_owned(),
-                            members: Vec::from_iter([#(#member_titles),*])
-                                .into_iter()
-                                .map(|title| lyrics.iter().find(|lyric| lyric.title == *title).unwrap())
-                                .map(|lyric| lyric.id)
-                                .collect::<Vec<_>>(),
-                        }
-                    )
+    let playlist_paths = playlists.iter().map(|(playlist_title, member_titles)| {
+        quote!(
+            Playlist::from(
+                (
+                    None,
+                    PlaylistPost {
+                        title: #playlist_title.to_owned(),
+                        members: Vec::from_iter([#(#member_titles),*])
+                            .into_iter()
+                            .map(|title| lyrics.iter().find(|lyric| lyric.title == *title).unwrap())
+                            .map(|lyric| lyric.id)
+                            .collect::<Vec<_>>(),
+                    }
                 )
             )
+        )
     });
     let lyric_paths = lyric_files.iter().map(|path| {
         let title = path.file_stem().unwrap().to_string_lossy().to_string();
