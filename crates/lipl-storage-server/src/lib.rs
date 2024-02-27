@@ -26,6 +26,14 @@ mod message;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+pub fn username() -> Result<String> {
+    std::env::var("LIPL_USERNAME").map_err(Into::into)
+}
+
+pub fn password() -> Result<String> {
+    std::env::var("LIPL_PASSWORD").map_err(Into::into)
+}
+
 pub async fn router_from_environment() -> Result<Router> {
     futures_util::future::ready(environment::repo_type())
         .and_then(|repo_type| create_router(repo_type).err_into())
