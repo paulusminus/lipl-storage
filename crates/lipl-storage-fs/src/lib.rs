@@ -75,10 +75,13 @@ fn check_members(
     }
 }
 
-fn send<T, D: Display>(s: futures::channel::oneshot::Sender<T>, error_message: D) -> impl FnOnce(T) -> Result<(), Error> {
+fn send<T, D: Display>(
+    s: futures::channel::oneshot::Sender<T>,
+    error_message: D,
+) -> impl FnOnce(T) -> Result<(), Error> {
     move |t| {
         s.send(t)
-        .map_err(|_| Error::SendFailed(error_message.to_string()))
+            .map_err(|_| Error::SendFailed(error_message.to_string()))
     }
 }
 
