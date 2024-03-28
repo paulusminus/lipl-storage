@@ -1,5 +1,5 @@
 use lipl_core::transaction::{start_log_thread, OptionalTransaction};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -75,6 +75,13 @@ fn check_members(
     }
 }
 
+fn send<T, D: Display>(s: futures::channel::oneshot::Sender<T>, error_message: D) -> impl FnOnce(T) -> Result<(), Error> {
+    move |t| {
+        s.send(t)
+        .map_err(|_| Error::SendFailed(error_message.to_string()))
+    }
+}
+
 async fn handle_request<P, Q>(
     request: Request,
     source_dir: String,
@@ -88,30 +95,30 @@ where
     match request {
         Request::Stop(sender) => {
             async { Ok::<(), lipl_core::Error>(()) }
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed("Stop".to_string()))
+                .map(send(sender, "Stop"))
+                // .map_err(|_| lipl_core::Error::SendFailed("Stop".to_string()))
                 .await?;
             Err(lipl_core::Error::Stop)
         }
         Request::LyricSummaries(sender) => {
             io::get_list(&source_dir, LYRIC_EXTENSION, io::get_lyric_summary)
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed("LyricSummaries".to_string()))
+                .map(send(sender, "LyricSummaries"))
+                // .map_err(|_| lipl_core::Error::SendFailed("LyricSummaries".to_string()))
                 .await
         }
         Request::LyricList(sender) => {
             io::get_list(&source_dir, LYRIC_EXTENSION, io::get_lyric)
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed("LyricList".to_string()))
+                .map(send(sender, "LyricList"))
+                // .map_err(|_| lipl_core::Error::SendFailed("LyricList".to_string()))
                 .await
         }
         Request::LyricItem(uuid, sender) => {
             io::get_lyric(lyric_path(&uuid))
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed(format!("LyricItem {uuid}")))
+                .map(send(sender, format!("LyricItem {uuid}")))
+                // .map_err(|_| lipl_core::Error::SendFailed(format!("LyricItem {uuid}")))
                 .await
         }
         Request::LyricDelete(uuid, sender) => {
@@ -132,49 +139,49 @@ where
                 }
                 Ok::<(), lipl_core::Error>(())
             }
-            .map(|v| sender.send(v))
-            .map_err(|_| lipl_core::Error::SendFailed(format!("LyricDelete {uuid}")))
+            .map(send(sender, format!("LyricDelete {uuid}")))
+            // .map_err(|_| lipl_core::Error::SendFailed(format!("LyricDelete {uuid}")))
             .await
         }
         Request::LyricPost(lyric, sender) => {
             let path = lyric_path(&lyric.id);
-            io::post_item(&path, lyric)
+            io::post_item(&path, lyric.clone())
                 .and_then(|_| io::get_lyric(&path))
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|e| {
-                    lipl_core::Error::SendFailed(format!("LyricPost {}", e.unwrap().title))
-                })
+                .map(send(sender, format!("LyricPost {}", &lyric.title)))
+                // .map_err(|e| {
+                //     lipl_core::Error::SendFailed(format!("LyricPost {}", e.unwrap().title))
+                // })
                 .await
         }
         Request::PlaylistSummaries(sender) => {
             io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist)
                 .map_ok(lipl_core::to_summaries)
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
+                .map(send(sender, "PlaylistSummaries"))
+                // .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
                 .await
         }
         Request::PlaylistList(sender) => {
             io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist)
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
+                .map(send(sender, "PlaylistList"))
+                // .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
                 .await
         }
         Request::PlaylistItem(uuid, sender) => {
             io::get_playlist(playlist_path(&uuid))
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistItem {uuid}")))
+                .map(send(sender, format!("PlaylistItem {uuid}")))
+                // .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistItem {uuid}")))
                 .await
         }
         Request::PlaylistDelete(uuid, sender) => {
             let path = playlist_path(&uuid);
             path.remove()
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistDelete {uuid}")))
+                .map(send(sender, format!("PlaylistDelete {uuid}")))
+                // .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistDelete {uuid}")))
                 .await
         }
         Request::PlaylistPost(playlist, sender) => {
@@ -184,10 +191,10 @@ where
                 .and_then(|_| io::post_item(playlist_path(&playlist.id), playlist.clone()))
                 .and_then(|_| io::get_playlist(playlist_path(&playlist.id)))
                 .err_into()
-                .map(|v| sender.send(v))
-                .map_err(|e| {
-                    lipl_core::Error::SendFailed(format!("PlaylistPost {}", e.unwrap().title))
-                })
+                .map(send(sender, format!("PlaylistPost {}", playlist.title)))
+                // .map_err(|e| {
+                //     lipl_core::Error::SendFailed(format!("PlaylistPost {}", playlist.title))
+                // })
                 .await
         }
     }

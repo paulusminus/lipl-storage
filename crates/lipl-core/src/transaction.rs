@@ -11,6 +11,19 @@ pub type ResultSender<T> = futures::channel::oneshot::Sender<crate::Result<T>>;
 pub type OptionalTransaction = Option<Transaction>;
 type LogRecord = (String, Transaction);
 
+pub enum RequestNew {
+    LyricSummaries,
+    LyricList,
+    LyricItem(Uuid),
+    LyricDelete(Uuid),
+    LyricPost(Lyric),
+    PlaylistSummaries,
+    PlaylistList,
+    PlaylistItem(Uuid),
+    PlaylistDelete(Uuid),
+    PlaylistPost(Playlist),
+}
+
 #[derive(Debug)]
 pub enum Request {
     LyricSummaries(ResultSender<Vec<Summary>>),
