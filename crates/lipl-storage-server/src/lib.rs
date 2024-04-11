@@ -34,6 +34,19 @@ pub fn password() -> Result<String> {
     std::env::var("LIPL_PASSWORD").map_err(Into::into)
 }
 
+#[cfg(feature = "pwa")]
+pub async fn router_from_environment() -> Result<Router> {
+    use std::env::var;
+
+    use tower_http::services::ServeDir;
+
+    futures_util::future::ready(environment::repo_type())
+        .and_then(|repo_type| create_router(repo_type).err_into())
+        .await
+        .map(|router| router.nest_service("/", ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned()))))
+}
+
+#[cfg(not(feature = "pwa"))]
 pub async fn router_from_environment() -> Result<Router> {
     futures_util::future::ready(environment::repo_type())
         .and_then(|repo_type| create_router(repo_type).err_into())

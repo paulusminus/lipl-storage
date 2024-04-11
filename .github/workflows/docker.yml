@@ -59,6 +59,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-contexts: |
+            pwa=https://github.com/paulusminus/lipl-control/releases/download/v1.8.3/web.tar.gz
       - name: Sign the published Docker image
         env:
           TAGS: ${{ steps.meta.outputs.tags }}

@@ -9,11 +9,12 @@ repository.workspace = true
 version.workspace = true
 
 [features]
-default = ["memory", "postgres", "fs", "redis"]
+default = ["fs", "memory", "postgres", "pwa", "redis"]
 postgres = ["dep:lipl-storage-postgres"]
 memory = ["dep:lipl-storage-memory"]
 fs = ["dep:lipl-storage-fs"]
 redis = ["dep:lipl-storage-redis"]
+pwa = ["tower-http/fs"]
 
 [dependencies]
 async-trait = "0.1"
