@@ -18,7 +18,7 @@ pwa = ["tower-http/fs"]
 
 [dependencies]
 async-trait = "0.1"
-axum = { version = "0.7", features = ["query"] }
+axum = { version = "0.7", features = ["http2"] }
 futures-util = "0.3"
 hyper = "1.0"
 lipl-storage-postgres = { version = "0.4", path = "../lipl-storage-postgres", optional = true }
