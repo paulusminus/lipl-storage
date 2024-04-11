@@ -311,9 +311,9 @@ dependencies = [
 
 [[package]]
 name = "combine"
-version = "4.6.6"
+version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35ed6e9d84f0b51a7f52daf1c7d71dd136fd7a3f41a8462b8cdb8c78d920fad4"
+checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes",
  "futures-core",
@@ -784,7 +784,7 @@ checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 
 [[package]]
 name = "lipl-core"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "async-trait",
  "bincode",
@@ -806,7 +806,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "lipl-core",
  "quote",
@@ -815,7 +815,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "async-trait",
  "futures",
@@ -828,7 +828,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -839,7 +839,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -853,7 +853,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -866,7 +866,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.4.8"
+version = "0.4.9"
 dependencies = [
  "async-trait",
  "axum",
