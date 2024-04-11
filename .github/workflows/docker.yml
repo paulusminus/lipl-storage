@@ -60,7 +60,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-contexts: |
-            pwa=docker-image://docker.io/paulusminus/lipl-pwa
+            pwa=docker-image://docker.io/paulusminus/lipl-pwa:latest
       - name: Sign the published Docker image
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
