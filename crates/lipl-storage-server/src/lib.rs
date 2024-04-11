@@ -43,7 +43,12 @@ pub async fn router_from_environment() -> Result<Router> {
     futures_util::future::ready(environment::repo_type())
         .and_then(|repo_type| create_router(repo_type).err_into())
         .await
-        .map(|router| router.nest_service("/", ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned()))))
+        .map(|router| {
+            router.nest_service(
+                "/",
+                ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())),
+            )
+        })
 }
 
 #[cfg(not(feature = "pwa"))]
