@@ -56,3 +56,12 @@ impl From<uuid::Uuid> for Uuid {
         Self(uuid)
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn new_id() {
+        let id = super::Uuid::default();
+        dbg!(id.to_string());
+    }
+}

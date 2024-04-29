@@ -8,7 +8,7 @@ use tokio::task::JoinHandle;
 
 use async_trait::async_trait;
 
-use constant::{LYRIC_EXTENSION, YAML_EXTENSION};
+use constant::{LYRIC_EXTENSION, TOML_EXTENSION};
 use fs::IO;
 use futures::channel::mpsc;
 use futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
@@ -17,7 +17,7 @@ use lipl_core::vec_ext::VecExt;
 use lipl_core::{transaction::Request, LiplRepo, Lyric, Playlist, Summary, ToRepo, Uuid};
 use request::{delete_by_id, post, select, select_by_id};
 
-mod constant;
+pub mod constant;
 mod fs;
 mod io;
 mod request;
@@ -128,13 +128,13 @@ where
             async {
                 let playlists = lyric_path(&uuid)
                     .remove()
-                    .and_then(|_| io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist))
+                    .and_then(|_| io::get_list(&source_dir, TOML_EXTENSION, io::get_playlist))
                     .await?;
                 for mut playlist in playlists {
                     if playlist.members.contains(&uuid) {
                         playlist.members = playlist.members.without(&uuid);
                         io::post_item(
-                            source_dir.full_path(&uuid.to_string(), YAML_EXTENSION),
+                            source_dir.full_path(&uuid.to_string(), TOML_EXTENSION),
                             playlist,
                         )
                         .await?;
@@ -158,7 +158,7 @@ where
                 .await
         }
         Request::PlaylistSummaries(sender) => {
-            io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist)
+            io::get_list(&source_dir, TOML_EXTENSION, io::get_playlist)
                 .map_ok(lipl_core::to_summaries)
                 .err_into()
                 .map(send(sender, "PlaylistSummaries"))
@@ -166,7 +166,7 @@ where
                 .await
         }
         Request::PlaylistList(sender) => {
-            io::get_list(&source_dir, YAML_EXTENSION, io::get_playlist)
+            io::get_list(&source_dir, TOML_EXTENSION, io::get_playlist)
                 .err_into()
                 .map(send(sender, "PlaylistList"))
                 // .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
@@ -234,7 +234,7 @@ impl FileRepo {
                         request,
                         source_dir.clone(),
                         path(source_dir.clone(), LYRIC_EXTENSION),
-                        path(source_dir.clone(), YAML_EXTENSION),
+                        path(source_dir.clone(), TOML_EXTENSION),
                     )
                 })
                 .await

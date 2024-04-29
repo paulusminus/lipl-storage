@@ -16,7 +16,8 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-mod disk_format;
+mod disk_format_toml;
+pub mod disk_format_yaml;
 pub mod error;
 pub mod parts;
 pub mod reexport;
@@ -26,6 +27,9 @@ mod uuid;
 pub mod vec_ext;
 
 pub type Result<T> = core::result::Result<T, Error>;
+
+pub const TOML_PREFIX: &str = "+++";
+const YAML_PREFIX: &str = "---";
 
 #[async_trait]
 pub trait LiplRepo: Send + Sync {
@@ -265,7 +269,7 @@ impl RepoDb {
     }
 
     pub fn to_yaml(&self) -> Result<String> {
-        let s = serde_yaml::to_string(self)?;
+        let s = toml_edit::ser::to_string(self)?;
         Ok(s)
     }
 }
@@ -288,7 +292,7 @@ impl std::fmt::Display for RepoDb {
     }
 }
 
-pub trait Yaml {
+pub trait Toml {
     fn load<R>(r: R) -> Result<Self>
     where
         R: std::io::Read,

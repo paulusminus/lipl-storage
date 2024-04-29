@@ -10,7 +10,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};
 
 use lipl_core::error::Error;
-use lipl_core::Uuid;
+use lipl_core::{Uuid, TOML_PREFIX};
 
 type Result<T> = std::result::Result<T, Error>;
 
@@ -50,9 +50,9 @@ where
             .map_ok(LinesStream::new)
             .and_then(|stream| {
                 stream
-                    .try_skip_while(|l| ready(Ok(l.trim() != "---")))
-                    .try_skip_while(|l| ready(Ok(l.trim() == "---")))
-                    .try_take_while(|l| ready(Ok(l.trim() != "---")))
+                    .try_skip_while(|l| ready(Ok(l.trim() != TOML_PREFIX)))
+                    .try_skip_while(|l| ready(Ok(l.trim() == TOML_PREFIX)))
+                    .try_take_while(|l| ready(Ok(l.trim() != TOML_PREFIX)))
                     .try_collect::<Vec<String>>()
             })
             .err_into()

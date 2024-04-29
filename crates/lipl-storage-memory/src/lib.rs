@@ -1,9 +1,10 @@
 use async_trait::async_trait;
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{
-    by_title, reexport::serde_yaml, Error, HasSummary, LiplRepo, Lyric, LyricPost, Playlist,
-    PlaylistPost, RepoDb, Result, Summary, ToRepo, Uuid, Yaml,
+    by_title, reexport::toml_edit, Error, HasSummary, LiplRepo, Lyric, LyricPost, Playlist,
+    PlaylistPost, RepoDb, Result, Summary, ToRepo, Uuid, Toml,
 };
+use std::io::read_to_string;
 use std::{
     collections::HashMap,
     iter::empty,
@@ -116,22 +117,25 @@ impl Default for MemoryRepo {
     }
 }
 
-impl Yaml for MemoryRepo {
+impl Toml for MemoryRepo {
     fn load<R>(r: R) -> Result<Self>
     where
         R: std::io::Read,
         Self: Sized,
     {
-        serde_yaml::from_reader::<_, RepoDb>(r)
+        read_to_string(r)
+        .map_err(lipl_core::Error::IOError)
+        .and_then(|s| toml_edit::de::from_str::<RepoDb>(&s).map_err(Into::into))
             .map_err(Into::into)
             .map(MemoryRepo::from)
     }
 
-    fn save<W>(&self, w: W) -> Result<()>
+    fn save<W>(&self, mut w: W) -> Result<()>
     where
         W: std::io::Write,
     {
-        serde_yaml::to_writer(w, &self.to_repo_db()).map_err(Into::into)
+        toml_edit::ser::to_string_pretty(&self.to_repo_db()).map_err(Into::into)
+        .and_then(|s| w.write_all(s.as_bytes()).map_err(Into::into))
     }
 }
 

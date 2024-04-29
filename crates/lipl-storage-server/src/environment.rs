@@ -52,6 +52,7 @@ fn var(key: &'static str) -> Result<String> {
     std::env::var(key).map_err(Error::from)
 }
 
+#[cfg(feature = "memory")]
 fn include_sample_data() -> Result<bool> {
     var("LIPL_STORAGE_MEMORY_SAMPLE").and_then(|s| s.parse::<bool>().map_err(Error::from))
 }
