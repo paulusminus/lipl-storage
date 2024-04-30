@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-- pwa: Add ability to serve static files for pwa functionallity
+- pwa: Add ability to serve static files for [pwa](https://en.wikipedia.org/wiki/Progressive_web_app) functionallity
 
 
 ## [0.4.5]
