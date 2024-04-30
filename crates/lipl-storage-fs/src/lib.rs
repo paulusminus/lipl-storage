@@ -1,3 +1,4 @@
+use convert::to_toml;
 use lipl_core::transaction::{start_log_thread, OptionalTransaction};
 use std::fmt::{Debug, Display};
 use std::fs::OpenOptions;
@@ -18,6 +19,7 @@ use lipl_core::{transaction::Request, LiplRepo, Lyric, Playlist, Summary, ToRepo
 use request::{delete_by_id, post, select, select_by_id};
 
 pub mod constant;
+mod convert;
 mod fs;
 mod io;
 mod request;
@@ -40,6 +42,7 @@ impl FromStr for FileRepoConfig {
 impl ToRepo for FileRepoConfig {
     async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
         let repo = FileRepo::new(self.path).await?;
+        to_toml(&repo.path)?;
         Ok(Arc::new(repo))
     }
 }

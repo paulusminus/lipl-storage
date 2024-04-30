@@ -1,5 +1,4 @@
 use std::{
-    env::var,
     ffi::OsStr,
     fs::{read_dir, read_to_string, rename, DirEntry, OpenOptions},
     io::Write,
@@ -7,11 +6,12 @@ use std::{
     str::FromStr,
 };
 
+use crate::constant::{LYRIC_EXTENSION, TOML_EXTENSION};
 use lipl_core::{
     disk_format_yaml::{LyricPostWrapper, PlaylistPostWrapper},
     Error, Lyric, Playlist, Result, Uuid,
 };
-use lipl_storage_fs::constant::{LYRIC_EXTENSION, TOML_EXTENSION};
+use tracing::info;
 
 const YAML_EXTENSION: &str = "yaml";
 const TO_TOML_OK_FILENAME: &str = "TO_TOML_OK";
@@ -44,7 +44,7 @@ fn write_object<D: std::fmt::Display, P: AsRef<Path>>(out_path: P, d: D) -> Resu
 }
 
 fn is_file(de: &DirEntry) -> bool {
-    de.file_type().ok().map(|f| f.is_file()) == Some(true)   
+    de.file_type().ok().map(|f| f.is_file()) == Some(true)
 }
 
 fn backup(de: &DirEntry) -> Result<()> {
@@ -54,40 +54,41 @@ fn backup(de: &DirEntry) -> Result<()> {
     Ok(())
 }
 
-fn main() -> Result<()> {
-    let in_dir = var("LIPL_STORAGE_FS_DIR").map(PathBuf::from)?;
+pub fn to_toml<P: AsRef<Path>>(path: P) -> Result<()> {
+    let in_dir: PathBuf = path.as_ref().into();
 
     if in_dir.exists() && in_dir.is_dir() {
-        println!("Using {} as input directory", in_dir.to_string_lossy());
+        info!("Using {} as input directory", in_dir.to_string_lossy());
     } else {
         return Err(Error::NonExistingDirectory(in_dir));
     }
 
     if in_dir.join(TO_TOML_OK_FILENAME).exists() && in_dir.join(TO_TOML_OK_FILENAME).is_file() {
-        return Err(Error::Argument("Already converted"));
+        info!("Conversion already done");
+        return Ok(());
     }
 
     let dir = read_dir(&in_dir)?;
     let files = dir.map_while(|r| r.ok());
 
     for file in files.filter(is_file) {
-        println!("Processing file {}", file.file_name().to_string_lossy());
+        info!("Processing file {}", file.file_name().to_string_lossy());
         if file.path().extension() == Some(OsStr::new(YAML_EXTENSION)) {
             let playlist = to_object::<PlaylistPostWrapper, Playlist>(&file)?;
-            println!("Found playlist with title {}", playlist.title);
+            info!("Found playlist with title {}", playlist.title);
             let out_path = in_dir.join(format!("{}.{}", playlist.id, TOML_EXTENSION));
 
             backup(&file)?;
-            println!("original file renamed with bak extension");
+            info!("original file renamed with bak extension");
 
             write_object(&out_path, playlist)?;
         } else if file.path().extension() == Some(OsStr::new(LYRIC_EXTENSION)) {
             let lyric = to_object::<LyricPostWrapper, Lyric>(&file)?;
-            println!("Found lyric with title {}", lyric.title);
+            info!("Found lyric with title {}", lyric.title);
             let out_path = in_dir.join(format!("{}.{}", lyric.id, LYRIC_EXTENSION));
 
             backup(&file)?;
-            println!("original file renamed with bak extension");
+            info!("original file renamed with bak extension");
             write_object(out_path, lyric)?;
         }
     }
