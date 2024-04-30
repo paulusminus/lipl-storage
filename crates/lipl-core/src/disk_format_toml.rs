@@ -7,7 +7,10 @@ use crate::error::Error;
 use crate::vec_ext::VecExt;
 use crate::{Etag, Lyric, LyricMeta, LyricPost, Playlist, PlaylistPost, TOML_PREFIX};
 
-fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, toml_edit::de::Error> {
+fn lines_to_lyric_post(
+    acc: LyricPost,
+    mut lines: Lines,
+) -> Result<LyricPost, toml_edit::de::Error> {
     let next = lines
         .by_ref()
         .skip_while(|l| l.trim().is_empty())
@@ -39,8 +42,6 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, to
     }
 }
 
-// pub struct LyricPostWrapper(LyricPost);
-
 impl FromStr for LyricPost {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -48,8 +49,6 @@ impl FromStr for LyricPost {
         Ok(lyric_post)
     }
 }
-
-// pub struct LyricWrapper(pub Lyric);
 
 impl Display for Lyric {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
@@ -68,16 +67,12 @@ impl Display for Lyric {
     }
 }
 
-// pub struct PlaylistPostWrapper(PlaylistPost);
-
 impl FromStr for PlaylistPost {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         toml_edit::de::from_str::<PlaylistPost>(s).map_err(Into::into)
     }
 }
-
-// pub struct PlaylistWrapper(pub Playlist);
 
 impl Display for Playlist {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -249,7 +244,10 @@ mod tests {
     #[test]
     fn lyric_post_parse_equals_display() {
         let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
-        println!("{}", &toml_edit::ser::to_string_pretty(&lyric_post).unwrap());
+        println!(
+            "{}",
+            &toml_edit::ser::to_string_pretty(&lyric_post).unwrap()
+        );
         let uuid = HERTOG_JAN_ID.to_owned().parse::<Uuid>().unwrap();
         let lyric = Lyric::from((Some(uuid), lyric_post));
         assert_eq!(
@@ -272,7 +270,11 @@ mod tests {
     fn display_playlist() {
         let playlist = PlaylistPost {
             title: "Kerst".to_owned(),
-            members: vec![PLAYLIST_MEMBER1.parse::<Uuid>().unwrap(), PLAYLIST_MEMBER2.parse::<Uuid>().unwrap(), PLAYLIST_MEMBER3.parse::<Uuid>().unwrap()]
+            members: vec![
+                PLAYLIST_MEMBER1.parse::<Uuid>().unwrap(),
+                PLAYLIST_MEMBER2.parse::<Uuid>().unwrap(),
+                PLAYLIST_MEMBER3.parse::<Uuid>().unwrap(),
+            ],
         };
 
         println!("{}", toml_edit::ser::to_string_pretty(&playlist).unwrap());

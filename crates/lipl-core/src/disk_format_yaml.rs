@@ -1,11 +1,10 @@
-use core::fmt::{Display, Formatter};
 use core::iter::once;
 use core::str::FromStr;
 use core::str::Lines;
 
 use crate::error::Error;
 use crate::vec_ext::VecExt;
-use crate::{Etag, Lyric, LyricMeta, LyricPost, Playlist, PlaylistPost, Uuid, YAML_PREFIX};
+use crate::{Lyric, LyricMeta, LyricPost, Playlist, PlaylistPost, Uuid, YAML_PREFIX};
 
 fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, serde_yaml::Error> {
     let next = lines
@@ -41,18 +40,6 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, se
 
 pub struct LyricPostWrapper(LyricPost);
 
-impl From<(Uuid, LyricPostWrapper)> for Lyric {
-    fn from(value: (Uuid, LyricPostWrapper)) -> Self {
-        (Some(value.0), value.1.0).into()
-    }
-}
-
-impl From<(Uuid, PlaylistPostWrapper)> for Playlist {
-    fn from(value: (Uuid, PlaylistPostWrapper)) -> Self {
-        (Some(value.0), value.1.0).into()
-    }
-}
-
 impl FromStr for LyricPostWrapper {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -61,69 +48,83 @@ impl FromStr for LyricPostWrapper {
     }
 }
 
-pub struct LyricWrapper(pub Lyric);
-
-impl Display for LyricWrapper {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        let lyric_meta = LyricMeta {
-            title: self.0.title.clone(),
-            hash: self.0.etag(),
-        };
-        let yaml = serde_yaml::to_string(&lyric_meta).unwrap();
-        let parts_string: String = self.0
-            .parts
-            .iter()
-            .map(|p| p.join("  \n"))
-            .collect::<Vec<_>>()
-            .join("\n\n");
-        write!(f, "{YAML_PREFIX}\n{yaml}{YAML_PREFIX}\n\n{parts_string}")
+impl From<(Uuid, LyricPostWrapper)> for Lyric {
+    fn from(value: (Uuid, LyricPostWrapper)) -> Self {
+        (Some(value.0), value.1 .0).into()
     }
 }
+
+// pub struct LyricWrapper(pub Lyric);
+
+// impl Display for LyricWrapper {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+//         let lyric_meta = LyricMeta {
+//             title: self.0.title.clone(),
+//             hash: self.0.etag(),
+//         };
+//         let yaml = serde_yaml::to_string(&lyric_meta).unwrap();
+//         let parts_string: String = self.0
+//             .parts
+//             .iter()
+//             .map(|p| p.join("  \n"))
+//             .collect::<Vec<_>>()
+//             .join("\n\n");
+//         write!(f, "{YAML_PREFIX}\n{yaml}{YAML_PREFIX}\n\n{parts_string}")
+//     }
+// }
 
 pub struct PlaylistPostWrapper(PlaylistPost);
 
 impl FromStr for PlaylistPostWrapper {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_yaml::from_str::<PlaylistPost>(s).map_err(Into::into).map(Self)
+        serde_yaml::from_str::<PlaylistPost>(s)
+            .map_err(Into::into)
+            .map(Self)
     }
 }
 
-pub struct PlaylistWrapper(pub Playlist);
-
-impl Display for PlaylistWrapper {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let playlist_post = PlaylistPost::from(self.0.clone());
-        let yaml = serde_yaml::to_string(&playlist_post).unwrap_or_default();
-        write!(f, "{}", yaml)
+impl From<(Uuid, PlaylistPostWrapper)> for Playlist {
+    fn from(value: (Uuid, PlaylistPostWrapper)) -> Self {
+        (Some(value.0), value.1 .0).into()
     }
 }
 
-fn empty_line(s: &&str) -> bool {
-    s.trim().is_empty()
-}
+// pub struct PlaylistWrapper(pub Playlist);
 
-fn non_empty_line(s: &&str) -> bool {
-    !empty_line(s)
-}
+// impl Display for PlaylistWrapper {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+//         let playlist_post = PlaylistPost::from(self.0.clone());
+//         let yaml = serde_yaml::to_string(&playlist_post).unwrap_or_default();
+//         write!(f, "{}", yaml)
+//     }
+// }
 
-pub struct LyricMetaWrapper(pub LyricMeta);
+// fn empty_line(s: &&str) -> bool {
+//     s.trim().is_empty()
+// }
 
-impl FromStr for LyricMetaWrapper {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let yaml = s
-            .lines()
-            .skip_while(empty_line)
-            .take_while(non_empty_line)
-            .map(String::from)
-            .filter(|s| s != YAML_PREFIX)
-            .collect::<Vec<_>>()
-            .join("\n");
+// fn non_empty_line(s: &&str) -> bool {
+//     !empty_line(s)
+// }
 
-        serde_yaml::from_str(&yaml).map_err(Into::into).map(Self)
-    }
-}
+// pub struct LyricMetaWrapper(pub LyricMeta);
+
+// impl FromStr for LyricMetaWrapper {
+//     type Err = Error;
+//     fn from_str(s: &str) -> Result<Self, Self::Err> {
+//         let yaml = s
+//             .lines()
+//             .skip_while(empty_line)
+//             .take_while(non_empty_line)
+//             .map(String::from)
+//             .filter(|s| s != YAML_PREFIX)
+//             .collect::<Vec<_>>()
+//             .join("\n");
+
+//         serde_yaml::from_str(&yaml).map_err(Into::into).map(Self)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

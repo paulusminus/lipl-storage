@@ -1,51 +1,77 @@
-use std::{env::{set_var, var}, ffi::OsStr, fs::{read_dir, read_to_string, DirEntry, OpenOptions}, io::Write, path::PathBuf, process::exit, str::FromStr};
+use std::{
+    env::var,
+    ffi::OsStr,
+    fs::{read_dir, read_to_string, rename, DirEntry, OpenOptions},
+    io::Write,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
-use lipl_core::{disk_format_yaml::{LyricPostWrapper, PlaylistPostWrapper}, Error, Lyric, Playlist, Uuid};
+use lipl_core::{
+    disk_format_yaml::{LyricPostWrapper, PlaylistPostWrapper},
+    Error, Lyric, Playlist, Result, Uuid,
+};
 use lipl_storage_fs::constant::{LYRIC_EXTENSION, TOML_EXTENSION};
 
 const YAML_EXTENSION: &str = "yaml";
+const TO_TOML_OK_FILENAME: &str = "TO_TOML_OK";
 
-fn to_object<T, U>(de: DirEntry) -> U
+fn to_object<T, U>(de: &DirEntry) -> Result<U>
 where
     T: FromStr<Err = Error>,
     U: From<(Uuid, T)>,
 {
-    let s = read_to_string(de.path()).unwrap();
-    let post = s.parse::<T>().unwrap();
-    let uuid = de.path().file_stem().unwrap().to_string_lossy().to_string().parse::<Uuid>().unwrap();
-    (uuid, post).into()
+    let s = read_to_string(de.path())?;
+    let post = s.parse::<T>()?;
+    let uuid = de
+        .path()
+        .file_stem()
+        .unwrap()
+        .to_string_lossy()
+        .to_string()
+        .parse::<Uuid>()?;
+    Ok((uuid, post).into())
 }
 
-fn write_object<D: std::fmt::Display>(out_path: PathBuf, d: D) 
-{
-    let mut out = OpenOptions::new().create(true).write(true).open(out_path).unwrap();
-    write!(&mut out, "{}", d).unwrap();
+fn write_object<D: std::fmt::Display, P: AsRef<Path>>(out_path: P, d: D) -> Result<()> {
+    let mut out = OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open(out_path.as_ref())?;
+    write!(&mut out, "{}", d)?;
+    Ok(())
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    set_var("DATA_IN", "./data");
-    set_var("DATA_OUT", "./out");
-    let in_dir = var("DATA_IN").map(PathBuf::from).unwrap();
-    let out_dir = var("DATA_OUT").map(PathBuf::from).unwrap();
-    if in_dir.exists() && in_dir.is_dir() && out_dir.exists() && out_dir.is_dir() {
-        let dir = read_dir("./data").unwrap().map_while(Result::ok);
+fn main() -> Result<()> {
+    let in_dir = var("LIPL_STORAGE_FS_DIR").map(PathBuf::from)?;
 
-        for file in dir.filter(|de| de.file_type().unwrap().is_file()) {
-            if file.path().extension() == Some(&OsStr::new(YAML_EXTENSION)) {
-                let playlist = to_object::<PlaylistPostWrapper, Playlist>(file);
-                let out_path = out_dir.join(format!("{}.{}", playlist.id, TOML_EXTENSION));
-                write_object(out_path, playlist);
-            }
-            else if file.path().extension() == Some(&OsStr::new(LYRIC_EXTENSION)) {
-                let lyric = to_object::<LyricPostWrapper, Lyric>(file);
-                let out_path = out_dir.join(format!("{}.{}", lyric.id, LYRIC_EXTENSION));
-                write_object(out_path, lyric);
+    if !in_dir.is_dir() {
+        return Err(Error::NonExistingDirectory(in_dir));
+    }
+
+    if !in_dir.join(TO_TOML_OK_FILENAME).exists() {
+        let dir = read_dir(&in_dir)?;
+        let files = dir.map_while(|r| r.ok());
+
+        for file in files.filter(|de| de.file_type().unwrap().is_file()) {
+            if file.path().extension() == Some(OsStr::new(YAML_EXTENSION)) {
+                let playlist = to_object::<PlaylistPostWrapper, Playlist>(&file)?;
+                let out_path = in_dir.join(format!("{}.{}", playlist.id, TOML_EXTENSION));
+                rename(file.path(), file.path().join(".bak"))?;
+                write_object(&out_path, playlist)?;
+            } else if file.path().extension() == Some(OsStr::new(LYRIC_EXTENSION)) {
+                let lyric = to_object::<LyricPostWrapper, Lyric>(&file)?;
+                let out_path = in_dir.join(format!("{}.{}", lyric.id, LYRIC_EXTENSION));
+                rename(file.path(), file.path().join(".bak"))?;
+                write_object(out_path, lyric)?;
             }
         }
-    }
-    else {
-        eprint!("Check DATA_IN and DATA_OUT. Are you sure you set the environment variables correct?");
-        exit(1);
+        OpenOptions::new()
+            .create(true)
+            .truncate(false)
+            .write(true)
+            .open(in_dir.join(TO_TOML_OK_FILENAME))?;
     }
 
     Ok(())

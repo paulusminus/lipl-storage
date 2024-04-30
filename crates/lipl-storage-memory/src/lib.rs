@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{
     by_title, reexport::toml_edit, Error, HasSummary, LiplRepo, Lyric, LyricPost, Playlist,
-    PlaylistPost, RepoDb, Result, Summary, ToRepo, Uuid, Toml,
+    PlaylistPost, RepoDb, Result, Summary, ToRepo, Toml, Uuid,
 };
 use std::io::read_to_string;
 use std::{
@@ -124,8 +124,8 @@ impl Toml for MemoryRepo {
         Self: Sized,
     {
         read_to_string(r)
-        .map_err(lipl_core::Error::IOError)
-        .and_then(|s| toml_edit::de::from_str::<RepoDb>(&s).map_err(Into::into))
+            .map_err(lipl_core::Error::IOError)
+            .and_then(|s| toml_edit::de::from_str::<RepoDb>(&s).map_err(Into::into))
             .map_err(Into::into)
             .map(MemoryRepo::from)
     }
@@ -134,8 +134,9 @@ impl Toml for MemoryRepo {
     where
         W: std::io::Write,
     {
-        toml_edit::ser::to_string_pretty(&self.to_repo_db()).map_err(Into::into)
-        .and_then(|s| w.write_all(s.as_bytes()).map_err(Into::into))
+        toml_edit::ser::to_string_pretty(&self.to_repo_db())
+            .map_err(Into::into)
+            .and_then(|s| w.write_all(s.as_bytes()).map_err(Into::into))
     }
 }
 
