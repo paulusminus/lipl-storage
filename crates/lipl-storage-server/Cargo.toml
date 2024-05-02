@@ -16,6 +16,9 @@ fs = ["dep:lipl-storage-fs"]
 redis = ["dep:lipl-storage-redis"]
 pwa = ["tower-http/fs"]
 
+[build]
+target = ["x86_64-unknown-linux-musl"]
+
 [dependencies]
 async-trait = "0.1"
 axum = { version = "0.7", features = ["http2"] }
