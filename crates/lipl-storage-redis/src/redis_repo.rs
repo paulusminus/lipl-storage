@@ -157,7 +157,7 @@ impl RedisRepo {
 
         if config.clear {
             cmd("FLUSHALL")
-                .query_async(connection.deref_mut())
+                .query_async::<_, ()>(connection.deref_mut())
                 .map_err(redis_error)
                 .await?;
         }
@@ -183,8 +183,8 @@ impl RedisRepo {
             .arg(id.to_string())
             .query_async(connection.deref_mut())
             .map_err(redis_error)
-            .await?;
-        Ok(())
+            .map(Into::into)
+            .await
     }
 
     async fn connection(&self) -> Result<PooledConnection<RedisConnectionManager>> {
@@ -316,11 +316,11 @@ impl LiplRepo for RedisRepo {
         self.connection()
             .and_then(|mut connection| async move {
                 connection
-                    .hset_multiple::<String, &str, String, ()>(
+                    .hset_multiple::<String, String, String, ()>(
                         lyric_key(lyric.id),
                         &[
-                            (TITLE_ATTR, lyric.title.clone()),
-                            (TEXT_ATTR, to_text(&lyric.parts)),
+                            (TITLE_ATTR.to_owned(), lyric.title.clone()),
+                            (TEXT_ATTR.to_owned(), to_text(&lyric.parts)),
                         ],
                     )
                     .map_ok(|_| lyric)
@@ -335,12 +335,12 @@ impl LiplRepo for RedisRepo {
         self.connection()
             .and_then(|mut connection| async move {
                 connection
-                    .hset_multiple::<String, &str, String, ()>(
+                    .hset_multiple::<String, String, String, ()>(
                         playlist_key(playlist.id),
                         &[
-                            (TITLE_ATTR, playlist.title.clone()),
+                            (TITLE_ATTR.to_owned(), playlist.title.clone()),
                             (
-                                MEMBERS_ATTR,
+                                MEMBERS_ATTR.to_owned(),
                                 playlist
                                     .members
                                     .iter()
