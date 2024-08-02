@@ -157,7 +157,7 @@ impl RedisRepo {
 
         if config.clear {
             cmd("FLUSHALL")
-                .query_async::<_, ()>(connection.deref_mut())
+                .query_async::<()>(connection.deref_mut())
                 .map_err(redis_error)
                 .await?;
         }
