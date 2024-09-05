@@ -60,7 +60,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-contexts: |
-            pwa=docker-image://docker.io/paulusminus/lipl-pwa:latest
+            pwa=https://github.com/paulusminus/lipl-control/releases/download/v1.13.1/lipl-pwa.tar.gz
       - name: Sign the published Docker image
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
