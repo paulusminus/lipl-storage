@@ -7,6 +7,7 @@ on:
 env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ github.repository }}
+  # LIPL_CONTROL_VERSION: v1.13.1
 
 jobs:
   build:
@@ -16,6 +17,12 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - name: Get latest version lipl-control
+        id: lipl-control-latest
+        uses: paulusminus/latest-release-tag@v1
+        with:
+          owner: paulusminus
+          repo: lipl-control
       - name: Add musl packages
         run: sudo apt install -y musl-tools
       - name: Add musl toolchain
@@ -54,6 +61,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          build-args: LIPL_CONTROL_VERSION=${{ steps.lipl-control-latest.outputs.latest }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
