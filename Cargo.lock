@@ -806,7 +806,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml_edit",
- "tracing",
  "uuid",
 ]
 
@@ -866,7 +865,6 @@ dependencies = [
  "futures-util",
  "lipl-core",
  "tokio",
- "tracing",
  "tracing-subscriber",
 ]
 
