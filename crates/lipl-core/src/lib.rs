@@ -46,9 +46,7 @@ pub trait LiplRepo: Send + Sync {
     async fn get_db(&self) -> Result<RepoDb> {
         let lyrics = self.get_lyrics().await?;
         let playlists = self.get_playlists().await?;
-        Ok(
-            RepoDb { lyrics, playlists }
-        )
+        Ok(RepoDb { lyrics, playlists })
     }
     async fn replace_db(&self, db: RepoDb) -> Result<()> {
         for playlist in self.get_playlists().await? {
@@ -64,7 +62,6 @@ pub trait LiplRepo: Send + Sync {
             self.upsert_playlist(playlist).await?;
         }
         Ok(())
-
     }
     async fn stop(&self) -> Result<()>;
 }

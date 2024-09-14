@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::ErrorReport;
 
+pub mod db;
 pub mod lyric;
 pub mod playlist;
-pub mod db;
 
 #[derive(Deserialize)]
 pub struct ListQuery {
