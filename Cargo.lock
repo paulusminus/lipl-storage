@@ -789,7 +789,7 @@ checksum = "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
 
 [[package]]
 name = "lipl-core"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "async-trait",
  "bincode",
@@ -811,7 +811,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "lipl-core",
  "quote",
@@ -820,7 +820,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "async-trait",
  "futures",
@@ -833,7 +833,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -844,7 +844,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -858,7 +858,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -870,7 +870,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.4.13"
+version = "0.4.14"
 dependencies = [
  "async-trait",
  "axum",
@@ -1027,9 +1027,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.19.0"
+version = "1.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
+checksum = "33ea5043e58958ee56f3e15a90aee535795cd7dfd319846288d93c5b57d85cbe"
 
 [[package]]
 name = "overload"
