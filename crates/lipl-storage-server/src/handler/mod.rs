@@ -13,6 +13,7 @@ use crate::error::ErrorReport;
 
 pub mod lyric;
 pub mod playlist;
+pub mod db;
 
 #[derive(Deserialize)]
 pub struct ListQuery {
@@ -87,7 +88,3 @@ pub(crate) fn to_error_response(error: lipl_core::Error) -> Response {
 pub(crate) fn to_status_ok<T>(_: T) -> Response {
     StatusCode::OK.into_response()
 }
-
-// pub(crate) fn not_found() -> Response {
-//     StatusCode::NOT_FOUND.into_response()
-// }

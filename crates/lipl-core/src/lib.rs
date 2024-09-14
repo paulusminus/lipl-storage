@@ -43,6 +43,29 @@ pub trait LiplRepo: Send + Sync {
     async fn get_playlist(&self, id: Uuid) -> Result<Playlist>;
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist>;
     async fn delete_playlist(&self, id: Uuid) -> Result<()>;
+    async fn get_db(&self) -> Result<RepoDb> {
+        let lyrics = self.get_lyrics().await?;
+        let playlists = self.get_playlists().await?;
+        Ok(
+            RepoDb { lyrics, playlists }
+        )
+    }
+    async fn replace_db(&self, db: RepoDb) -> Result<()> {
+        for playlist in self.get_playlists().await? {
+            self.delete_playlist(playlist.id).await?
+        }
+        for lyric in self.get_lyrics().await? {
+            self.delete_lyric(lyric.id).await?;
+        }
+        for lyric in db.lyrics {
+            self.upsert_lyric(lyric).await?;
+        }
+        for playlist in db.playlists {
+            self.upsert_playlist(playlist).await?;
+        }
+        Ok(())
+
+    }
     async fn stop(&self) -> Result<()>;
 }
 

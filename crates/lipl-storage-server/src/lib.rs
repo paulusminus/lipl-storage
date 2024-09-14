@@ -16,7 +16,7 @@ use tower_http::validate_request::ValidateRequestHeaderLayer;
 use tracing::Level;
 
 pub use crate::error::Error;
-use crate::handler::{lyric, playlist};
+use crate::handler::{db, lyric, playlist};
 
 pub mod constant;
 pub mod environment;
@@ -144,6 +144,7 @@ where
                                 .delete(playlist::delete)
                                 .put(playlist::put),
                         )
+                        .route("/db", get(db::get).put(db::put))
                         .layer(ValidateRequestHeaderLayer::basic(&username, &password))
                         .with_state(state),
                 )

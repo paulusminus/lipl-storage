@@ -102,7 +102,6 @@ where
         Request::Stop(sender) => {
             async { Ok::<(), lipl_core::Error>(()) }
                 .map(send(sender, "Stop"))
-                // .map_err(|_| lipl_core::Error::SendFailed("Stop".to_string()))
                 .await?;
             Err(lipl_core::Error::Stop)
         }
@@ -110,21 +109,18 @@ where
             io::get_list(&source_dir, LYRIC_EXTENSION, io::get_lyric_summary)
                 .err_into()
                 .map(send(sender, "LyricSummaries"))
-                // .map_err(|_| lipl_core::Error::SendFailed("LyricSummaries".to_string()))
                 .await
         }
         Request::LyricList(sender) => {
             io::get_list(&source_dir, LYRIC_EXTENSION, io::get_lyric)
                 .err_into()
                 .map(send(sender, "LyricList"))
-                // .map_err(|_| lipl_core::Error::SendFailed("LyricList".to_string()))
                 .await
         }
         Request::LyricItem(uuid, sender) => {
             io::get_lyric(lyric_path(&uuid))
                 .err_into()
                 .map(send(sender, format!("LyricItem {uuid}")))
-                // .map_err(|_| lipl_core::Error::SendFailed(format!("LyricItem {uuid}")))
                 .await
         }
         Request::LyricDelete(uuid, sender) => {
@@ -146,7 +142,6 @@ where
                 Ok::<(), lipl_core::Error>(())
             }
             .map(send(sender, format!("LyricDelete {uuid}")))
-            // .map_err(|_| lipl_core::Error::SendFailed(format!("LyricDelete {uuid}")))
             .await
         }
         Request::LyricPost(lyric, sender) => {
@@ -155,9 +150,6 @@ where
                 .and_then(|_| io::get_lyric(&path))
                 .err_into()
                 .map(send(sender, format!("LyricPost {}", &lyric.title)))
-                // .map_err(|e| {
-                //     lipl_core::Error::SendFailed(format!("LyricPost {}", e.unwrap().title))
-                // })
                 .await
         }
         Request::PlaylistSummaries(sender) => {
@@ -165,21 +157,18 @@ where
                 .map_ok(lipl_core::to_summaries)
                 .err_into()
                 .map(send(sender, "PlaylistSummaries"))
-                // .map_err(|_| lipl_core::Error::SendFailed("PlaylistSummaries".to_string()))
                 .await
         }
         Request::PlaylistList(sender) => {
             io::get_list(&source_dir, TOML_EXTENSION, io::get_playlist)
                 .err_into()
                 .map(send(sender, "PlaylistList"))
-                // .map_err(|_| lipl_core::Error::SendFailed("PlaylistList".to_string()))
                 .await
         }
         Request::PlaylistItem(uuid, sender) => {
             io::get_playlist(playlist_path(&uuid))
                 .err_into()
                 .map(send(sender, format!("PlaylistItem {uuid}")))
-                // .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistItem {uuid}")))
                 .await
         }
         Request::PlaylistDelete(uuid, sender) => {
@@ -187,7 +176,6 @@ where
             path.remove()
                 .err_into()
                 .map(send(sender, format!("PlaylistDelete {uuid}")))
-                // .map_err(|_| lipl_core::Error::SendFailed(format!("PlaylistDelete {uuid}")))
                 .await
         }
         Request::PlaylistPost(playlist, sender) => {
@@ -198,9 +186,6 @@ where
                 .and_then(|_| io::get_playlist(playlist_path(&playlist.id)))
                 .err_into()
                 .map(send(sender, format!("PlaylistPost {}", playlist.title)))
-                // .map_err(|e| {
-                //     lipl_core::Error::SendFailed(format!("PlaylistPost {}", playlist.title))
-                // })
                 .await
         }
     }
@@ -249,11 +234,6 @@ impl FileRepo {
             tx,
             _join_handle: Arc::new(join_handle),
         };
-
-        // if Path::exists(&transaction_log) {
-        //     let file = OpenOptions::new().read(true).open(&transaction_log)?;
-        //     build_from_log(file, file_repo.clone()).await?;
-        // }
 
         Ok(file_repo.clone())
     }
