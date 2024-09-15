@@ -73,6 +73,8 @@ jobs:
       PORT: 3000
       PREFIX: http://localhost:3000/lipl/api/v1
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Create docker volume
         run: docker volume create lipl-storage-fs
       - name: Check environment
