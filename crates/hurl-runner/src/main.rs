@@ -1,9 +1,9 @@
 use hurl::{
     output::write_last_body,
-    runner::{run, RunnerOptions, RunnerOptionsBuilder, Value},
+    runner::{run, HurlResult, RunnerOptions, RunnerOptionsBuilder, Value},
     util::{
         logger::{LoggerOptions, LoggerOptionsBuilder},
-        term::Stdout,
+        term::{Stdout, WriteMode},
     },
 };
 use std::{collections::HashMap, env::var};
@@ -34,32 +34,45 @@ fn user() -> Result<String> {
     Ok(user)
 }
 
-fn runner_options(user: String) -> RunnerOptions {
-    RunnerOptionsBuilder::new().user(Some(user)).build()
+fn run_with_options(
+    script: &str,
+    variables: &HashMap<String, Value>,
+    runner_options: &RunnerOptions,
+    logger_options: &LoggerOptions,
+) -> Result<HurlResult> {
+    run(script, None, runner_options, variables, logger_options).map_err(Into::into)
 }
 
-fn run_script(script: &str, out: &mut Stdout) -> Result<()> {
-    user()
-        .and_then(|user| {
-            run(
-                script,
-                None,
-                &runner_options(user),
-                &variables(),
-                &logger_options(),
-            )
-            .map_err(Into::into)
-        })
-        .and_then(|result| {
-            write_last_body(&result, true, true, None, out, true)
-                .map_err(|error| format!("{:?} {:?}", error.kind, error.source_info))
-                .map_err(Into::into)
-        })
+fn handle_output(out: &mut Stdout) -> impl FnMut(HurlResult) -> Result<()> + '_ {
+    move |result| {
+        write_last_body(&result, true, true, None, out, true)
+            .map_err(|error| format!("{:?} {:?}", error.kind, error.source_info).into())
+    }
+}
+
+fn run_script<'a>(
+    out: &'a mut Stdout,
+    variables: &'a HashMap<String, Value>,
+    runner_options: &'a RunnerOptions,
+    logger_options: &'a LoggerOptions,
+) -> impl FnMut(&str) -> Result<()> + 'a {
+    move |script| {
+        run_with_options(script, variables, runner_options, logger_options)
+            .and_then(handle_output(out))
+    }
 }
 
 fn main() -> Result<()> {
-    let mut out = Stdout::new(hurl::util::term::WriteMode::Immediate);
-    constant::HURL_SCRIPTS
-        .into_iter()
-        .try_for_each(|script| run_script(script, &mut out))
+    let out = &mut Stdout::new(WriteMode::Immediate);
+    let user = user()?;
+    let runner_options = RunnerOptionsBuilder::new().user(Some(user)).build();
+    let variables = variables();
+    let logger_options = logger_options();
+
+    constant::HURL_SCRIPTS.into_iter().try_for_each(run_script(
+        out,
+        &variables,
+        &runner_options,
+        &logger_options,
+    ))
 }

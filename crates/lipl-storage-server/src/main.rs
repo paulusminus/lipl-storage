@@ -9,6 +9,13 @@ use lipl_core::Result;
 use lipl_storage_server::{constant, create_services, exit_on_signal_int, router_from_environment};
 use tokio::net::TcpListener;
 
+#[cfg(target_env = "musl")]
+use mimalloc::MiMalloc;
+
+#[cfg(target_env = "musl")]
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 async fn run(router: Router) -> Result<()> {
     let localhost = if constant::USE_IPV6 {
         IpAddr::from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])

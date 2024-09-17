@@ -383,6 +383,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "cfg_aliases"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
+
+[[package]]
 name = "chrono"
 version = "0.4.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -988,7 +994,7 @@ dependencies = [
 
 [[package]]
 name = "hurl-runner"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "hurl",
 ]
@@ -1147,6 +1153,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libmimalloc-sys"
+version = "0.1.39"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23aa6811d3bd4deb8a84dde645f943476d13b248d818edcf8ce0b2f37f036b44"
+dependencies = [
+ "cc",
+ "libc",
+]
+
+[[package]]
 name = "libredox"
 version = "0.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1188,7 +1204,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
 name = "lipl-core"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "async-trait",
  "bincode",
@@ -1210,7 +1226,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "lipl-core",
  "quote",
@@ -1219,7 +1235,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "async-trait",
  "futures",
@@ -1232,7 +1248,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -1243,7 +1259,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -1257,7 +1273,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -1269,11 +1285,12 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.4.15"
+version = "0.4.16"
 dependencies = [
  "async-trait",
  "axum",
  "base64 0.22.1",
+ "cfg_aliases",
  "futures-util",
  "http-body-util",
  "hyper",
@@ -1282,6 +1299,7 @@ dependencies = [
  "lipl-storage-memory",
  "lipl-storage-postgres",
  "lipl-storage-redis",
+ "mimalloc",
  "serde",
  "serde_json",
  "thiserror",
@@ -1345,6 +1363,15 @@ name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "mimalloc"
+version = "0.1.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68914350ae34959d83f732418d51e2427a794055d0b9529f48259ac07af65633"
+dependencies = [
+ "libmimalloc-sys",
+]
 
 [[package]]
 name = "mime"
