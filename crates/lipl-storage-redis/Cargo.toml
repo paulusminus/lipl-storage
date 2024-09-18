@@ -9,7 +9,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-lipl-core = { version = "0.4", path = "../lipl-core" }
+lipl-core = { version = "0.5", path = "../lipl-core" }
 async-trait = "0.1.61"
 bb8-redis = "0.17"
 futures-util = "0.3.25"

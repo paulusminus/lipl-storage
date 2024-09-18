@@ -11,9 +11,8 @@ pub enum Error {
     #[error("IO Error: {0}")]
     IOError(#[from] std::io::Error),
 
-    #[error("Yaml Error: {0}")]
-    YamlError(#[from] serde_yaml::Error),
-
+    // #[error("Yaml Error: {0}")]
+    // YamlError(#[from] serde_yaml::Error),
     #[error("Toml serialization error: {0}")]
     TomlSerError(#[from] toml_edit::ser::Error),
 

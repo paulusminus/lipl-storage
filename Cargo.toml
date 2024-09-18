@@ -16,7 +16,7 @@ edition = "2021"
 homepage = "https://www.paulmin.nl/lipl/"
 license = "MIT"
 repository = "https://github.com/paulusminus/lipl-storage/"
-version = "0.4.16"
+version = "0.5.0"
 
 [profile.release]
 lto = true
