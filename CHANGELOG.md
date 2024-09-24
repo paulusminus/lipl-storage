@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking change
 
-- Do not check if conversion from yaml to toml is necessary at startup. Code is commented out.
+- Do not check if conversion from yaml to toml is necessary at startup.
+Code is commented out.
 
 ## [0.4.16]
 
@@ -19,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.15]
 
-## Changes
+### Changes
 
 - after building and pushing the docker image to Docker hub, pull the image and do some testing with hurl
 
@@ -42,13 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - On disk format for lipl-storage-fs changed from yaml to toml
 
-
 ## [0.4.7]
 
 ### Features
 
 - pwa: Add ability to serve static files for [pwa](https://en.wikipedia.org/wiki/Progressive_web_app) functionallity
-
 
 ## [0.4.5]
 
@@ -60,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-- Accessing lyrics or playlists requires basic authentication. 
+- Accessing lyrics or playlists requires basic authentication.
 - Adding a health url that dos not require authentication.
 
 ## [0.4.3]
@@ -82,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker image based on alpine 3.19
 
 ## Fix
+
 - Clippy warning in package build-bins
 
 ## [0.4.0]
@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a directory quadlet with sample files for running containers with systemd.
 
 ### Fixed
+
 - Documentation
 
 ## [0.3.1] - 2023-11-23

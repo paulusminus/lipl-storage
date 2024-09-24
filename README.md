@@ -3,11 +3,14 @@
 
 # Lipl Storage
 
-A collection of crates that can be used to create a binary executable that handles the storage and retrieval of lyrics and playlists. Configuration of the storage backend is done through environment variables.
+A collection of crates that can be used to create a binary executable that handles
+the storage and retrieval of lyrics and playlists.
+Configuration of the storage backend is done through environment variables.
 
 ## lipl-core
 
-Models and LiplRepo trait. The latter is used to hide implementation details for the backend.
+Models and LiplRepo trait.
+The latter is used to hide implementation details for the backend.
 
 ## lipl-storage-fs
 
@@ -22,7 +25,7 @@ export LIPL_STORAGE_FS_DIR=/home/paul/lipl_data/
 
 ## lipl-storage-memory
 
-Non persistent storage on internal memory. 
+Non persistent storage on internal memory.
 
 ### Configuration example
 
@@ -59,4 +62,5 @@ Sample data that can be used to play a demo or for testing.
 
 ## lipl-storage-server
 
-The server component handles web requests. 
+The server component handles web requests.
+
