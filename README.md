@@ -63,4 +63,3 @@ Sample data that can be used to play a demo or for testing.
 ## lipl-storage-server
 
 The server component handles web requests.
-
