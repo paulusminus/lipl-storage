@@ -1,4 +1,4 @@
-use futures::{TryFuture, TryStreamExt};
+use futures_util::{TryFuture, TryStreamExt};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 

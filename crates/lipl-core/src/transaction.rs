@@ -7,7 +7,7 @@ use crate::{LiplRepo, Lyric, Playlist, Summary, Uuid};
 use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
 
-pub type ResultSender<T> = futures::channel::oneshot::Sender<crate::Result<T>>;
+pub type ResultSender<T> = futures_channel::oneshot::Sender<crate::Result<T>>;
 pub type OptionalTransaction = Option<Transaction>;
 type LogRecord = (String, Transaction);
 

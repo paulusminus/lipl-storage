@@ -1,6 +1,6 @@
 use crate::Uuid;
-use futures::channel::oneshot::Canceled;
-use futures::channel::{mpsc, oneshot};
+use futures_channel::oneshot::Canceled;
+use futures_channel::{mpsc, oneshot};
 use lipl_core::transaction::{Request, ResultSender};
 use lipl_core::Error;
 use std::fmt::Debug;

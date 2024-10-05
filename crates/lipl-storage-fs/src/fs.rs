@@ -3,8 +3,8 @@ use std::path::{Path, PathBuf};
 use std::pin::Pin;
 
 use async_trait::async_trait;
-use futures::future::{ready, Ready};
-use futures::{Stream, StreamExt, TryFutureExt, TryStreamExt};
+use futures_util::future::{ready, Ready};
+use futures_util::{Stream, StreamExt, TryFutureExt, TryStreamExt};
 use tokio::fs::{read_dir, remove_file, File};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};

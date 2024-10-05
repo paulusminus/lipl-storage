@@ -11,8 +11,8 @@ use async_trait::async_trait;
 
 use constant::{LYRIC_EXTENSION, TOML_EXTENSION};
 use fs::IO;
-use futures::channel::mpsc;
-use futures::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
+use futures_channel::mpsc;
+use futures_util::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 pub use lipl_core::error::{Error, ErrorExtension};
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{transaction::Request, LiplRepo, Lyric, Playlist, Summary, ToRepo, Uuid};
@@ -63,23 +63,23 @@ impl Debug for FileRepo {
 fn check_members(
     playlist: &Playlist,
     lyric_ids: &[Uuid],
-) -> impl futures::Future<Output = Result<(), Error>> {
+) -> impl futures_util::Future<Output = Result<(), Error>> {
     if let Some(member) = playlist
         .members
         .iter()
         .find(|member| !lyric_ids.contains(member))
     {
-        futures::future::ready(Err(Error::PlaylistInvalidMember(
+        futures_util::future::ready(Err(Error::PlaylistInvalidMember(
             playlist.id.to_string(),
             member.to_string(),
         )))
     } else {
-        futures::future::ready(Ok(()))
+        futures_util::future::ready(Ok(()))
     }
 }
 
 fn send<T, D: Display>(
-    s: futures::channel::oneshot::Sender<T>,
+    s: futures_channel::oneshot::Sender<T>,
     error_message: D,
 ) -> impl FnOnce(T) -> Result<(), Error> {
     move |t| {
