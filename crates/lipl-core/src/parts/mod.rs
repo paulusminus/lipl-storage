@@ -1,17 +1,11 @@
-use lazy_static::lazy_static;
 use regex::Regex;
-
-// mod from_async_reader;
-// mod from_reader;
-// mod st;
-// pub use st::to_parts_async;
-// pub use from_async_reader::from_async_reader;
-// pub use from_reader::parts_from_reader;
+use std::sync::OnceLock;
 
 const DOUBLE_LINE: &str = r"\n\s*\n";
 
-lazy_static! {
-    static ref DOUBLE_LINE_REGEX: Regex = DOUBLE_LINE.parse().unwrap();
+fn double_line_regex() -> &'static Regex {
+    static DOUBLE_LINE_REGEX: OnceLock<Regex> = OnceLock::new();
+    DOUBLE_LINE_REGEX.get_or_init(|| DOUBLE_LINE.parse().unwrap())
 }
 
 pub struct Markdown {
@@ -60,7 +54,7 @@ fn to_lines(s: &str) -> Vec<String> {
 }
 
 pub fn to_parts(s: String) -> Vec<Vec<String>> {
-    DOUBLE_LINE_REGEX
+    double_line_regex()
         .split(&s)
         .map(to_lines)
         .filter(|p| !p.is_empty())

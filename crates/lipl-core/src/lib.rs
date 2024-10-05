@@ -1,5 +1,5 @@
 /*!
-This crate is a depency library for other crates who wish to work with lyrics and playlists.
+This crate is a dependency library for other crates who wish to work with lyrics and playlists.
 
 The main trait is LiplRepo. Other crates implement this trait to hide implementation details for creating, reading, updating and deleting
 lyrics ands playlist from a store. All implementation except MemoryRepo implement a persistent store.

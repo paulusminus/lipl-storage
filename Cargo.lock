@@ -1207,7 +1207,6 @@ dependencies = [
  "chrono",
  "etag",
  "futures",
- "lazy_static",
  "regex",
  "serde",
  "serde_json",
