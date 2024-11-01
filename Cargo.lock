@@ -958,7 +958,7 @@ dependencies = [
 
 [[package]]
 name = "hurl-runner"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "hurl",
 ]
@@ -1169,7 +1169,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
 name = "lipl-core"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-trait",
  "bincode",
@@ -1190,7 +1190,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "lipl-core",
  "quote",
@@ -1199,7 +1199,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-trait",
  "futures-channel",
@@ -1213,7 +1213,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -1224,7 +1224,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -1238,7 +1238,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -1250,7 +1250,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-trait",
  "axum",
@@ -1939,9 +1939,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.85"
+version = "2.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5023162dfcd14ef8f32034d8bcd4cc5ddc61ef7a247c024a33e24e1f24d21b56"
+checksum = "e89275301d38033efb81a6e60e3497e734dfcc62571f2854bf4b16690398824c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1994,18 +1994,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.65"
+version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d11abd9594d9b38965ef50805c5e469ca9cc6f197f883f717e0269a3057b3d5"
+checksum = "5d171f59dbaa811dbbb1aee1e73db92ec2b122911a48e1390dfe327a821ddede"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.65"
+version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae71770322cbd277e69d762a16c444af02aa0575ac0d174f0b9562d3b37f8602"
+checksum = "b08be0f17bd307950653ce45db00cd31200d82b624b36e181337d9c7d92765b5"
 dependencies = [
  "proc-macro2",
  "quote",
