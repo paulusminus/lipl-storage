@@ -9,12 +9,11 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-async-trait = "0.1"
-bb8-postgres = "0.8"
-futures-util = "0.3"
+async-trait = "0.1.83"
+bb8-postgres = "0.8.1"
+futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core" }
-serde = { version = "1.0", features = ["derive"] }
-thiserror = "1.0.52"
-tokio-postgres = { version = "0.7", features = ["with-uuid-1"] }
-tracing = "0.1.37"
-
+serde = { version = "1.0.214", features = ["derive"] }
+thiserror = "2.0.0"
+tokio-postgres = { version = "0.7.12", features = ["with-uuid-1"] }
+tracing = "0.1.40"

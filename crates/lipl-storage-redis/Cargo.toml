@@ -10,10 +10,10 @@ version.workspace = true
 
 [dependencies]
 lipl-core = { version = "0.5", path = "../lipl-core" }
-async-trait = "0.1.61"
-bb8-redis = "0.17"
-futures-util = "0.3.25"
+async-trait = "0.1.83"
+bb8-redis = "0.17.0"
+futures-util = "0.3.31"
 
 [dev-dependencies]
-tokio = { version = "1.24", features = ["rt", "macros"] }
-tracing-subscriber = "0.3.16"
+tokio = { version = "1.41.0", features = ["rt", "macros"] }
+tracing-subscriber = "0.3.18"

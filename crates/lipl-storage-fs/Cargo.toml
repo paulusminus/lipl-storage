@@ -15,8 +15,8 @@ futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core", features = [
   "transaction",
 ] }
-serde = { version = "1.0.210", features = ["derive"] }
-tokio = { version = "1.40.0", features = [
+serde = { version = "1.0.214", features = ["derive"] }
+tokio = { version = "1.41.0", features = [
   "fs",
   "macros",
   "rt-multi-thread",
@@ -26,7 +26,7 @@ tokio-stream = { version = "0.1.16", features = ["fs", "io-util"] }
 tracing = "0.1.40"
 
 [dev-dependencies]
-tokio = { version = "1.40.0", features = [
+tokio = { version = "1.41.0", features = [
   "fs",
   "macros",
   "rt-multi-thread",
