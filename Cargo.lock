@@ -513,9 +513,9 @@ dependencies = [
 
 [[package]]
 name = "curl-sys"
-version = "0.4.77+curl-8.10.1"
+version = "0.4.78+curl-8.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f469e8a5991f277a208224f6c7ad72ecb5f986e36d09ae1f2c1bb9259478a480"
+checksum = "8eec768341c5c7789611ae51cf6c459099f22e64a5d5d0ce4892434e33821eaf"
 dependencies = [
  "cc",
  "libc",
@@ -969,7 +969,7 @@ dependencies = [
 
 [[package]]
 name = "hurl-runner"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "hurl",
 ]
@@ -1229,9 +1229,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.161"
+version = "0.2.162"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e9489c2807c139ffd9c1794f4af0ebe86a828db53ecdc7fea2111d0fed085d1"
+checksum = "18d287de67fe55fd7e1581fe933d965a5a9477b38e949cfa9f8574ef01506398"
 
 [[package]]
 name = "libflate"
@@ -1309,7 +1309,7 @@ checksum = "78b3ae25bc7c8c38cec158d1f2757ee79e9b3740fbc7ccf0e59e4b08d793fa89"
 
 [[package]]
 name = "lipl-core"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "bincode",
@@ -1330,7 +1330,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "lipl-core",
  "quote",
@@ -1339,7 +1339,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "futures-channel",
@@ -1353,7 +1353,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "lipl-core",
@@ -1364,7 +1364,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "bb8-postgres",
@@ -1378,7 +1378,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "bb8-redis",
@@ -1390,7 +1390,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "axum",
@@ -2212,9 +2212,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.41.0"
+version = "1.41.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "145f3413504347a2be84393cc8a7d2fb4d863b375909ea59f2158261aa258bbb"
+checksum = "22cfb5bee7a6a52939ca9224d6ac897bb669134078daa8735560897f69de4d33"
 dependencies = [
  "backtrace",
  "bytes",
@@ -2838,9 +2838,9 @@ checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
 
 [[package]]
 name = "xml-rs"
-version = "0.8.22"
+version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af4e2e2f7cba5a093896c1e150fbfe177d1883e7448200efb81d40b9d339ef26"
+checksum = "af310deaae937e48a26602b730250b4949e125f468f11e6990be3e5304ddd96f"
 
 [[package]]
 name = "xxhash-rust"
