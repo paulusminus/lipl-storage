@@ -8,4 +8,4 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-hurl = "5.0.1"
+hurl = "6.0.0"
