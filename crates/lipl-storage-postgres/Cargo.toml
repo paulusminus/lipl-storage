@@ -10,7 +10,7 @@ version.workspace = true
 
 [dependencies]
 async-trait = "0.1.83"
-bb8-postgres = "0.8.1"
+bb8-postgres = "0.9.0"
 futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core" }
 serde = { version = "1.0.214", features = ["derive"] }
