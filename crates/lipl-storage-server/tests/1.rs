@@ -104,7 +104,7 @@ async fn lyric_post_change() {
     assert_eq!(lyric.parts, lyric_post.parts);
 
     lyric_post.title = "Daar bij dat molengedrag".to_owned();
-    let lyric_changed: Lyric = put(&service, LYRIC, id.clone(), &lyric_post).await;
+    let lyric_changed: Lyric = put(&service, LYRIC, &id, &lyric_post).await;
 
     assert_eq!(lyric_changed.title, lyric_post.title);
 }
@@ -121,8 +121,8 @@ async fn lyric_delete() {
     let list_after_post: Vec<Summary> = list(&service, LYRIC).await;
     assert_eq!(list_after_post.len(), 2);
 
-    delete(&service, LYRIC, roodkapje.id.to_string()).await;
-    delete(&service, LYRIC, daar_bij_die_molen.id.to_string()).await;
+    delete(&service, LYRIC, &roodkapje.id.to_string()).await;
+    delete(&service, LYRIC, &daar_bij_die_molen.id.to_string()).await;
 
     let list_after_delete: Vec<Summary> = list(&service, LYRIC).await;
     assert_eq!(list_after_delete.len(), 0);
@@ -175,8 +175,8 @@ async fn playlist_post_lyric_delete() {
     assert_eq!(playlist.title, "Alle 13 goed".to_owned());
     assert_eq!(playlist.members, vec![roodkapje.id, daar_bij_die_molen.id]);
 
-    delete(&service, LYRIC, roodkapje.id.to_string()).await;
-    let playlist: Playlist = item(&service, PLAYLIST, playlist.id.to_string()).await;
+    delete(&service, LYRIC, &roodkapje.id.to_string()).await;
+    let playlist: Playlist = item(&service, PLAYLIST, &playlist.id.to_string()).await;
     assert_eq!(playlist.members, vec![daar_bij_die_molen.id]);
 }
 
@@ -211,7 +211,7 @@ async fn list<R: DeserializeOwned>(service: &Router<()>, name: &'static str) -> 
     r
 }
 
-async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uuid: String) -> R {
+async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uuid: &str) -> R {
     let response = service
         .clone()
         .oneshot(
@@ -228,7 +228,7 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
     r
 }
 
-async fn delete(service: &Router<()>, name: &'static str, id: String) {
+async fn delete(service: &Router<()>, name: &'static str, id: &str) {
     let response = service
         .clone()
         .oneshot(
@@ -252,7 +252,7 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(
     let response = service
         .clone()
         .oneshot(
-            Request::post(format!("{}{}", PREFIX, name.to_string()))
+            Request::post(format!("{}{}", PREFIX, name))
                 .header("Content-Type", "application/json")
                 .header("Authorization", basic_authentication_header())
                 .body(body)
@@ -271,7 +271,7 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(
 async fn put<'a, T: Serialize, R: DeserializeOwned>(
     service: &'a Router<()>,
     name: &str,
-    id: String,
+    id: &str,
     t: &T,
 ) -> R {
     let body = serde_json::to_string(t).unwrap();
