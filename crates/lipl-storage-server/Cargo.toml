@@ -17,8 +17,8 @@ redis = ["dep:lipl-storage-redis"]
 pwa = ["tower-http/fs"]
 
 [dependencies]
-async-trait = "0.1.83"
-axum = { version = "0.7.7", features = ["http2"] }
+async-trait = "0.1.84"
+axum = { version = "0.8.1", features = ["http2"] }
 futures-util = "0.3.31"
 hyper = "1.5.0"
 lipl-storage-postgres = { version = "0.5", path = "../lipl-storage-postgres", optional = true }
@@ -27,27 +27,27 @@ lipl-storage-fs = { version = "0.5", path = "../lipl-storage-fs", optional = tru
 lipl-storage-redis = { version = "0.5", path = "../lipl-storage-redis", optional = true }
 lipl-core = { version = "0.5", path = "../lipl-core" }
 serde = { version = "1.0.214", features = ["derive"] }
-thiserror = "2.0.0"
-tokio = { version = "1.41.0", features = [
+thiserror = "2.0.9"
+tokio = { version = "1.42.0", features = [
   "rt-multi-thread",
   "macros",
   "signal",
 ] }
-tower = "0.5.1"
-tower-http = { version = "0.6.1", features = [
+tower = "0.5.2"
+tower-http = { version = "0.6.2", features = [
   "auth",
   "compression-br",
   "compression-gzip",
   "trace",
   "util",
 ] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 uuid = "1.11.0"
 
 [dev-dependencies]
-serde_json = "1.0.132"
-tower = { version = "0.5.1", features = ["full"] }
+serde_json = "1.0.134"
+tower = { version = "0.5.2", features = ["full"] }
 http-body-util = "0.1.2"
 base64 = "0.22.1"
 
