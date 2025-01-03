@@ -15,5 +15,5 @@ bb8-redis = "0.18.0"
 futures-util = "0.3.31"
 
 [dev-dependencies]
-tokio = { version = "1.41.0", features = ["rt", "macros"] }
-tracing-subscriber = "0.3.18"
+tokio = { version = "1.42.0", features = ["rt", "macros"] }
+tracing-subscriber = "0.3.19"
