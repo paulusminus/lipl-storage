@@ -4,7 +4,6 @@ use axum::{
     extract::FromRequestParts,
     response::{IntoResponse, Json, Response},
 };
-use futures_util::FutureExt;
 use hyper::StatusCode;
 use lipl_core::LiplRepo;
 use serde::{Deserialize, Serialize};
@@ -33,35 +32,21 @@ impl Key {
 impl FromRequestParts<Arc<dyn LiplRepo>> for Key {
     type Rejection = StatusCode;
 
-    fn from_request_parts<'life0, 'life1, 'async_trait>(
-        parts: &'life0 mut axum::http::request::Parts,
-        _state: &'life1 Arc<dyn LiplRepo>,
-    ) -> core::pin::Pin<
-        Box<
-            dyn core::future::Future<Output = Result<Self, Self::Rejection>>
-                + core::marker::Send
-                + 'async_trait,
-        >,
-    >
-    where
-        'life0: 'async_trait,
-        'life1: 'async_trait,
-        Self: 'async_trait,
-    {
-        async move {
-            parts
-                .uri
-                .path()
-                .split('/')
-                .last()
-                .ok_or(StatusCode::NOT_FOUND)
-                .and_then(|s| {
-                    s.parse::<lipl_core::Uuid>()
-                        .map_err(|_| StatusCode::NOT_FOUND)
-                })
-                .map(Key::new)
-        }
-        .boxed()
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &Arc<dyn LiplRepo>,
+    ) -> Result<Self, Self::Rejection> {
+        parts
+            .uri
+            .path()
+            .split('/')
+            .last()
+            .ok_or(StatusCode::NOT_FOUND)
+            .and_then(|s| {
+                s.parse::<lipl_core::Uuid>()
+                    .map_err(|_| StatusCode::NOT_FOUND)
+            })
+            .map(Key::new)
     }
 }
 
