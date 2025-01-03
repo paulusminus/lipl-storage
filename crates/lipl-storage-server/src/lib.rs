@@ -134,12 +134,12 @@ where
                     Router::new()
                         .route("/lyric", get(lyric::list).post(lyric::post))
                         .route(
-                            "/lyric/:id",
+                            "/lyric/{id}",
                             get(lyric::item).delete(lyric::delete).put(lyric::put),
                         )
                         .route("/playlist", get(playlist::list).post(playlist::post))
                         .route(
-                            "/playlist/:id",
+                            "/playlist/{id}",
                             get(playlist::item)
                                 .delete(playlist::delete)
                                 .put(playlist::put),
