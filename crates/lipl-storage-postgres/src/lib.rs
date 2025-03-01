@@ -93,15 +93,15 @@ impl PostgresConnectionPool {
                 .prepare_typed(sql, types)
                 .await
                 .map_err(postgres_error)?;
-            if let Some(row) = connection
+            match connection
                 .query_opt(&statement, params)
                 .await
                 .map_err(postgres_error)?
-            {
+            { Some(row) => {
                 convert(row)
-            } else {
+            } _ => {
                 Err(Error::NoResults)
-            }
+            }}
         }
     }
 }

@@ -16,11 +16,11 @@ fn error_on_count(count: u64, uuid: Uuid) -> Result<()> {
 
 fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
     move |pg_error| {
-        if let Error::NoResults = pg_error {
+        match pg_error { Error::NoResults => {
             Error::NoKey(uuid.to_string())
-        } else {
+        } _ => {
             pg_error
-        }
+        }}
     }
 }
 

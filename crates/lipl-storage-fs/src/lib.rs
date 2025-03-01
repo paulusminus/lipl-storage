@@ -32,9 +32,7 @@ pub struct FileRepoConfig {
 impl FromStr for FileRepoConfig {
     type Err = lipl_core::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.is_dir()
-            .map_err(lipl_core::Error::from)
-            .map(|_| FileRepoConfig { path: s.into() })
+        s.is_dir().map(|_| FileRepoConfig { path: s.into() })
     }
 }
 
@@ -63,7 +61,7 @@ impl Debug for FileRepo {
 fn check_members(
     playlist: &Playlist,
     lyric_ids: &[Uuid],
-) -> impl futures_util::Future<Output = Result<(), Error>> {
+) -> impl futures_util::Future<Output = Result<(), Error>> + use<> {
     if let Some(member) = playlist
         .members
         .iter()

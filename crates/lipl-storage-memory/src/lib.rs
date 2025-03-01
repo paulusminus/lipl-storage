@@ -126,7 +126,6 @@ impl Toml for MemoryRepo {
         read_to_string(r)
             .map_err(lipl_core::Error::IOError)
             .and_then(|s| toml_edit::de::from_str::<RepoDb>(&s).map_err(Into::into))
-            .map_err(Into::into)
             .map(MemoryRepo::from)
     }
 
