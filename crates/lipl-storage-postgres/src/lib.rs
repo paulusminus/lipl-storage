@@ -97,11 +97,10 @@ impl PostgresConnectionPool {
                 .query_opt(&statement, params)
                 .await
                 .map_err(postgres_error)?
-            { Some(row) => {
-                convert(row)
-            } _ => {
-                Err(Error::NoResults)
-            }}
+            {
+                Some(row) => convert(row),
+                _ => Err(Error::NoResults),
+            }
         }
     }
 }
