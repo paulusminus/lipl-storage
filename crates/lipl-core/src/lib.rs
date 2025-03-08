@@ -258,7 +258,7 @@ pub trait Etag {
 
 impl<T: Serialize> Etag for T {
     fn etag(&self) -> Option<String> {
-        bincode::serialize(self)
+        bincode::serde::encode_to_vec(self, bincode::config::standard())
             .map(|bytes| etag::EntityTag::const_from_data(&bytes))
             .map(|etag| etag.to_string())
             .ok()

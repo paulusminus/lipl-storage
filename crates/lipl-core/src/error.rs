@@ -26,7 +26,7 @@ pub enum Error {
     CannotFindDirectory(Option<String>),
 
     #[error("Bincode serialization failed: {0}")]
-    BincodeError(#[from] Box<bincode::ErrorKind>),
+    BincodeError(#[from] Box<bincode::error::EncodeError>),
 
     #[error("Decode error: {0}")]
     Bs58DecodeError(#[from] bs58::decode::Error),
