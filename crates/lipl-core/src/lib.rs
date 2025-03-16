@@ -240,40 +240,28 @@ where
 #[derive(Deserialize, Serialize)]
 pub struct LyricMeta {
     pub title: String,
-    pub hash1: Option<String>,
-    pub hash2: Option<String>,
+    pub hash: Option<String>,
 }
 
 impl From<&Lyric> for LyricMeta {
     fn from(l: &Lyric) -> Self {
         LyricMeta {
             title: l.title.clone(),
-            hash1: l.etag1(),
-            hash2: l.etag2(),
+            hash: l.etag(),
         }
     }
 }
 
 pub trait Etag {
-    fn etag1(&self) -> Option<String>;
-    fn etag2(&self) -> Option<String>;
+    fn etag(&self) -> Option<String>;
 }
 
 impl<T: Serialize> Etag for T {
-    fn etag1(&self) -> Option<String> {
-        bincode_1::serialize(self)
+    fn etag(&self) -> Option<String> {
+        bincode::serde::encode_to_vec(self, bincode::config::standard().with_fixed_int_encoding())
             .map(|bytes| etag::EntityTag::const_from_data(&bytes))
             .map(|etag| etag.to_string())
             .ok()
-    }
-    fn etag2(&self) -> Option<String> {
-        bincode_2::serde::encode_to_vec(
-            self,
-            bincode_2::config::standard().with_fixed_int_encoding(),
-        )
-        .map(|bytes| etag::EntityTag::const_from_data(&bytes))
-        .map(|etag| etag.to_string())
-        .ok()
     }
 }
 
@@ -332,4 +320,88 @@ pub trait Toml {
     fn save<W>(&self, w: W) -> Result<()>
     where
         W: std::io::Write;
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{Etag, Lyric, LyricPost, Playlist, PlaylistPost, Uuid};
+
+    fn lyric() -> Lyric {
+        Lyric {
+            id: "T2NPjHifDf1E1UfZZA6TDB".parse::<Uuid>().unwrap(),
+            title: "Hertog Jan".to_owned(),
+            parts: vec![],
+        }
+    }
+
+    fn uuid() -> Uuid {
+        "T2NPjHifDf1E1UfZZA6TDB".parse::<Uuid>().unwrap()
+    }
+
+    fn lyric_post() -> LyricPost {
+        LyricPost {
+            title: "Hertog Jan".to_owned(),
+            parts: vec![],
+        }
+    }
+
+    fn playlist() -> Playlist {
+        Playlist {
+            id: "T2NPjHifDf1E1UfZZA6TDB".parse::<Uuid>().unwrap(),
+            title: "Alles".to_owned(),
+            members: vec![],
+        }
+    }
+
+    fn playlist_post() -> PlaylistPost {
+        PlaylistPost {
+            title: "Alles".to_owned(),
+            members: vec![],
+        }
+    }
+
+    #[test]
+    fn etag_lyric() {
+        let lyric = lyric();
+        assert_eq!(
+            lyric.etag().unwrap(),
+            "\"56-48630228493704143785053775946993106597\""
+        );
+    }
+
+    #[test]
+    fn etag_uuid() {
+        let uuid = uuid();
+        assert_eq!(
+            uuid.etag().unwrap(),
+            "\"30-24337412146940561941725448827086629913\""
+        );
+    }
+
+    #[test]
+    fn etag_lyric_post() {
+        let lyric_post = lyric_post();
+        assert_eq!(
+            lyric_post.etag().unwrap(),
+            "\"26-328567728742927140900783181828566710110\""
+        );
+    }
+
+    #[test]
+    fn etag_playlist() {
+        let playlist = playlist();
+        assert_eq!(
+            playlist.etag().unwrap(),
+            "\"51-153574784935411525780941638844058540530\""
+        );
+    }
+
+    #[test]
+    fn etag_playlist_post() {
+        let playlist_post = playlist_post();
+        assert_eq!(
+            playlist_post.etag().unwrap(),
+            "\"21-10802477096456745637733263246531066696\""
+        );
+    }
 }
