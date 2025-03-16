@@ -240,25 +240,34 @@ where
 #[derive(Deserialize, Serialize)]
 pub struct LyricMeta {
     pub title: String,
-    pub hash: Option<String>,
+    pub hash1: Option<String>,
+    pub hash2: Option<String>,
 }
 
 impl From<&Lyric> for LyricMeta {
     fn from(l: &Lyric) -> Self {
         LyricMeta {
             title: l.title.clone(),
-            hash: l.etag(),
+            hash1: l.etag1(),
+            hash2: l.etag2(),
         }
     }
 }
 
 pub trait Etag {
-    fn etag(&self) -> Option<String>;
+    fn etag1(&self) -> Option<String>;
+    fn etag2(&self) -> Option<String>;
 }
 
 impl<T: Serialize> Etag for T {
-    fn etag(&self) -> Option<String> {
-        bincode::serde::encode_to_vec(self, bincode::config::standard())
+    fn etag1(&self) -> Option<String> {
+        bincode_1::serialize(self)
+        .map(|bytes| etag::EntityTag::const_from_data(&bytes))
+        .map(|etag| etag.to_string())
+        .ok()
+}
+    fn etag2(&self) -> Option<String> {
+        bincode_2::serde::encode_to_vec(self, bincode_2::config::standard().with_fixed_int_encoding())
             .map(|bytes| etag::EntityTag::const_from_data(&bytes))
             .map(|etag| etag.to_string())
             .ok()

@@ -54,7 +54,8 @@ impl Display for Lyric {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         let lyric_meta = LyricMeta {
             title: self.title.clone(),
-            hash: self.etag(),
+            hash1: self.etag1(),
+            hash2: self.etag2(),
         };
         let yaml = toml_edit::ser::to_string_pretty(&lyric_meta).unwrap();
         let parts_string: String = self
@@ -235,7 +236,7 @@ mod tests {
     #[test]
     fn lyric_post_parse() {
         let hertog_jan = hertog_jan_lyric().to_string();
-        let lyric_post = hertog_jan.as_str().parse::<LyricPost>().unwrap();
+        let lyric_post = hertog_jan.parse::<LyricPost>().unwrap();
 
         assert_eq!(lyric_post.title, HERTOG_JAN_TITLE.to_owned());
         assert_eq!(lyric_post.parts.len(), 9);
@@ -261,7 +262,11 @@ mod tests {
         let lyric_meta: LyricMeta = hertog_jan_lyric().to_string().parse().unwrap();
         assert_eq!(lyric_meta.title, HERTOG_JAN_TITLE.to_owned());
         assert_eq!(
-            lyric_meta.hash,
+            lyric_meta.hash1,
+            Some("\"2530-189459479300553739784561073837696755448\"".to_owned())
+        );
+        assert_eq!(
+            lyric_meta.hash2,
             Some("\"2530-189459479300553739784561073837696755448\"".to_owned())
         );
     }
