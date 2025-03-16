@@ -262,15 +262,18 @@ pub trait Etag {
 impl<T: Serialize> Etag for T {
     fn etag1(&self) -> Option<String> {
         bincode_1::serialize(self)
-        .map(|bytes| etag::EntityTag::const_from_data(&bytes))
-        .map(|etag| etag.to_string())
-        .ok()
-}
-    fn etag2(&self) -> Option<String> {
-        bincode_2::serde::encode_to_vec(self, bincode_2::config::standard().with_fixed_int_encoding())
             .map(|bytes| etag::EntityTag::const_from_data(&bytes))
             .map(|etag| etag.to_string())
             .ok()
+    }
+    fn etag2(&self) -> Option<String> {
+        bincode_2::serde::encode_to_vec(
+            self,
+            bincode_2::config::standard().with_fixed_int_encoding(),
+        )
+        .map(|bytes| etag::EntityTag::const_from_data(&bytes))
+        .map(|etag| etag.to_string())
+        .ok()
     }
 }
 
