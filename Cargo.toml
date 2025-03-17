@@ -13,11 +13,11 @@ members = [
 
 [workspace.package]
 authors = ["Paul Min"]
-edition = "2021"
+edition = "2024"
 homepage = "https://www.paulmin.nl/lipl/"
 license = "MIT"
 repository = "https://github.com/paulusminus/lipl-storage/"
-version = "0.5.3"
+version = "0.5.4"
 
 [profile.release]
 lto = true
