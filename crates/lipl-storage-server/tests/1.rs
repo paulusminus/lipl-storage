@@ -1,15 +1,15 @@
 use std::vec;
 
 use axum::{
+    Router,
     body::Body,
     http::{Request, StatusCode},
-    Router,
 };
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use http_body_util::BodyExt;
 use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
 use lipl_storage_server::{create_router, environment::RepoType};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use tower::ServiceExt;
 
 const LYRIC: &str = "lyric";

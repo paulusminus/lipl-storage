@@ -1,5 +1,5 @@
 // use convert::to_toml;
-use lipl_core::transaction::{start_log_thread, OptionalTransaction};
+use lipl_core::transaction::{OptionalTransaction, start_log_thread};
 use std::fmt::{Debug, Display};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
@@ -15,7 +15,7 @@ use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 pub use lipl_core::error::{Error, ErrorExtension};
 use lipl_core::vec_ext::VecExt;
-use lipl_core::{transaction::Request, LiplRepo, Lyric, Playlist, Summary, ToRepo, Uuid};
+use lipl_core::{LiplRepo, Lyric, Playlist, Summary, ToRepo, Uuid, transaction::Request};
 use request::{delete_by_id, post, select, select_by_id};
 
 pub mod constant;

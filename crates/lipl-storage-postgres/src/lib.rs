@@ -1,10 +1,10 @@
-use bb8_postgres::{bb8::Pool, PostgresConnectionManager};
-use futures_util::{Future, TryFutureExt};
-use lipl_core::{postgres_error, Error, LiplRepo, Result};
+use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
+use futures_util::TryFutureExt;
+use lipl_core::{Error, LiplRepo, Result, postgres_error};
 use serde::Serialize;
 use tokio_postgres::{
-    types::{ToSql, Type},
     NoTls, Row,
+    types::{ToSql, Type},
 };
 
 mod convert;
@@ -26,24 +26,22 @@ impl From<ConnectionPool> for PostgresConnectionPool {
 }
 
 impl PostgresConnectionPool {
-    fn execute<'a>(
+    async fn execute<'a>(
         &'a self,
         sql: &'static str,
         types: &'a [Type],
         params: &'a [&(dyn ToSql + Sync)],
-    ) -> impl Future<Output = Result<u64>> + 'a {
-        async move {
-            let connection = self.inner.get().await.map_err(postgres_error)?;
-            let statement = connection
-                .prepare_typed(sql, types)
-                .await
-                .map_err(postgres_error)?;
-            let count = connection
-                .execute(&statement, params)
-                .await
-                .map_err(postgres_error)?;
-            Ok(count)
-        }
+    ) -> Result<u64> {
+        let connection = self.inner.get().await.map_err(postgres_error)?;
+        let statement = connection
+            .prepare_typed(sql, types)
+            .await
+            .map_err(postgres_error)?;
+        let count = connection
+            .execute(&statement, params)
+            .await
+            .map_err(postgres_error)?;
+        Ok(count)
     }
 
     async fn batch_execute(&self, sql: &str) -> Result<()> {
@@ -51,56 +49,52 @@ impl PostgresConnectionPool {
         connection.batch_execute(sql).map_err(postgres_error).await
     }
 
-    fn query<'a, F, T>(
+    async fn query<'a, F, T>(
         &'a self,
         sql: &'static str,
         types: &'static [Type],
         convert: F,
         params: &'a [&(dyn ToSql + Sync)],
-    ) -> impl Future<Output = Result<Vec<T>>> + 'a
+    ) -> Result<Vec<T>>
     where
         F: Fn(Row) -> Result<T> + Copy + 'a,
         T: Serialize,
     {
-        async move {
-            let connection = self.inner.get().await.map_err(postgres_error)?;
-            let statement = connection
-                .prepare_typed(sql, types)
-                .await
-                .map_err(postgres_error)?;
-            let rows = connection
-                .query(&statement, params)
-                .await
-                .map_err(postgres_error)?;
-            convert::to_list(convert)(rows)
-        }
+        let connection = self.inner.get().await.map_err(postgres_error)?;
+        let statement = connection
+            .prepare_typed(sql, types)
+            .await
+            .map_err(postgres_error)?;
+        let rows = connection
+            .query(&statement, params)
+            .await
+            .map_err(postgres_error)?;
+        convert::to_list(convert)(rows)
     }
 
-    fn query_one<'a, F, T>(
+    async fn query_one<'a, F, T>(
         &'a self,
         sql: &'static str,
         types: &'a [Type],
         convert: F,
         params: &'a [&(dyn ToSql + Sync)],
-    ) -> impl Future<Output = Result<T>> + 'a
+    ) -> Result<T>
     where
         F: Fn(Row) -> Result<T> + Copy + 'a,
         T: Serialize,
     {
-        async move {
-            let connection = self.inner.get().await.map_err(postgres_error)?;
-            let statement = connection
-                .prepare_typed(sql, types)
-                .await
-                .map_err(postgres_error)?;
-            match connection
-                .query_opt(&statement, params)
-                .await
-                .map_err(postgres_error)?
-            {
-                Some(row) => convert(row),
-                _ => Err(Error::NoResults),
-            }
+        let connection = self.inner.get().await.map_err(postgres_error)?;
+        let statement = connection
+            .prepare_typed(sql, types)
+            .await
+            .map_err(postgres_error)?;
+        match connection
+            .query_opt(&statement, params)
+            .await
+            .map_err(postgres_error)?
+        {
+            Some(row) => convert(row),
+            _ => Err(Error::NoResults),
         }
     }
 }

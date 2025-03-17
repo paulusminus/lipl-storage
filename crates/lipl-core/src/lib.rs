@@ -11,7 +11,7 @@ MemoryRepo is usefull for testing perposes.
 pub use crate::uuid::Uuid;
 use async_trait::async_trait;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
-pub use error::{postgres_error, redis_error, Error};
+pub use error::{Error, postgres_error, redis_error};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::sync::Arc;

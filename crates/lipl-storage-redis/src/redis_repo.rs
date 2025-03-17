@@ -1,15 +1,15 @@
 use async_trait::async_trait;
 use bb8_redis::redis::AsyncCommands;
 use bb8_redis::{
-    bb8::{Pool, PooledConnection},
-    redis::{cmd, IntoConnectionInfo},
     RedisConnectionManager,
+    bb8::{Pool, PooledConnection},
+    redis::{IntoConnectionInfo, cmd},
 };
-use futures_util::{future::try_join_all, FutureExt, TryFutureExt};
+use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use lipl_core::{
-    by_title,
+    Error, LiplRepo, Lyric, Playlist, Result, Summary, ToRepo, Uuid, by_title,
     parts::{to_parts, to_text},
-    redis_error, Error, LiplRepo, Lyric, Playlist, Result, Summary, ToRepo, Uuid,
+    redis_error,
 };
 use std::{collections::HashMap, ops::DerefMut, str::FromStr, sync::Arc};
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, response::Response, Json};
+use axum::{Json, extract::State, http::StatusCode, response::Response};
 use futures_util::TryFutureExt;
 use lipl_core::{LiplRepo, RepoDb};
 

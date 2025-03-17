@@ -1,6 +1,6 @@
 use hurl::{
     output::write_last_body,
-    runner::{run, HurlResult, RunnerOptions, RunnerOptionsBuilder, Value, VariableSet},
+    runner::{HurlResult, RunnerOptions, RunnerOptionsBuilder, Value, VariableSet, run},
     util::{
         logger::{LoggerOptions, LoggerOptionsBuilder},
         term::{Stdout, WriteMode},

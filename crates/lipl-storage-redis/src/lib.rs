@@ -1,4 +1,4 @@
-use lipl_core::{parts::to_parts, Lyric, Playlist, Uuid};
+use lipl_core::{Lyric, Playlist, Uuid, parts::to_parts};
 pub use redis_repo::RedisRepoConfig;
 
 pub mod redis_repo;

@@ -1,11 +1,11 @@
-use axum::routing::get;
 use axum::Router;
+use axum::routing::get;
 use futures_util::TryFutureExt;
 use hyper::StatusCode;
 use lipl_core::ToRepo;
-use tokio::signal::unix::{signal, SignalKind};
-use tower::layer::util::{Identity, Stack};
+use tokio::signal::unix::{SignalKind, signal};
 use tower::ServiceBuilder;
+use tower::layer::util::{Identity, Stack};
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::{

@@ -1,9 +1,9 @@
 use std::{env::VarError, str::ParseBoolError};
 
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

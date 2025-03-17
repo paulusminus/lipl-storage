@@ -3,14 +3,14 @@ use std::path::{Path, PathBuf};
 use std::pin::Pin;
 
 use async_trait::async_trait;
-use futures_util::future::{ready, Ready};
+use futures_util::future::{Ready, ready};
 use futures_util::{Stream, StreamExt, TryFutureExt, TryStreamExt};
-use tokio::fs::{read_dir, remove_file, File};
+use tokio::fs::{File, read_dir, remove_file};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio_stream::wrappers::{LinesStream, ReadDirStream};
 
 use lipl_core::error::Error;
-use lipl_core::{Uuid, TOML_PREFIX};
+use lipl_core::{TOML_PREFIX, Uuid};
 
 type Result<T> = std::result::Result<T, Error>;
 

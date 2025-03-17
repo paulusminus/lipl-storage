@@ -1,8 +1,8 @@
 use crate::Uuid;
 use futures_channel::oneshot::Canceled;
 use futures_channel::{mpsc, oneshot};
-use lipl_core::transaction::{Request, ResultSender};
 use lipl_core::Error;
+use lipl_core::transaction::{Request, ResultSender};
 use std::fmt::Debug;
 
 type Result<T> = std::result::Result<T, Error>;

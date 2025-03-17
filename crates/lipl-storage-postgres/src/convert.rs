@@ -1,5 +1,5 @@
 use lipl_core::vec_ext::VecExt;
-use lipl_core::{postgres_error, reexport, Lyric, Playlist, Result, Summary, Uuid};
+use lipl_core::{Lyric, Playlist, Result, Summary, Uuid, postgres_error, reexport};
 use tokio_postgres::Row;
 
 pub fn to_list<F, T>(f: F) -> impl Fn(Vec<Row>) -> Result<Vec<T>>
