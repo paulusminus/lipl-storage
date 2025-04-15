@@ -40,7 +40,7 @@ impl FromRequestParts<Arc<dyn LiplRepo>> for Key {
             .uri
             .path()
             .split('/')
-            .last()
+            .next_back()
             .ok_or(StatusCode::NOT_FOUND)
             .and_then(|s| {
                 s.parse::<lipl_core::Uuid>()
