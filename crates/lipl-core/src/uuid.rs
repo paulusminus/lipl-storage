@@ -25,7 +25,7 @@ impl Display for Uuid {
 
 impl std::fmt::Debug for Uuid {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 

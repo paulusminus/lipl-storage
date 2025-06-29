@@ -112,7 +112,7 @@ fn main() {
 
     let tokens = source_gen(hashmap);
     let out_dir = std::env::var("OUT_DIR").unwrap();
-    println!("out dir: {}", out_dir);
+    println!("out dir: {out_dir}");
     let path = PathBuf::from(out_dir).join(DATA_FILENAME);
 
     if let Err(error) = std::fs::write(

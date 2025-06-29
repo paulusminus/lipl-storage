@@ -78,7 +78,7 @@ impl Display for Playlist {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let playlist_post = PlaylistPost::from(self.clone());
         let yaml = toml_edit::ser::to_string_pretty(&playlist_post).unwrap_or_default();
-        write!(f, "{}", yaml)
+        write!(f, "{yaml}")
     }
 }
 

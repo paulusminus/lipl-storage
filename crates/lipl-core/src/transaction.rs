@@ -92,7 +92,7 @@ fn write<W>(w: &mut W, json: String) -> crate::Result<()>
 where
     W: std::io::Write,
 {
-    w.write_fmt(format_args!("{}\n", json))?;
+    w.write_fmt(format_args!("{json}\n"))?;
     w.flush()?;
     Ok(())
 }

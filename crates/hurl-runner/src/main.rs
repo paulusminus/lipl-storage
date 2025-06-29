@@ -32,7 +32,7 @@ fn logger_options() -> LoggerOptions {
 fn user() -> Result<String> {
     let username = var("LIPL_USERNAME")?;
     let password = var("LIPL_PASSWORD")?;
-    let user = format!("{}:{}", username, password);
+    let user = format!("{username}:{password}");
     Ok(user)
 }
 

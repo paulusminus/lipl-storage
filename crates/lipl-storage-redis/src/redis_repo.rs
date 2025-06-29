@@ -67,11 +67,11 @@ fn hashmap_to_playlist(id: Uuid) -> impl Fn(Result<HashMap<String, String>>) -> 
 }
 
 fn lyric_key(id: Uuid) -> String {
-    format!("{}{}{}", LYRIC, SEP, id)
+    format!("{LYRIC}{SEP}{id}")
 }
 
 fn playlist_key(id: Uuid) -> String {
-    format!("{}{}{}", PLAYLIST, SEP, id)
+    format!("{PLAYLIST}{SEP}{id}")
 }
 
 fn key_to_uuid(key: &str) -> Result<Uuid> {

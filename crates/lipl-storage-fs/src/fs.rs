@@ -99,7 +99,7 @@ where
     }
 
     fn full_path(&self, id: &str, ext: &str) -> PathBuf {
-        self.as_ref().join(format!("{}.{}", id, ext))
+        self.as_ref().join(format!("{id}.{ext}"))
     }
 
     fn id(&self) -> Result<Uuid> {
