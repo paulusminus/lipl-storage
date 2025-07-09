@@ -10,10 +10,10 @@ version.workspace = true
 
 [features]
 transaction = [
-  "dep:futures-util",
-  "dep:futures-channel",
-  "dep:chrono",
-  "dep:serde_json",
+    "dep:futures-util",
+    "dep:futures-channel",
+    "dep:chrono",
+    "dep:serde_json",
 ]
 
 [dependencies]
@@ -28,9 +28,9 @@ regex = "1.11.1"
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = { version = "1.0.132", optional = true }
 serde_with = { version = "3.11.0", default-features = false, features = [
-  "macros",
+    "macros",
 ] }
 thiserror = "2.0.0"
 tokio = { version = "1.41.0", features = ["rt"], optional = true }
 uuid = { version = "1.11.0", features = ["v4"] }
-toml_edit = { version = "0.22.22", features = ["serde"] }
+toml_edit = { version = "0.23.0", features = ["serde"] }
