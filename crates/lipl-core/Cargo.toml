@@ -10,27 +10,27 @@ version.workspace = true
 
 [features]
 transaction = [
-    "dep:futures-util",
-    "dep:futures-channel",
-    "dep:chrono",
-    "dep:serde_json",
+  "dep:futures-util",
+  "dep:futures-channel",
+  "dep:chrono",
+  "dep:serde_json",
 ]
 
 [dependencies]
-async-trait = "0.1.83"
-bincode = { version = "2.0.0", features = ["serde"] }
+async-trait = "0.1.88"
+bincode = { version = "2.0.1", features = ["serde"] }
 bs58 = "0.5.1"
-chrono = { version = "0.4.38", optional = true }
+chrono = { version = "0.4.41", optional = true }
 etag = "4.0.0"
 futures-util = { version = "0.3.31", optional = true }
 futures-channel = { version = "0.3.31", optional = true }
 regex = "1.11.1"
-serde = { version = "1.0.214", features = ["derive"] }
-serde_json = { version = "1.0.132", optional = true }
-serde_with = { version = "3.11.0", default-features = false, features = [
-    "macros",
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.140", optional = true }
+serde_with = { version = "3.14.0", default-features = false, features = [
+  "macros",
 ] }
-thiserror = "2.0.0"
-tokio = { version = "1.41.0", features = ["rt"], optional = true }
-uuid = { version = "1.11.0", features = ["v4"] }
+thiserror = "2.0.12"
+tokio = { version = "1.46.1", features = ["rt"], optional = true }
+uuid = { version = "1.17.0", features = ["v4"] }
 toml_edit = { version = "0.23.0", features = ["serde"] }

@@ -9,24 +9,24 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-async-trait = "0.1.83"
+async-trait = "0.1.88"
 futures-channel = "0.3.31"
 futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core", features = [
   "transaction",
 ] }
-serde = { version = "1.0.214", features = ["derive"] }
-tokio = { version = "1.41.0", features = [
+serde = { version = "1.0.219", features = ["derive"] }
+tokio = { version = "1.46.1", features = [
   "fs",
   "macros",
   "rt-multi-thread",
   "sync",
 ] }
-tokio-stream = { version = "0.1.16", features = ["fs", "io-util"] }
-tracing = "0.1.40"
+tokio-stream = { version = "0.1.17", features = ["fs", "io-util"] }
+tracing = "0.1.41"
 
 [dev-dependencies]
-tokio = { version = "1.41.0", features = [
+tokio = { version = "1.46.1", features = [
   "fs",
   "macros",
   "rt-multi-thread",
