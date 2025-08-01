@@ -12,15 +12,13 @@ type Result<T, E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
 
 mod constant;
 
-fn variableset() -> Result<VariableSet> {
+fn variableset() -> VariableSet {
     let mut variables = VariableSet::new();
+    variables.insert(
+        constant::PREFIX_NAME.into(),
+        Value::String(constant::PREFIX_VALUE.into()),
+    );
     variables
-        .insert(
-            constant::PREFIX_NAME.into(),
-            Value::String(constant::PREFIX_VALUE.into()),
-        )
-        .map_err(|_| "Cannot insert key value into variableset".to_owned())?;
-    Ok(variables)
 }
 
 fn logger_options() -> LoggerOptions {
@@ -68,7 +66,7 @@ fn main() -> Result<()> {
     let out = &mut Stdout::new(WriteMode::Immediate);
     let user = user()?;
     let runner_options = RunnerOptionsBuilder::new().user(Some(user)).build();
-    let variables = variableset()?;
+    let variables = variableset();
     let logger_options = logger_options();
 
     constant::HURL_SCRIPTS.into_iter().try_for_each(run_script(

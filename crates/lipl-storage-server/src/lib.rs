@@ -45,7 +45,7 @@ pub async fn router_from_environment() -> Result<Router> {
         .await
         .map(|router| {
             router.nest_service(
-                "/",
+                "/lipl/",
                 ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())),
             )
         })
