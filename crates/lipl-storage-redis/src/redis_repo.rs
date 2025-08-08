@@ -187,7 +187,7 @@ impl RedisRepo {
             .await
     }
 
-    async fn connection(&self) -> Result<PooledConnection<RedisConnectionManager>> {
+    async fn connection(&self) -> Result<PooledConnection<'_, RedisConnectionManager>> {
         self.pool.get().map_err(redis_error).await
     }
 

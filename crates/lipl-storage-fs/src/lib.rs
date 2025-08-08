@@ -209,10 +209,10 @@ impl FileRepo {
         let join_handle = tokio::spawn(async move {
             rx.map(Ok)
                 .inspect_ok(move |request| {
-                    if let Some(transaction) = OptionalTransaction::from(request) {
-                        if let Err(error) = log_tx.send(transaction) {
-                            tracing::error!("Error transaction logging: {error}");
-                        }
+                    if let Some(transaction) = OptionalTransaction::from(request)
+                        && let Err(error) = log_tx.send(transaction)
+                    {
+                        tracing::error!("Error transaction logging: {error}");
                     }
                 })
                 .try_for_each(|request| {
