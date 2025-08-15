@@ -59,7 +59,7 @@ fn create_lyrics(lyric_files: &[PathBuf], playlists: Vec<(String, Vec<String>)>)
                     None,
                     LyricPost {
                         title: #title.to_owned(),
-                        parts: to_parts(include_str!(#file_path).to_owned()),
+                        parts: to_parts(include_str!(#file_path)),
                     }
                 )
             )

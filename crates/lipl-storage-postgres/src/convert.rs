@@ -19,7 +19,7 @@ pub fn to_lyric(row: Row) -> Result<Lyric> {
             .try_get::<&str, String>(column::TITLE)
             .map_err(postgres_error)?,
         parts: lipl_core::parts::to_parts(
-            row.try_get::<&str, String>(column::PARTS)
+            &row.try_get::<&str, String>(column::PARTS)
                 .map_err(postgres_error)?,
         ),
     })

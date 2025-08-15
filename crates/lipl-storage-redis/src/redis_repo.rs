@@ -35,7 +35,7 @@ fn hashmap_to_lyric(id: Uuid) -> impl Fn(HashMap<String, String>) -> Lyric {
     move |hm| Lyric {
         id,
         title: hm.get(TITLE_ATTR).cloned().unwrap_or_default(),
-        parts: to_parts(hm.get(TEXT_ATTR).cloned().unwrap_or_default()),
+        parts: to_parts(&hm.get(TEXT_ATTR).cloned().unwrap_or_default()),
     }
 }
 

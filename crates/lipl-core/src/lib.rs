@@ -137,7 +137,7 @@ impl From<(&str, &str)> for LyricPost {
     fn from(value: (&str, &str)) -> Self {
         Self {
             title: value.0.to_owned(),
-            parts: parts::to_parts(value.1.to_owned()),
+            parts: parts::to_parts(value.1),
         }
     }
 }

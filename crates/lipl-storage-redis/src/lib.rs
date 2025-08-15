@@ -7,7 +7,7 @@ pub fn new_lyric(title: &str, text: &str) -> Lyric {
     Lyric {
         id: Uuid::default(),
         title: title.to_owned(),
-        parts: to_parts(text.to_owned()),
+        parts: to_parts(text),
     }
 }
 

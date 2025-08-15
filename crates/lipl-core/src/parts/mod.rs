@@ -1,12 +1,12 @@
-use regex::Regex;
-use std::sync::OnceLock;
+// use regex::Regex;
+// use std::sync::OnceLock;
 
-const DOUBLE_LINE: &str = r"\n\s*\n";
+// const DOUBLE_LINE: &str = r"\n\s*\n";
 
-fn double_line_regex() -> &'static Regex {
-    static DOUBLE_LINE_REGEX: OnceLock<Regex> = OnceLock::new();
-    DOUBLE_LINE_REGEX.get_or_init(|| DOUBLE_LINE.parse().unwrap())
-}
+// fn double_line_regex() -> &'static Regex {
+//     static DOUBLE_LINE_REGEX: OnceLock<Regex> = OnceLock::new();
+//     DOUBLE_LINE_REGEX.get_or_init(|| DOUBLE_LINE.parse().unwrap())
+// }
 
 pub struct Markdown {
     pub frontmatter: Option<String>,
@@ -20,7 +20,7 @@ impl From<String> for Markdown {
 }
 
 fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
-    let parts = to_parts(text);
+    let parts = to_parts(&text);
     if !parts.is_empty() && !parts[0].is_empty() && parts[0][0] == *yaml_separator {
         Markdown {
             frontmatter: Some(
@@ -41,23 +41,34 @@ fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
     }
 }
 
-fn trim_end(s: &str) -> &str {
-    s.trim_end()
-}
+// fn trim_end(s: &str) -> &str {
+//     s.trim_end()
+// }
 
-fn to_lines(s: &str) -> Vec<String> {
-    s.split('\n')
-        .map(trim_end)
-        .filter(|&s| !s.is_empty())
-        .map(|s| s.to_string())
-        .collect()
-}
+// fn to_lines(s: &str) -> Vec<String> {
+//     s.split('\n')
+//         .map(trim_end)
+//         .filter(|&s| !s.is_empty())
+//         .map(|s| s.to_string())
+//         .collect()
+// }
 
-pub fn to_parts(s: String) -> Vec<Vec<String>> {
-    double_line_regex()
-        .split(&s)
-        .map(to_lines)
-        .filter(|p| !p.is_empty())
+// fn to_parts_old(s: String) -> Vec<Vec<String>> {
+//     double_line_regex()
+//         .split(&s)
+//         .map(to_lines)
+//         .filter(|p| !p.is_empty())
+//         .collect()
+// }
+
+pub fn to_parts(input: &str) -> Vec<Vec<String>> {
+    input
+        .lines()
+        .map(|s| s.trim_end().to_string())
+        .collect::<Vec<_>>()
+        .split(|c| c.is_empty())
+        .map(Into::into)
+        .filter(|c: &Vec<String>| !c.is_empty())
         .collect()
 }
 
@@ -71,26 +82,9 @@ pub fn to_text(parts: &[Vec<String>]) -> String {
 
 #[cfg(test)]
 mod test {
-
-    #[test]
-    fn test_trim() {
-        let test = "\rHallo allema  \t";
-        assert_eq!(super::trim_end(test), "\rHallo allema");
-    }
-
-    #[test]
-    fn test_to_lines() {
-        let test = "Hallo\nAllemaal\r\nWat fijn  \n\r\n";
-        let result = super::to_lines(test);
-        assert_eq!(result.len(), 3);
-        assert_eq!(result[0], "Hallo");
-        assert_eq!(result[1], "Allemaal");
-        assert_eq!(result[2], "Wat fijn");
-    }
-
     #[test]
     fn test_to_parts() {
-        let test = "Hallo\nAllemaal\r\n\nWat fijn  \n\r\n".to_owned();
+        let test = "Hallo\nAllemaal\r\n\nWat fijn  \n\r\n";
         let result = super::to_parts(test);
         assert_eq!(result.len(), 2);
         assert_eq!(&result[0][0], "Hallo");
