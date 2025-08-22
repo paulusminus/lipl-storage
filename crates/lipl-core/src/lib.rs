@@ -265,7 +265,7 @@ impl<T: Serialize> Etag for T {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct RepoDb {
     pub lyrics: Vec<Lyric>,
     pub playlists: Vec<Playlist>,
