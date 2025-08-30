@@ -44,10 +44,7 @@ pub async fn router_from_environment() -> Result<Router> {
         .and_then(|repo_type| create_router(repo_type).err_into())
         .await
         .map(|router| {
-            router.nest_service(
-                "/lipl/",
-                ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())),
-            )
+            router.fallback_service(ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())))
         })
 }
 
