@@ -1,3 +1,4 @@
+use futures_util::future::BoxFuture;
 // use convert::to_toml;
 use lipl_core::transaction::{OptionalTransaction, start_log_thread};
 use std::fmt::{Debug, Display};
@@ -6,8 +7,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
-
-use async_trait::async_trait;
 
 use constant::{LYRIC_EXTENSION, TOML_EXTENSION};
 use fs::IO;
@@ -36,12 +35,12 @@ impl FromStr for FileRepoConfig {
     }
 }
 
-#[async_trait]
 impl ToRepo for FileRepoConfig {
-    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+    type Repo = FileRepo;
+    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         let repo = FileRepo::new(self.path).await?;
         // to_toml(&repo.path)?;
-        Ok(Arc::new(repo))
+        Ok(repo)
     }
 }
 
@@ -237,68 +236,69 @@ impl FileRepo {
     }
 }
 
-#[async_trait]
 impl LiplRepo for FileRepo {
-    async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>> {
-        select(self.tx.clone(), Request::LyricList).err_into().await
+    fn get_lyrics(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Lyric>>> {
+        select(self.tx.clone(), Request::LyricList)
+            .err_into()
+            .boxed()
     }
 
-    async fn get_lyric_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
+    fn get_lyric_summaries(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Summary>>> {
         select(self.tx.clone(), Request::LyricSummaries)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn get_lyric(&self, id: Uuid) -> lipl_core::Result<Lyric> {
+    fn get_lyric(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<Lyric>> {
         select_by_id(self.tx.clone(), id, Request::LyricItem)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
+    fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, lipl_core::Result<Lyric>> {
         post(self.tx.clone(), lyric, Request::LyricPost)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn delete_lyric(&self, id: Uuid) -> lipl_core::Result<()> {
+    fn delete_lyric(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<()>> {
         delete_by_id(self.tx.clone(), id, Request::LyricDelete)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn get_playlists(&self) -> lipl_core::Result<Vec<Playlist>> {
+    fn get_playlists(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Playlist>>> {
         select(self.tx.clone(), Request::PlaylistList)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn get_playlist_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
+    fn get_playlist_summaries(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Summary>>> {
         select(self.tx.clone(), Request::PlaylistSummaries)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn get_playlist(&self, id: Uuid) -> lipl_core::Result<Playlist> {
+    fn get_playlist(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<Playlist>> {
         select_by_id(self.tx.clone(), id, Request::PlaylistItem)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
+    fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, lipl_core::Result<Playlist>> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> lipl_core::Result<()> {
+    fn delete_playlist(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<()>> {
         delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn stop(&self) -> lipl_core::Result<()> {
-        select(self.tx.clone(), Request::Stop).err_into().await
+    fn stop(&self) -> BoxFuture<'_, lipl_core::Result<()>> {
+        select(self.tx.clone(), Request::Stop).err_into().boxed()
     }
 }
 

@@ -1,17 +1,17 @@
-use async_trait::async_trait;
 use bb8_redis::redis::AsyncCommands;
 use bb8_redis::{
     RedisConnectionManager,
     bb8::{Pool, PooledConnection},
     redis::{IntoConnectionInfo, cmd},
 };
+use futures_util::future::BoxFuture;
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use lipl_core::{
     Error, LiplRepo, Lyric, Playlist, Result, Summary, ToRepo, Uuid, by_title,
     parts::{to_parts, to_text},
     redis_error,
 };
-use std::{collections::HashMap, ops::DerefMut, str::FromStr, sync::Arc};
+use std::{collections::HashMap, ops::DerefMut, str::FromStr};
 
 const LYRIC: &str = "lyric";
 const PLAYLIST: &str = "playlist";
@@ -100,9 +100,9 @@ where
         Self { clear, url }
     }
 
-    pub async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+    pub async fn to_repo(self) -> lipl_core::Result<RedisRepo> {
         let repo = RedisRepo::new(self).await?;
-        Ok(Arc::new(repo))
+        Ok(repo)
     }
 }
 
@@ -125,17 +125,18 @@ impl FromStr for RedisRepoConfig<String> {
     }
 }
 
-#[async_trait]
 impl<T> ToRepo for RedisRepoConfig<T>
 where
     T: IntoConnectionInfo + Send + Clone,
 {
-    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+    type Repo = RedisRepo;
+    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         let repo = RedisRepo::new(self).await?;
-        Ok(Arc::new(repo))
+        Ok(repo)
     }
 }
 
+#[derive(Clone)]
 pub struct RedisRepo {
     pool: Pool<RedisConnectionManager>,
     delete_lyric_sha: String,
@@ -233,132 +234,157 @@ impl RedisRepo {
     }
 }
 
-#[async_trait]
 impl LiplRepo for RedisRepo {
-    async fn delete_lyric(&self, id: Uuid) -> lipl_core::Result<()> {
-        self.delete_lyric_script(id).err_into().await
+    fn delete_lyric(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<()>> {
+        self.delete_lyric_script(id).err_into().boxed()
     }
 
-    async fn delete_playlist(&self, id: Uuid) -> lipl_core::Result<()> {
-        self.delete(id, playlist_key).err_into().await
+    fn delete_playlist(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<()>> {
+        self.delete(id, playlist_key).err_into().boxed()
     }
 
-    async fn get_lyric(&self, id: Uuid) -> lipl_core::Result<Lyric> {
-        self.connection()
-            .and_then(|mut connection| async move {
-                connection
-                    .hgetall(lyric_key(id))
-                    .map_err(redis_error)
-                    .map_ok(hashmap_to_lyric(id))
-                    .await
-            })
-            .err_into()
-            .await
+    fn get_lyric(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<Lyric>> {
+        async move {
+            self.connection()
+                .and_then(|mut connection| async move {
+                    connection
+                        .hgetall(lyric_key(id))
+                        .map_err(redis_error)
+                        .map_ok(hashmap_to_lyric(id))
+                        .await
+                })
+                .err_into()
+                .await
+        }
+        .boxed()
     }
 
-    async fn get_playlist(&self, id: Uuid) -> lipl_core::Result<Playlist> {
-        self.connection()
-            .and_then(|mut connection| async move {
-                connection
-                    .hgetall(playlist_key(id))
-                    .map_err(redis_error)
-                    .map(hashmap_to_playlist(id))
-                    .await
-            })
-            .err_into()
-            .await
+    fn get_playlist(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<Playlist>> {
+        async move {
+            self.connection()
+                .and_then(|mut connection| async move {
+                    connection
+                        .hgetall(playlist_key(id))
+                        .map_err(redis_error)
+                        .map(hashmap_to_playlist(id))
+                        .await
+                })
+                .err_into()
+                .await
+        }
+        .boxed()
     }
 
-    async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>> {
-        let mut lyrics = self
-            .get_keys(LYRIC_ALL.concat(), bs58_to_uuid)
-            .err_into()
-            .and_then(|ids| try_join_all(ids.into_iter().map(|id| self.get_lyric(id))))
-            .await?;
-        lyrics.sort_by(by_title);
-        Ok(lyrics)
+    fn get_lyrics(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Lyric>>> {
+        async move {
+            let mut lyrics = self
+                .get_keys(LYRIC_ALL.concat(), bs58_to_uuid)
+                .err_into()
+                .and_then(|ids| try_join_all(ids.into_iter().map(|id| self.get_lyric(id))))
+                .await?;
+            lyrics.sort_by(by_title);
+            Ok(lyrics)
+        }
+        .boxed()
     }
 
-    async fn get_lyric_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
-        let mut summaries = self
-            .get_keys(LYRIC_ALL.concat(), bs58_to_uuid)
-            .and_then(|ids| try_join_all(ids.into_iter().map(|id| self.get_summary(id, lyric_key))))
-            .await?;
-        summaries.sort_by(by_title);
-        Ok(summaries)
+    fn get_lyric_summaries(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Summary>>> {
+        async move {
+            let mut summaries = self
+                .get_keys(LYRIC_ALL.concat(), bs58_to_uuid)
+                .and_then(|ids| {
+                    try_join_all(ids.into_iter().map(|id| self.get_summary(id, lyric_key)))
+                })
+                .await?;
+            summaries.sort_by(by_title);
+            Ok(summaries)
+        }
+        .boxed()
     }
 
-    async fn get_playlists(&self) -> lipl_core::Result<Vec<Playlist>> {
-        let mut playlists = self
-            .get_keys(PLAYLIST_ALL.concat(), bs58_to_uuid)
-            .err_into()
-            .and_then(|ids| try_join_all(ids.into_iter().map(|id| self.get_playlist(id))))
-            .await?;
-        playlists.sort_by(by_title);
-        Ok(playlists)
+    fn get_playlists(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Playlist>>> {
+        async move {
+            let mut playlists = self
+                .get_keys(PLAYLIST_ALL.concat(), bs58_to_uuid)
+                .err_into()
+                .and_then(|ids| try_join_all(ids.into_iter().map(|id| self.get_playlist(id))))
+                .await?;
+            playlists.sort_by(by_title);
+            Ok(playlists)
+        }
+        .boxed()
     }
 
-    async fn get_playlist_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
-        let mut summaries = self
-            .get_keys(PLAYLIST_ALL.concat(), bs58_to_uuid)
-            .and_then(|ids| {
-                try_join_all(
-                    ids.into_iter()
-                        .map(|id| self.get_summary(id, playlist_key).err_into()),
-                )
-            })
-            .await?;
-        summaries.sort_by(by_title);
-        Ok(summaries)
-    }
-
-    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
-        self.connection()
-            .and_then(|mut connection| async move {
-                connection
-                    .hset_multiple::<String, String, String, ()>(
-                        lyric_key(lyric.id),
-                        &[
-                            (TITLE_ATTR.to_owned(), lyric.title.clone()),
-                            (TEXT_ATTR.to_owned(), to_text(&lyric.parts)),
-                        ],
+    fn get_playlist_summaries(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Summary>>> {
+        async move {
+            let mut summaries = self
+                .get_keys(PLAYLIST_ALL.concat(), bs58_to_uuid)
+                .and_then(|ids| {
+                    try_join_all(
+                        ids.into_iter()
+                            .map(|id| self.get_summary(id, playlist_key).err_into()),
                     )
-                    .map_ok(|_| lyric)
-                    .map_err(redis_error)
-                    .await
-            })
-            .err_into()
-            .await
+                })
+                .await?;
+            summaries.sort_by(by_title);
+            Ok(summaries)
+        }
+        .boxed()
     }
 
-    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
-        self.connection()
-            .and_then(|mut connection| async move {
-                connection
-                    .hset_multiple::<String, String, String, ()>(
-                        playlist_key(playlist.id),
-                        &[
-                            (TITLE_ATTR.to_owned(), playlist.title.clone()),
-                            (
-                                MEMBERS_ATTR.to_owned(),
-                                playlist
-                                    .members
-                                    .iter()
-                                    .map(|id| id.to_string())
-                                    .collect::<Vec<_>>()
-                                    .join(" "),
-                            ),
-                        ],
-                    )
-                    .map_ok(|_| playlist)
-                    .map_err(redis_error)
-                    .await
-            })
-            .err_into()
-            .await
+    fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, lipl_core::Result<Lyric>> {
+        async move {
+            self.connection()
+                .and_then(|mut connection| async move {
+                    connection
+                        .hset_multiple::<String, String, String, ()>(
+                            lyric_key(lyric.id),
+                            &[
+                                (TITLE_ATTR.to_owned(), lyric.title.clone()),
+                                (TEXT_ATTR.to_owned(), to_text(&lyric.parts)),
+                            ],
+                        )
+                        .map_ok(|_| lyric)
+                        .map_err(redis_error)
+                        .await
+                })
+                .err_into()
+                .await
+        }
+        .boxed()
     }
 
-    async fn stop(&self) -> lipl_core::Result<()> {
-        Ok(())
+    fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, lipl_core::Result<Playlist>> {
+        async move {
+            self.connection()
+                .and_then(|mut connection| async move {
+                    connection
+                        .hset_multiple::<String, String, String, ()>(
+                            playlist_key(playlist.id),
+                            &[
+                                (TITLE_ATTR.to_owned(), playlist.title.clone()),
+                                (
+                                    MEMBERS_ATTR.to_owned(),
+                                    playlist
+                                        .members
+                                        .iter()
+                                        .map(|id| id.to_string())
+                                        .collect::<Vec<_>>()
+                                        .join(" "),
+                                ),
+                            ],
+                        )
+                        .map_ok(|_| playlist)
+                        .map_err(redis_error)
+                        .await
+                })
+                .err_into()
+                .await
+        }
+        .boxed()
+    }
+
+    fn stop(&self) -> BoxFuture<'_, lipl_core::Result<()>> {
+        async { Ok(()) }.boxed()
     }
 }

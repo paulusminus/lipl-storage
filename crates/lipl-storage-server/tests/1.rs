@@ -228,7 +228,7 @@ async fn item<R: DeserializeOwned>(service: &Router<()>, name: &'static str, uui
     r
 }
 
-async fn delete(service: &Router<()>, name: &'static str, id: &str) {
+async fn delete(service: &Router, name: &'static str, id: &str) {
     let response = service
         .clone()
         .oneshot(
@@ -243,11 +243,7 @@ async fn delete(service: &Router<()>, name: &'static str, id: &str) {
     assert_eq!(response.status(), StatusCode::OK);
 }
 
-async fn post<'a, T: Serialize, R: DeserializeOwned>(
-    service: &'a Router<()>,
-    name: &str,
-    t: &T,
-) -> R {
+async fn post<'a, T: Serialize, R: DeserializeOwned>(service: &'a Router, name: &str, t: &T) -> R {
     let body = serde_json::to_string(t).unwrap();
     let response = service
         .clone()
@@ -269,7 +265,7 @@ async fn post<'a, T: Serialize, R: DeserializeOwned>(
 }
 
 async fn put<'a, T: Serialize, R: DeserializeOwned>(
-    service: &'a Router<()>,
+    service: &'a Router,
     name: &str,
     id: &str,
     t: &T,

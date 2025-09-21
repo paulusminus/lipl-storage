@@ -17,7 +17,6 @@ redis = ["dep:lipl-storage-redis"]
 pwa = ["tower-http/fs"]
 
 [dependencies]
-async-trait = "0.1.88"
 axum = { version = "0.8.4", features = ["http2"] }
 futures-util = "0.3.31"
 hyper = "1.6.0"

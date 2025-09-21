@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::Router;
 use axum::routing::get;
 use futures_util::TryFutureExt;
@@ -15,6 +17,7 @@ use tower_http::trace::{
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 use tracing::Level;
 
+#[cfg(feature = "pwa")]
 pub use crate::error::Error;
 use crate::handler::{db, lyric, playlist};
 
@@ -118,6 +121,7 @@ async fn health() -> StatusCode {
 pub async fn create_router<T>(t: T) -> lipl_core::Result<Router>
 where
     T: ToRepo,
+    T::Repo: Send + Sync + 'static + Clone,
 {
     let username = std::env::var("LIPL_USERNAME")?;
     let password = std::env::var("LIPL_PASSWORD")?;
@@ -143,7 +147,7 @@ where
                         )
                         .route("/db", get(db::get).put(db::put))
                         .layer(ValidateRequestHeaderLayer::basic(&username, &password))
-                        .with_state(state),
+                        .with_state(Arc::new(state)),
                 )
         })
         .await

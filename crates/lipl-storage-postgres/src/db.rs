@@ -1,5 +1,5 @@
-use async_trait::async_trait;
-use futures_util::TryFutureExt;
+use futures_util::future::BoxFuture;
+use futures_util::{FutureExt, TryFutureExt};
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{Error, LiplRepo, Lyric, Playlist, Result, Summary, Uuid, parts::to_text};
 
@@ -21,15 +21,14 @@ fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
     }
 }
 
-#[async_trait]
 impl LiplRepo for PostgresConnectionPool {
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
+    fn get_lyric_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>> {
         self.query(lyric::LIST, lyric::LIST_TYPES, convert::to_summary, &[])
             .err_into()
-            .await
+            .boxed()
     }
 
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
+    fn get_lyrics(&self) -> BoxFuture<'_, Result<Vec<Lyric>>> {
         self.query(
             lyric::LIST_FULL,
             lyric::LIST_FULL_TYPES,
@@ -37,43 +36,52 @@ impl LiplRepo for PostgresConnectionPool {
             &[],
         )
         .err_into()
-        .await
+        .boxed()
     }
 
-    async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
-        self.query_one(
-            lyric::ITEM,
-            lyric::ITEM_TYPES,
-            convert::to_lyric,
-            &[&uuid.inner()],
-        )
-        .map_err(pg_error_to_lipl_core(uuid))
-        .await
+    fn get_lyric(&self, uuid: Uuid) -> BoxFuture<'_, Result<Lyric>> {
+        async move {
+            self.query_one(
+                lyric::ITEM,
+                lyric::ITEM_TYPES,
+                convert::to_lyric,
+                &[&uuid.inner()],
+            )
+            .map_err(pg_error_to_lipl_core(uuid))
+            .await
+        }
+        .boxed()
     }
 
-    async fn upsert_lyric(&self, lyric: Lyric) -> Result<Lyric> {
-        self.query_one(
-            lyric::UPSERT,
-            lyric::UPSERT_TYPES,
-            convert::to_lyric,
-            &[
-                &Uuid::default().inner(),
-                &lyric.title.clone(),
-                &to_text(&lyric.parts),
-            ],
-        )
-        .err_into()
-        .await
+    fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, Result<Lyric>> {
+        async move {
+            self.query_one(
+                lyric::UPSERT,
+                lyric::UPSERT_TYPES,
+                convert::to_lyric,
+                &[
+                    &Uuid::default().inner(),
+                    &lyric.title.clone(),
+                    &to_text(&lyric.parts),
+                ],
+            )
+            .err_into()
+            .await
+        }
+        .boxed()
     }
 
-    async fn delete_lyric(&self, uuid: Uuid) -> Result<()> {
-        let count = self
-            .execute(lyric::DELETE, lyric::DELETE_TYPES, &[&uuid.inner()])
-            .await?;
-        error_on_count(count, uuid)
+    fn delete_lyric(&self, uuid: Uuid) -> BoxFuture<'_, Result<()>> {
+        async move {
+            let count = self
+                .execute(lyric::DELETE, lyric::DELETE_TYPES, &[&uuid.inner()])
+                .await?;
+            error_on_count(count, uuid)
+        }
+        .boxed()
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
+    fn get_playlist_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>> {
         self.query(
             playlist::LIST,
             playlist::LIST_TYPES,
@@ -81,10 +89,10 @@ impl LiplRepo for PostgresConnectionPool {
             &[],
         )
         .err_into()
-        .await
+        .boxed()
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>> {
+    fn get_playlists(&self) -> BoxFuture<'_, Result<Vec<Playlist>>> {
         self.query(
             playlist::LIST_FULL,
             playlist::LIST_FULL_TYPES,
@@ -92,44 +100,53 @@ impl LiplRepo for PostgresConnectionPool {
             &[],
         )
         .err_into()
-        .await
+        .boxed()
     }
 
-    async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
-        self.query_one(
-            playlist::ITEM,
-            playlist::ITEM_TYPES,
-            convert::to_playlist,
-            &[&uuid.inner()],
-        )
-        .map_err(pg_error_to_lipl_core(uuid))
-        .await
+    fn get_playlist(&self, uuid: Uuid) -> BoxFuture<'_, Result<Playlist>> {
+        async move {
+            self.query_one(
+                playlist::ITEM,
+                playlist::ITEM_TYPES,
+                convert::to_playlist,
+                &[&uuid.inner()],
+            )
+            .map_err(pg_error_to_lipl_core(uuid))
+            .await
+        }
+        .boxed()
     }
 
-    async fn delete_playlist(&self, uuid: Uuid) -> Result<()> {
-        let count = self
-            .execute(playlist::DELETE, playlist::DELETE_TYPES, &[&uuid.inner()])
-            .await?;
-        error_on_count(count, uuid)
+    fn delete_playlist(&self, uuid: Uuid) -> BoxFuture<'_, Result<()>> {
+        async move {
+            let count = self
+                .execute(playlist::DELETE, playlist::DELETE_TYPES, &[&uuid.inner()])
+                .await?;
+            error_on_count(count, uuid)
+        }
+        .boxed()
     }
 
-    async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
-        self.query_one(
-            playlist::UPSERT,
-            playlist::UPSERT_TYPES,
-            convert::to_playlist,
-            &[
-                &Uuid::default().inner(),
-                &playlist.title.clone(),
-                &playlist.members.map(convert::to_inner).as_slice(),
-            ],
-        )
-        .err_into()
-        .await
+    fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, Result<Playlist>> {
+        async move {
+            self.query_one(
+                playlist::UPSERT,
+                playlist::UPSERT_TYPES,
+                convert::to_playlist,
+                &[
+                    &Uuid::default().inner(),
+                    &playlist.title.clone(),
+                    &playlist.members.map(convert::to_inner).as_slice(),
+                ],
+            )
+            .err_into()
+            .await
+        }
+        .boxed()
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
+    fn stop(&self) -> BoxFuture<'_, Result<()>> {
+        async move { Ok(()) }.boxed()
     }
 }
 

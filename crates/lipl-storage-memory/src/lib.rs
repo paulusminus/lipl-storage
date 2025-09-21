@@ -1,4 +1,5 @@
-use async_trait::async_trait;
+use futures_util::future::BoxFuture;
+use futures_util::{FutureExt, TryFutureExt};
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{
     Error, HasSummary, LiplRepo, Lyric, LyricPost, Playlist, PlaylistPost, RepoDb, Result, Summary,
@@ -44,14 +45,14 @@ impl std::str::FromStr for MemoryRepoConfig {
     }
 }
 
-#[async_trait]
 impl ToRepo for MemoryRepoConfig {
-    async fn to_repo(self) -> lipl_core::Result<Arc<dyn LiplRepo>> {
+    type Repo = MemoryRepo;
+    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         if self.sample_data {
             let repo = lipl_sample_data::repo_db();
-            Ok(Arc::new(MemoryRepo::from(repo)))
+            Ok(MemoryRepo::from(repo))
         } else {
-            Ok(Arc::new(MemoryRepo::new(empty(), empty())))
+            Ok(MemoryRepo::new(empty(), empty()))
         }
     }
 }
@@ -139,131 +140,156 @@ impl Toml for MemoryRepo {
     }
 }
 
-#[async_trait]
 impl LiplRepo for MemoryRepo {
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
+    fn get_lyric_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>> {
         self.get_lyrics()
-            .await
-            .map(|lyrics| lyrics.map(|lyric| lyric.summary()))
+            .map_ok(|lyrics| lyrics.map(|lyric| lyric.summary()))
+            .boxed()
     }
 
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
-        let mut lyrics = self
-            .db
-            .read()
-            .unwrap()
-            .iter()
-            .filter_map(|(key, record)| {
-                if let Record::Lyric(lyric_post) = record {
-                    Some(Lyric::from((Some(*key), lyric_post.clone())))
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        lyrics.sort_by(by_title);
-        Ok(lyrics)
-    }
-
-    async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
-        self.db
-            .read()
-            .unwrap()
-            .get(&uuid)
-            .and_then(|record| match record {
-                Record::Lyric(lyric_post) => Some(Lyric::from((Some(uuid), lyric_post.clone()))),
-                _ => None,
-            })
-            .ok_or(Error::NotFound(uuid))
-    }
-
-    async fn upsert_lyric(&self, lyric: Lyric) -> Result<Lyric> {
-        self.db
-            .write()
-            .unwrap()
-            .entry(lyric.clone().id)
-            .and_modify(|lyric_post| *lyric_post = Record::Lyric(lyric.clone().into()))
-            .or_insert_with(|| Record::Lyric(lyric.clone().into()));
-        Ok(lyric)
-    }
-
-    async fn delete_lyric(&self, uuid: Uuid) -> Result<()> {
-        let mut db = self.db.write().unwrap();
-        if db.remove(&uuid).is_some() {
-            db.iter_mut().for_each(|(_, record)| {
-                if let Record::Playlist(playlist_post) = record {
-                    *playlist_post = PlaylistPost {
-                        title: playlist_post.title.clone(),
-                        members: playlist_post.members.clone().without(&uuid),
+    fn get_lyrics(&self) -> BoxFuture<'_, Result<Vec<Lyric>>> {
+        async move {
+            let mut lyrics = self
+                .db
+                .read()
+                .unwrap()
+                .iter()
+                .filter_map(|(key, record)| {
+                    if let Record::Lyric(lyric_post) = record {
+                        Some(Lyric::from((Some(*key), lyric_post.clone())))
+                    } else {
+                        None
                     }
-                }
-            });
-            Ok(())
-        } else {
-            Err(Error::NotFound(uuid))
+                })
+                .collect::<Vec<_>>();
+
+            lyrics.sort_by(by_title);
+            Ok(lyrics)
         }
+        .boxed()
     }
 
-    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
+    fn get_lyric(&self, uuid: Uuid) -> BoxFuture<'_, Result<Lyric>> {
+        async move {
+            self.db
+                .read()
+                .unwrap()
+                .get(&uuid)
+                .and_then(|record| match record {
+                    Record::Lyric(lyric_post) => {
+                        Some(Lyric::from((Some(uuid), lyric_post.clone())))
+                    }
+                    _ => None,
+                })
+                .ok_or(Error::NotFound(uuid))
+        }
+        .boxed()
+    }
+
+    fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, Result<Lyric>> {
+        async move {
+            self.db
+                .write()
+                .unwrap()
+                .entry(lyric.clone().id)
+                .and_modify(|lyric_post| *lyric_post = Record::Lyric(lyric.clone().into()))
+                .or_insert_with(|| Record::Lyric(lyric.clone().into()));
+            Ok(lyric)
+        }
+        .boxed()
+    }
+
+    fn delete_lyric(&self, uuid: Uuid) -> BoxFuture<'_, Result<()>> {
+        async move {
+            let mut db = self.db.write().unwrap();
+            if db.remove(&uuid).is_some() {
+                db.iter_mut().for_each(|(_, record)| {
+                    if let Record::Playlist(playlist_post) = record {
+                        *playlist_post = PlaylistPost {
+                            title: playlist_post.title.clone(),
+                            members: playlist_post.members.clone().without(&uuid),
+                        }
+                    }
+                });
+                Ok(())
+            } else {
+                Err(Error::NotFound(uuid))
+            }
+        }
+        .boxed()
+    }
+
+    fn get_playlist_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>> {
         self.get_playlists()
-            .await
-            .map(|playlists| playlists.map(|p| p.summary()))
+            .map_ok(|playlists| playlists.map(|p| p.summary()))
+            .boxed()
     }
 
-    async fn get_playlists(&self) -> Result<Vec<Playlist>> {
-        let mut playlists = self
-            .db
-            .read()
-            .unwrap()
-            .iter()
-            .filter_map(|(key, record)| match record {
-                Record::Playlist(playlist_post) => {
-                    Some(Playlist::from((Some(*key), playlist_post.clone())))
-                }
-                _ => None,
-            })
-            .collect::<Vec<_>>();
+    fn get_playlists(&self) -> BoxFuture<'_, Result<Vec<Playlist>>> {
+        async move {
+            let mut playlists = self
+                .db
+                .read()
+                .unwrap()
+                .iter()
+                .filter_map(|(key, record)| match record {
+                    Record::Playlist(playlist_post) => {
+                        Some(Playlist::from((Some(*key), playlist_post.clone())))
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
 
-        playlists.sort_by(by_title);
-        Ok(playlists)
+            playlists.sort_by(by_title);
+            Ok(playlists)
+        }
+        .boxed()
     }
 
-    async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
-        self.db
-            .read()
-            .unwrap()
-            .get(&uuid)
-            .and_then(|record| match record {
-                Record::Playlist(playlist_post) => {
-                    Some(Playlist::from((Some(uuid), playlist_post.clone())))
-                }
-                _ => None,
-            })
-            .ok_or(Error::NotFound(uuid))
+    fn get_playlist(&self, uuid: Uuid) -> BoxFuture<'_, Result<Playlist>> {
+        async move {
+            self.db
+                .read()
+                .unwrap()
+                .get(&uuid)
+                .and_then(|record| match record {
+                    Record::Playlist(playlist_post) => {
+                        Some(Playlist::from((Some(uuid), playlist_post.clone())))
+                    }
+                    _ => None,
+                })
+                .ok_or(Error::NotFound(uuid))
+        }
+        .boxed()
     }
 
-    async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
-        self.db
-            .write()
-            .unwrap()
-            .entry(playlist.clone().id)
-            .and_modify(|record| *record = Record::Playlist(playlist.clone().into()))
-            .or_insert_with(|| Record::Playlist(playlist.clone().into()));
-        Ok(playlist)
+    fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, Result<Playlist>> {
+        async move {
+            self.db
+                .write()
+                .unwrap()
+                .entry(playlist.clone().id)
+                .and_modify(|record| *record = Record::Playlist(playlist.clone().into()))
+                .or_insert_with(|| Record::Playlist(playlist.clone().into()));
+            Ok(playlist)
+        }
+        .boxed()
     }
 
-    async fn delete_playlist(&self, uuid: Uuid) -> Result<()> {
-        self.db
-            .write()
-            .unwrap()
-            .remove(&uuid)
-            .ok_or(Error::NotFound(uuid))
-            .map(|_| ())
+    fn delete_playlist(&self, uuid: Uuid) -> BoxFuture<'_, Result<()>> {
+        async move {
+            self.db
+                .write()
+                .unwrap()
+                .remove(&uuid)
+                .ok_or(Error::NotFound(uuid))
+                .map(|_| ())
+        }
+        .boxed()
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
+    fn stop(&self) -> BoxFuture<'_, Result<()>> {
+        async move { Ok(()) }.boxed()
     }
 }
 
