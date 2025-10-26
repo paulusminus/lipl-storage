@@ -38,9 +38,7 @@ impl FromStr for FileRepoConfig {
 impl ToRepo for FileRepoConfig {
     type Repo = FileRepo;
     async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
-        let repo = FileRepo::new(self.path).await?;
-        // to_toml(&repo.path)?;
-        Ok(repo)
+        FileRepo::new(self.path).await.map_err(Into::into)
     }
 }
 
@@ -53,7 +51,7 @@ pub struct FileRepo {
 
 impl Debug for FileRepo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "FileRepo:{}", self.path)
+        write!(f, "FileRepo: {}", self.path)
     }
 }
 
