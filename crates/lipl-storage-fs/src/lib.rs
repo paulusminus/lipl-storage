@@ -38,7 +38,7 @@ impl FromStr for FileRepoConfig {
 impl ToRepo for FileRepoConfig {
     type Repo = FileRepo;
     async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
-        FileRepo::new(self.path).await.map_err(Into::into)
+        FileRepo::new(self.path).await
     }
 }
 
