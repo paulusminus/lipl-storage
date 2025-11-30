@@ -45,8 +45,16 @@ fn run_with_options(
 
 fn handle_output(out: &mut Stdout) -> impl FnMut(HurlResult) -> Result<()> + '_ {
     move |result| {
-        write_last_body(&result, true, true, None, out, true)
-            .map_err(|error| format!("{:?} {:?}", error.kind, error.source_info).into())
+        write_last_body(
+            &result,
+            true,
+            true,
+            hurl::pretty::PrettyMode::Automatic,
+            None,
+            out,
+            true,
+        )
+        .map_err(|error| format!("{:?} {:?}", error.kind, error.source_info).into())
     }
 }
 

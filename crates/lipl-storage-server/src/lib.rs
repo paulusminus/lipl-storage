@@ -128,6 +128,7 @@ where
 
     t.to_repo()
         .map_ok(|state| {
+            #[allow(deprecated)]
             Router::new()
                 .route(&format!("{}/health", constant::PREFIX), get(health))
                 .nest(
