@@ -70,10 +70,9 @@ pub trait LiplRepo: Send + Sync {
     fn stop(&self) -> BoxFuture<'_, Result<()>>;
 }
 
-#[allow(async_fn_in_trait)]
 pub trait ToRepo {
     type Repo: LiplRepo;
-    async fn to_repo(self) -> Result<Self::Repo>;
+    fn to_repo(self) -> Result<Self::Repo>;
 }
 
 pub trait HasSummary {

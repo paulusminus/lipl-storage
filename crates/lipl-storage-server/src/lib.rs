@@ -4,17 +4,17 @@ use axum::Router;
 use axum::routing::get;
 use futures_util::TryFutureExt;
 use hyper::StatusCode;
-use lipl_core::ToRepo;
+use lipl_core::{LiplRepo, ToRepo};
 use tokio::signal::unix::{SignalKind, signal};
 use tower::ServiceBuilder;
 use tower::layer::util::{Identity, Stack};
+use tower_http::auth::AddAuthorizationLayer;
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::compression::CompressionLayer;
 use tower_http::trace::{
     DefaultMakeSpan, DefaultOnBodyChunk, DefaultOnEos, DefaultOnFailure, DefaultOnRequest,
     DefaultOnResponse, TraceLayer,
 };
-use tower_http::validate_request::ValidateRequestHeaderLayer;
 use tracing::Level;
 
 #[cfg(feature = "pwa")]
@@ -43,12 +43,10 @@ pub async fn router_from_environment() -> Result<Router> {
 
     use tower_http::services::ServeDir;
 
-    futures_util::future::ready(environment::repo_type())
-        .and_then(|repo_type| create_router(repo_type).err_into())
-        .await
-        .map(|router| {
-            router.fallback_service(ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())))
-        })
+    let repo = environment::repo_type()?;
+    create_router(repo).err_into().await.map(|router| {
+        router.fallback_service(ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())))
+    })
 }
 
 #[cfg(not(feature = "pwa"))]
@@ -108,48 +106,48 @@ pub async fn exit_on_signal_int() {
 }
 
 #[allow(clippy::type_complexity)]
-pub fn create_services() -> ServiceBuilder<
-    Stack<CompressionLayer, Stack<TraceLayer<SharedClassifier<ServerErrorsAsFailures>>, Identity>>,
+pub fn create_services(
+    username: &str,
+    password: &str,
+) -> ServiceBuilder<
+    Stack<
+        AddAuthorizationLayer,
+        Stack<
+            CompressionLayer,
+            Stack<TraceLayer<SharedClassifier<ServerErrorsAsFailures>>, Identity>,
+        >,
+    >,
 > {
-    ServiceBuilder::new().layer(logging()).layer(compression())
+    ServiceBuilder::new()
+        .layer(logging())
+        .layer(compression())
+        .layer(AddAuthorizationLayer::basic(username, password))
 }
 
 async fn health() -> StatusCode {
     StatusCode::OK
 }
 
-pub async fn create_router<T>(t: T) -> lipl_core::Result<Router>
-where
-    T: ToRepo,
-    T::Repo: Send + Sync + 'static + Clone,
-{
-    let username = std::env::var("LIPL_USERNAME")?;
-    let password = std::env::var("LIPL_PASSWORD")?;
-
-    t.to_repo()
-        .map_ok(|state| {
-            #[allow(deprecated)]
+pub async fn create_router(state: Arc<dyn LiplRepo>) -> lipl_core::Result<Router> {
+    #[allow(deprecated)]
+    Ok(Router::new()
+        .route(&format!("{}/health", constant::PREFIX), get(health))
+        .nest(
+            constant::PREFIX,
             Router::new()
-                .route(&format!("{}/health", constant::PREFIX), get(health))
-                .nest(
-                    constant::PREFIX,
-                    Router::new()
-                        .route("/lyric", get(lyric::list).post(lyric::post))
-                        .route(
-                            "/lyric/{id}",
-                            get(lyric::item).delete(lyric::delete).put(lyric::put),
-                        )
-                        .route("/playlist", get(playlist::list).post(playlist::post))
-                        .route(
-                            "/playlist/{id}",
-                            get(playlist::item)
-                                .delete(playlist::delete)
-                                .put(playlist::put),
-                        )
-                        .route("/db", get(db::get).put(db::put))
-                        .layer(ValidateRequestHeaderLayer::basic(&username, &password))
-                        .with_state(Arc::new(state)),
+                .route("/lyric", get(lyric::list).post(lyric::post))
+                .route(
+                    "/lyric/{id}",
+                    get(lyric::item).delete(lyric::delete).put(lyric::put),
                 )
-        })
-        .await
+                .route("/playlist", get(playlist::list).post(playlist::post))
+                .route(
+                    "/playlist/{id}",
+                    get(playlist::item)
+                        .delete(playlist::delete)
+                        .put(playlist::put),
+                )
+                .route("/db", get(db::get).put(db::put))
+                .with_state(state),
+        ))
 }

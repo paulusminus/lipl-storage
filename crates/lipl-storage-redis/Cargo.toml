@@ -12,6 +12,7 @@ version.workspace = true
 lipl-core = { version = "0.5", path = "../lipl-core" }
 bb8-redis = "0.24.0"
 futures-util = "0.3.31"
+tokio = "1.46.1"
 
 [dev-dependencies]
 tokio = { version = "1.46.1", features = ["rt", "macros"] }

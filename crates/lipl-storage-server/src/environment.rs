@@ -1,6 +1,7 @@
+use std::sync::Arc;
+
 #[cfg(feature = "fs")]
-use futures_util::FutureExt;
-use futures_util::{TryFutureExt, future::BoxFuture};
+use futures_util::future::BoxFuture;
 use lipl_core::{LiplRepo, Lyric, Playlist, Summary};
 
 #[cfg(feature = "memory")]
@@ -179,40 +180,37 @@ impl LiplRepo for ServerRepo {
     }
 }
 
-impl ToRepo for RepoType {
-    type Repo = ServerRepo;
-    fn to_repo(self) -> impl Future<Output = lipl_core::Result<Self::Repo>> {
-        match self {
-            #[cfg(feature = "postgres")]
-            Self::Postgres(connection) => async move {
-                lipl_storage_postgres::connection_pool(&connection)
-                    .map_ok(ServerRepo::Postgres)
-                    .await
-            }
-            .boxed(),
-            #[cfg(feature = "memory")]
-            Self::Memory(include_sample) => lipl_storage_memory::MemoryRepoConfig {
-                sample_data: include_sample,
-                transaction_log: None,
-            }
-            .to_repo()
-            .map_ok(ServerRepo::Memory)
-            .boxed(),
-            #[cfg(feature = "fs")]
-            Self::Fs(data_dir) => lipl_storage_fs::FileRepoConfig { path: data_dir }
-                .to_repo()
-                .map_ok(ServerRepo::Fs)
-                .boxed(),
-            #[cfg(feature = "redis")]
-            Self::Redis(connection) => {
-                lipl_storage_redis::redis_repo::RedisRepoConfig::new(false, connection)
-                    .to_repo()
-                    .map_ok(ServerRepo::Redis)
-                    .boxed()
-            }
-        }
-    }
-}
+// impl ToRepo for RepoType {
+//     type Repo = ServerRepo;
+//     fn to_repo(self) -> lipl_core::Result<Self::Repo> {
+//         match self {
+//             #[cfg(feature = "postgres")]
+//             Self::Postgres(connection) => {
+//                 lipl_storage_postgres::connection_pool(&connection).map(ServerRepo::Postgres)
+//             }
+//             #[cfg(feature = "memory")]
+//             Self::Memory(include_sample) => lipl_storage_memory::MemoryRepoConfig {
+//                 sample_data: include_sample,
+//                 transaction_log: None,
+//             }
+//             .to_repo()
+//             .map_ok(ServerRepo::Memory)
+//             .boxed(),
+//             #[cfg(feature = "fs")]
+//             Self::Fs(data_dir) => lipl_storage_fs::FileRepoConfig { path: data_dir }
+//                 .to_repo()
+//                 .map_ok(ServerRepo::Fs)
+//                 .boxed(),
+//             #[cfg(feature = "redis")]
+//             Self::Redis(connection) => {
+//                 lipl_storage_redis::redis_repo::RedisRepoConfig::new(false, connection)
+//                     .to_repo()
+//                     .map_ok(ServerRepo::Redis)
+//                     .boxed()
+//             }
+//         }
+//     }
+// }
 
 fn var(key: &'static str) -> Result<String> {
     std::env::var(key).map_err(Error::from)
@@ -223,29 +221,45 @@ fn include_sample_data() -> Result<bool> {
     var("LIPL_STORAGE_MEMORY_SAMPLE").and_then(|s| s.parse::<bool>().map_err(Error::from))
 }
 
-pub fn repo_type() -> Result<RepoType> {
+pub fn repo_type() -> Result<Arc<dyn LiplRepo>> {
     var("LIPL_STORAGE_REPO_TYPE").and_then(|s| {
         let repo_type = s.trim().to_lowercase();
         let r = repo_type.as_str();
 
         #[cfg(feature = "postgres")]
         if r == "postgres" {
-            return postgres_connection().map(RepoType::Postgres);
+            use lipl_storage_postgres::connection_pool;
+            let s = postgres_connection()?;
+            let pool = connection_pool(&s)?;
+            return Ok(Arc::new(pool) as Arc<dyn LiplRepo>);
         }
 
         #[cfg(feature = "fs")]
         if r == "fs" {
-            return Ok(RepoType::Fs(file_path()));
+            use lipl_storage_fs::FileRepoConfig;
+            let s = file_path();
+            let repo = s.parse::<FileRepoConfig>()?.to_repo()?;
+            return Ok(Arc::new(repo));
         }
 
         #[cfg(feature = "memory")]
         if r == "memory" {
-            return include_sample_data().map(RepoType::Memory);
+            use lipl_storage_memory::MemoryRepoConfig;
+            let s = include_sample_data()?;
+            let repo = MemoryRepoConfig {
+                sample_data: s,
+                transaction_log: None,
+            }
+            .to_repo()?;
+            return Ok(Arc::new(repo));
         }
 
         #[cfg(feature = "redis")]
         if r == "redis" {
-            return redis_connection().map(RepoType::Redis);
+            use lipl_storage_redis::RedisRepoConfig;
+            let s = redis_connection()?;
+            let repo = s.parse::<RedisRepoConfig<_>>()?.to_repo()?;
+            return Ok(Arc::new(repo));
         }
 
         Err(Error::InvalidConfiguration)

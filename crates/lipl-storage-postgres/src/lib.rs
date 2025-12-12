@@ -99,30 +99,38 @@ impl PostgresConnectionPool {
     }
 }
 
-pub async fn connection_pool(connection: &str) -> Result<PostgresConnectionPool> {
+pub fn connection_pool(connection: &str) -> Result<PostgresConnectionPool> {
     let manager = PostgresConnectionManager::new_from_stringlike(connection, NoTls)
         .map_err(postgres_error)?;
-    let pool = Pool::builder()
-        .build(manager)
-        .await
-        .map_err(postgres_error)?;
 
-    let postgres_connection_pool = PostgresConnectionPool::from(pool);
-    tracing::info!("About to execute database creation script");
-    postgres_connection_pool.batch_execute(CREATE_DB).await?;
-    tracing::info!("Finished executing database creation script");
+    let (tx, rx) = std::sync::mpsc::channel();
+    tokio::spawn(async move {
+        let pool = Pool::builder()
+            .build(manager)
+            .await
+            .map_err(postgres_error)
+            .unwrap();
+        let postgres_connection_pool = PostgresConnectionPool::from(pool);
+        tracing::info!("About to execute database creation script");
+        postgres_connection_pool
+            .batch_execute(CREATE_DB)
+            .await
+            .unwrap();
+        tracing::info!("Finished executing database creation script");
 
-    tracing::info!("Warm up cache");
+        tracing::info!("Warm up cache");
 
-    if let Err(error) = postgres_connection_pool.get_lyrics().await {
-        tracing::error!("Failed to get lyrics for warming up cache: {}", error);
-    }
+        if let Err(error) = postgres_connection_pool.get_lyrics().await {
+            tracing::error!("Failed to get lyrics for warming up cache: {}", error);
+        }
 
-    if let Err(error) = postgres_connection_pool.get_playlists().await {
-        tracing::error!("Failed to get playlists for warming up cache: {}", error);
-    }
+        if let Err(error) = postgres_connection_pool.get_playlists().await {
+            tracing::error!("Failed to get playlists for warming up cache: {}", error);
+        }
 
-    tracing::info!("Warm up cache finished");
+        tracing::info!("Warm up cache finished");
 
-    Ok(postgres_connection_pool)
+        tx.send(Ok(postgres_connection_pool)).unwrap();
+    });
+    rx.recv().unwrap()
 }

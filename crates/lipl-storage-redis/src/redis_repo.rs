@@ -93,16 +93,20 @@ where
 
 impl<T> RedisRepoConfig<T>
 where
-    T: IntoConnectionInfo,
+    T: IntoConnectionInfo + Send + 'static,
 {
     #[allow(dead_code)]
     pub fn new(clear: bool, url: T) -> Self {
         Self { clear, url }
     }
 
-    pub async fn to_repo(self) -> lipl_core::Result<RedisRepo> {
-        let repo = RedisRepo::new(self).await?;
-        Ok(repo)
+    pub fn to_repo(self) -> lipl_core::Result<RedisRepo> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        tokio::spawn(async move {
+            let repo = RedisRepo::new(self).await.unwrap();
+            tx.send(repo).unwrap();
+        });
+        rx.recv().map_err(Into::into)
     }
 }
 
@@ -127,12 +131,16 @@ impl FromStr for RedisRepoConfig<String> {
 
 impl<T> ToRepo for RedisRepoConfig<T>
 where
-    T: IntoConnectionInfo + Send + Clone,
+    T: IntoConnectionInfo + Send + Clone + 'static,
 {
     type Repo = RedisRepo;
-    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
-        let repo = RedisRepo::new(self).await?;
-        Ok(repo)
+    fn to_repo(self) -> lipl_core::Result<Self::Repo> {
+        let (tx, rx) = std::sync::mpsc::channel();
+        tokio::spawn(async move {
+            let result = RedisRepo::new(self).await.unwrap();
+            tx.send(result).unwrap();
+        });
+        rx.recv().map_err(Into::into)
     }
 }
 

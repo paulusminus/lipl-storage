@@ -37,8 +37,8 @@ impl FromStr for FileRepoConfig {
 
 impl ToRepo for FileRepoConfig {
     type Repo = FileRepo;
-    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
-        FileRepo::new(self.path).await
+    fn to_repo(self) -> lipl_core::Result<Self::Repo> {
+        FileRepo::new(self.path)
     }
 }
 
@@ -191,7 +191,7 @@ fn path(source_dir: String, extension: &'static str) -> impl Fn(&Uuid) -> PathBu
 }
 
 impl FileRepo {
-    pub async fn new(source_dir: String) -> lipl_core::Result<FileRepo> {
+    pub fn new(source_dir: String) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
         let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");

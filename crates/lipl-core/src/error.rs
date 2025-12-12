@@ -99,6 +99,9 @@ pub enum Error {
 
     #[error("Environment variable: {0}")]
     Var(#[from] VarError),
+
+    #[error("Receive error: {0}")]
+    Mpsc(#[from] std::sync::mpsc::RecvError),
 }
 
 pub fn postgres_error<E>(error: E) -> Error

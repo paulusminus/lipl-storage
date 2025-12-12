@@ -1,4 +1,4 @@
-use std::vec;
+use std::{sync::Arc, vec};
 
 use axum::{
     Router,
@@ -7,8 +7,9 @@ use axum::{
 };
 use base64::{Engine, engine::general_purpose};
 use http_body_util::BodyExt;
-use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, Uuid};
-use lipl_storage_server::{create_router, environment::RepoType};
+use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, ToRepo, Uuid};
+use lipl_storage_memory::MemoryRepoConfig;
+use lipl_storage_server::create_router;
 use serde::{Serialize, de::DeserializeOwned};
 use tower::ServiceExt;
 
@@ -18,7 +19,16 @@ const HEALTH: &str = "health";
 const PREFIX: &str = "/lipl/api/v1/";
 
 async fn router() -> Router {
-    create_router(RepoType::Memory(false)).await.unwrap()
+    create_router(Arc::new(
+        MemoryRepoConfig {
+            sample_data: false,
+            transaction_log: None,
+        }
+        .to_repo()
+        .unwrap(),
+    ))
+    .await
+    .unwrap()
 }
 
 fn basic_authentication_header() -> String {

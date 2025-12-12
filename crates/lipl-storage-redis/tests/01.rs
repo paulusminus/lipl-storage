@@ -4,7 +4,7 @@ use lipl_storage_redis::{RedisRepoConfig, new_lyric, new_playlist};
 
 #[tokio::test(flavor = "current_thread")]
 async fn main() {
-    let db = RedisRepoConfig::default().to_repo().await.unwrap();
+    let db = RedisRepoConfig::default().to_repo().unwrap();
 
     let lyrics = try_join_all([
         db.upsert_lyric(new_lyric("Roodkapje", "Zeg roodkapje waar ga je hene")),

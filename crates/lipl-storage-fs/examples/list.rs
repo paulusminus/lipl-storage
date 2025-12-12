@@ -10,7 +10,7 @@ where
 }
 
 pub async fn process() -> Result<(), Box<dyn std::error::Error>> {
-    let repo = FileRepo::new("./data/".to_owned()).await?;
+    let repo = FileRepo::new("./data/".to_owned())?;
 
     println!("Lyrics");
     repo.get_lyric_summaries()

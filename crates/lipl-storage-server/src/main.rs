@@ -1,7 +1,4 @@
-use std::{
-    net::{IpAddr, SocketAddr},
-    process::exit,
-};
+use std::net::{IpAddr, SocketAddr};
 
 use axum::Router;
 use futures_util::TryFutureExt;
@@ -25,9 +22,14 @@ async fn run(router: Router) -> Result<()> {
     let addr = SocketAddr::from((localhost, constant::PORT));
     let listener = TcpListener::bind(addr).await?;
 
+    let username = std::env::var("LIPL_USERNAME")?;
+    let password = std::env::var("LIPL_PASSWORD")?;
+
     axum::serve(
         listener,
-        router.layer(create_services()).into_make_service(),
+        router
+            .layer(create_services(&username, &password))
+            .into_make_service(),
     )
     .with_graceful_shutdown(exit_on_signal_int())
     .await
@@ -39,16 +41,14 @@ fn log_filter() -> String {
 }
 
 #[tokio::main]
-pub async fn main() {
+pub async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_env_filter(log_filter())
         .init();
 
-    if let Err(error) = router_from_environment()
+    router_from_environment()
         .and_then(|router| run(router).err_into())
         .await
-    {
-        tracing::error!("Failed with error {error}");
-        exit(1);
-    }
+        .inspect_err(|error| tracing::error!("Failed with error {error}"))
+        .map_err(Into::into)
 }
