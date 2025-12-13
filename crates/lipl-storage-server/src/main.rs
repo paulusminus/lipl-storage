@@ -1,9 +1,7 @@
-use std::net::{IpAddr, SocketAddr};
-
 use axum::Router;
-use futures_util::TryFutureExt;
 use lipl_core::Result;
 use lipl_storage_server::{constant, create_services, exit_on_signal_int, router_from_environment};
+use std::net::{IpAddr, SocketAddr};
 use tokio::net::TcpListener;
 
 #[cfg(target_env = "musl")]
@@ -46,8 +44,8 @@ pub async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         .with_env_filter(log_filter())
         .init();
 
-    router_from_environment()
-        .and_then(|router| run(router).err_into())
+    let router = router_from_environment()?;
+    run(router)
         .await
         .inspect_err(|error| tracing::error!("Failed with error {error}"))
         .map_err(Into::into)

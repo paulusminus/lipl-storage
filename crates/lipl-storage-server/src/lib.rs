@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use axum::Router;
 use axum::routing::get;
-use futures_util::TryFutureExt;
 use hyper::StatusCode;
 use lipl_core::{LiplRepo, ToRepo};
 use tokio::signal::unix::{SignalKind, signal};
@@ -38,22 +37,22 @@ pub fn password() -> Result<String> {
 }
 
 #[cfg(feature = "pwa")]
-pub async fn router_from_environment() -> Result<Router> {
+pub fn router_from_environment() -> Result<Router> {
     use std::env::var;
 
     use tower_http::services::ServeDir;
 
-    let repo = environment::repo_type()?;
-    create_router(repo).err_into().await.map(|router| {
-        router.fallback_service(ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())))
-    })
+    let repo = environment::repo()?;
+    let router = create_router(repo)
+        .fallback_service(ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())));
+    Ok(router)
 }
 
 #[cfg(not(feature = "pwa"))]
-pub async fn router_from_environment() -> Result<Router> {
-    futures_util::future::ready(environment::repo_type())
-        .and_then(|repo_type| create_router(repo_type).err_into())
-        .await
+pub fn router_from_environment() -> Result<Router> {
+    let repo = environment::repo()?;
+    let router = create_router(repo);
+    Ok(router)
 }
 
 #[inline]
@@ -128,9 +127,8 @@ async fn health() -> StatusCode {
     StatusCode::OK
 }
 
-pub async fn create_router(state: Arc<dyn LiplRepo>) -> lipl_core::Result<Router> {
-    #[allow(deprecated)]
-    Ok(Router::new()
+pub fn create_router(state: Arc<dyn LiplRepo>) -> Router {
+    Router::new()
         .route(&format!("{}/health", constant::PREFIX), get(health))
         .nest(
             constant::PREFIX,
@@ -149,5 +147,5 @@ pub async fn create_router(state: Arc<dyn LiplRepo>) -> lipl_core::Result<Router
                 )
                 .route("/db", get(db::get).put(db::put))
                 .with_state(state),
-        ))
+        )
 }

@@ -2,7 +2,7 @@ use futures_util::future::try_join_all;
 use lipl_core::LiplRepo;
 use lipl_storage_redis::{RedisRepoConfig, new_lyric, new_playlist};
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn main() {
     let db = RedisRepoConfig::default().to_repo().unwrap();
 

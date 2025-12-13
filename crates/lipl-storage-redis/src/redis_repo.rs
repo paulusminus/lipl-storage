@@ -114,7 +114,7 @@ impl Default for RedisRepoConfig<String> {
     fn default() -> Self {
         Self {
             clear: true,
-            url: "redis://127.0.0.1/".to_owned(),
+            url: "redis://127.0.0.1".to_owned(),
         }
     }
 }
@@ -135,12 +135,15 @@ where
 {
     type Repo = RedisRepo;
     fn to_repo(self) -> lipl_core::Result<Self::Repo> {
-        let (tx, rx) = std::sync::mpsc::channel();
-        tokio::spawn(async move {
-            let result = RedisRepo::new(self).await.unwrap();
-            tx.send(result).unwrap();
-        });
-        rx.recv().map_err(Into::into)
+        let handle = tokio::runtime::Handle::current();
+        handle.block_on(RedisRepo::new(self))
+        // handle.block_on(RedisRepo::new(self))
+        // // let (tx, rx) = std::sync::mpsc::channel();
+        // tokio::spawn(async move {
+        //     let result = RedisRepo::new(self).await.unwrap();
+        //     tx.send(result).unwrap();
+        // });
+        // Ok(rx.recv().unwrap())
     }
 }
 
