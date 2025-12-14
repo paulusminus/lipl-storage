@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use axum::Router;
 use axum::routing::get;
 use hyper::StatusCode;
-use lipl_core::{LiplRepo, ToRepo};
+use lipl_core::{Repo, ToRepo};
+use std::sync::Arc;
 use tokio::signal::unix::{SignalKind, signal};
 use tower::ServiceBuilder;
 use tower::layer::util::{Identity, Stack};
@@ -16,6 +15,7 @@ use tower_http::trace::{
 };
 use tracing::Level;
 
+use crate::environment::{password, username};
 #[cfg(feature = "pwa")]
 pub use crate::error::Error;
 use crate::handler::{db, lyric, playlist};
@@ -28,30 +28,18 @@ mod message;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub fn username() -> Result<String> {
-    std::env::var("LIPL_USERNAME").map_err(Into::into)
-}
-
-pub fn password() -> Result<String> {
-    std::env::var("LIPL_PASSWORD").map_err(Into::into)
-}
-
 #[cfg(feature = "pwa")]
 pub fn router_from_environment() -> Result<Router> {
-    use std::env::var;
-
+    use environment::www_root;
     use tower_http::services::ServeDir;
 
-    let repo = environment::repo()?;
-    let router = create_router(repo)
-        .fallback_service(ServeDir::new(var("WWW_ROOT").unwrap_or(".".to_owned())));
+    let router = environment::repo()?.fallback_service(ServeDir::new(www_root()));
     Ok(router)
 }
 
 #[cfg(not(feature = "pwa"))]
 pub fn router_from_environment() -> Result<Router> {
-    let repo = environment::repo()?;
-    let router = create_router(repo);
+    let router = environment::repo()?;
     Ok(router)
 }
 
@@ -105,47 +93,47 @@ pub async fn exit_on_signal_int() {
 }
 
 #[allow(clippy::type_complexity)]
-pub fn create_services(
-    username: &str,
-    password: &str,
-) -> ServiceBuilder<
-    Stack<
-        AddAuthorizationLayer,
-        Stack<
-            CompressionLayer,
-            Stack<TraceLayer<SharedClassifier<ServerErrorsAsFailures>>, Identity>,
-        >,
-    >,
+pub fn create_services() -> ServiceBuilder<
+    Stack<CompressionLayer, Stack<TraceLayer<SharedClassifier<ServerErrorsAsFailures>>, Identity>>,
 > {
-    ServiceBuilder::new()
-        .layer(logging())
-        .layer(compression())
-        .layer(AddAuthorizationLayer::basic(username, password))
+    ServiceBuilder::new().layer(logging()).layer(compression())
 }
 
 async fn health() -> StatusCode {
     StatusCode::OK
 }
 
-pub fn create_router(state: Arc<dyn LiplRepo>) -> Router {
+pub fn create_router<S>(state: S) -> Router
+where
+    S: Repo + 'static + Send + Sync,
+{
     Router::new()
         .route(&format!("{}/health", constant::PREFIX), get(health))
         .nest(
             constant::PREFIX,
             Router::new()
-                .route("/lyric", get(lyric::list).post(lyric::post))
+                .route("/lyric", get(lyric::list::<S>).post(lyric::post::<S>))
                 .route(
                     "/lyric/{id}",
-                    get(lyric::item).delete(lyric::delete).put(lyric::put),
+                    get(lyric::item::<S>)
+                        .delete(lyric::delete::<S>)
+                        .put(lyric::put::<S>),
                 )
-                .route("/playlist", get(playlist::list).post(playlist::post))
+                .route(
+                    "/playlist",
+                    get(playlist::list::<S>).post(playlist::post::<S>),
+                )
                 .route(
                     "/playlist/{id}",
-                    get(playlist::item)
-                        .delete(playlist::delete)
-                        .put(playlist::put),
+                    get(playlist::item::<S>)
+                        .delete(playlist::delete::<S>)
+                        .put(playlist::put::<S>),
                 )
-                .route("/db", get(db::get).put(db::put))
-                .with_state(state),
+                .route("/db", get(db::get::<S>).put(db::put::<S>))
+                .layer(AddAuthorizationLayer::basic(
+                    &username().unwrap(),
+                    &password().unwrap(),
+                ))
+                .with_state(Arc::new(state)),
         )
 }

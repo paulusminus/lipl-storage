@@ -1,5 +1,3 @@
-use std::{sync::Arc, vec};
-
 use axum::{
     Router,
     body::Body,
@@ -19,14 +17,14 @@ const HEALTH: &str = "health";
 const PREFIX: &str = "/lipl/api/v1/";
 
 fn router() -> Router {
-    create_router(Arc::new(
+    create_router(
         MemoryRepoConfig {
             sample_data: false,
             transaction_log: None,
         }
         .to_repo()
         .unwrap(),
-    ))
+    )
 }
 
 fn basic_authentication_header() -> String {

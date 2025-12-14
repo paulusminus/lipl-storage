@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use super::ListQuery;
 use super::{Key, to_error_response, to_json_response, to_status_ok};
 use axum::{
@@ -9,13 +7,11 @@ use axum::{
     response::Response,
 };
 use futures_util::TryFutureExt;
-use lipl_core::{LiplRepo, PlaylistPost};
+use lipl_core::{PlaylistPost, Repo};
+use std::sync::Arc;
 
 /// Handler for getting all playlists
-pub async fn list(
-    State(connection): State<Arc<dyn LiplRepo>>,
-    query: Query<ListQuery>,
-) -> Response {
+pub async fn list<R: Repo>(State(connection): State<Arc<R>>, query: Query<ListQuery>) -> Response {
     if query.full == Some(true) {
         connection
             .get_playlists()
@@ -30,7 +26,7 @@ pub async fn list(
 }
 
 /// Handler for getting a specific playlist
-pub async fn item(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Response {
+pub async fn item<R: Repo>(State(connection): State<Arc<R>>, key: Key) -> Response {
     connection
         .get_playlist(key.id)
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
@@ -38,8 +34,8 @@ pub async fn item(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Resp
 }
 
 /// Handler for posting a new playlist
-pub async fn post(
-    State(connection): State<Arc<dyn LiplRepo>>,
+pub async fn post<R: Repo>(
+    State(connection): State<Arc<R>>,
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Response {
     connection
@@ -49,7 +45,7 @@ pub async fn post(
 }
 
 /// Handler for deleting a specific playlist
-pub async fn delete(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Response {
+pub async fn delete<R: Repo>(State(connection): State<Arc<R>>, key: Key) -> Response {
     connection
         .delete_playlist(key.id)
         .map_ok_or_else(to_error_response, to_status_ok)
@@ -57,8 +53,8 @@ pub async fn delete(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Re
 }
 
 /// Handler for changing a specific playlist
-pub async fn put(
-    State(connection): State<Arc<dyn LiplRepo>>,
+pub async fn put<R: Repo>(
+    State(connection): State<Arc<R>>,
     key: Key,
     Json(playlist_post): Json<PlaylistPost>,
 ) -> Response {

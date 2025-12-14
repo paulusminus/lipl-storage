@@ -1,4 +1,4 @@
-use lipl_core::LiplRepo;
+use lipl_core::Repo;
 use lipl_storage_fs::FileRepo;
 use std::{fmt::Display, time::Instant};
 

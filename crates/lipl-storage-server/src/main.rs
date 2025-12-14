@@ -20,14 +20,9 @@ async fn run(router: Router) -> Result<()> {
     let addr = SocketAddr::from((localhost, constant::PORT));
     let listener = TcpListener::bind(addr).await?;
 
-    let username = std::env::var("LIPL_USERNAME")?;
-    let password = std::env::var("LIPL_PASSWORD")?;
-
     axum::serve(
         listener,
-        router
-            .layer(create_services(&username, &password))
-            .into_make_service(),
+        router.layer(create_services()).into_make_service(),
     )
     .with_graceful_shutdown(exit_on_signal_int())
     .await

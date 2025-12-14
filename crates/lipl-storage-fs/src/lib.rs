@@ -1,5 +1,4 @@
-use futures_util::future::BoxFuture;
-// use convert::to_toml;
+use lipl_core::Repo;
 use lipl_core::transaction::{OptionalTransaction, start_log_thread};
 use std::fmt::{Debug, Display};
 use std::fs::OpenOptions;
@@ -14,11 +13,10 @@ use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 pub use lipl_core::error::{Error, ErrorExtension};
 use lipl_core::vec_ext::VecExt;
-use lipl_core::{LiplRepo, Lyric, Playlist, Summary, ToRepo, Uuid, transaction::Request};
+use lipl_core::{Lyric, Playlist, Summary, ToRepo, Uuid, transaction::Request};
 use request::{delete_by_id, post, select, select_by_id};
 
 pub mod constant;
-// mod convert;
 mod fs;
 mod io;
 mod request;
@@ -234,69 +232,67 @@ impl FileRepo {
     }
 }
 
-impl LiplRepo for FileRepo {
-    fn get_lyrics(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Lyric>>> {
-        select(self.tx.clone(), Request::LyricList)
-            .err_into()
-            .boxed()
+impl Repo for FileRepo {
+    async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>> {
+        select(self.tx.clone(), Request::LyricList).err_into().await
     }
 
-    fn get_lyric_summaries(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Summary>>> {
+    async fn get_lyric_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::LyricSummaries)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn get_lyric(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<Lyric>> {
+    async fn get_lyric(&self, id: Uuid) -> lipl_core::Result<Lyric> {
         select_by_id(self.tx.clone(), id, Request::LyricItem)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, lipl_core::Result<Lyric>> {
+    async fn upsert_lyric(&self, lyric: Lyric) -> lipl_core::Result<Lyric> {
         post(self.tx.clone(), lyric, Request::LyricPost)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn delete_lyric(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<()>> {
+    async fn delete_lyric(&self, id: Uuid) -> lipl_core::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::LyricDelete)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn get_playlists(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Playlist>>> {
+    async fn get_playlists(&self) -> lipl_core::Result<Vec<Playlist>> {
         select(self.tx.clone(), Request::PlaylistList)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn get_playlist_summaries(&self) -> BoxFuture<'_, lipl_core::Result<Vec<Summary>>> {
+    async fn get_playlist_summaries(&self) -> lipl_core::Result<Vec<Summary>> {
         select(self.tx.clone(), Request::PlaylistSummaries)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn get_playlist(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<Playlist>> {
+    async fn get_playlist(&self, id: Uuid) -> lipl_core::Result<Playlist> {
         select_by_id(self.tx.clone(), id, Request::PlaylistItem)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, lipl_core::Result<Playlist>> {
+    async fn upsert_playlist(&self, playlist: Playlist) -> lipl_core::Result<Playlist> {
         post(self.tx.clone(), playlist, Request::PlaylistPost)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn delete_playlist(&self, id: Uuid) -> BoxFuture<'_, lipl_core::Result<()>> {
+    async fn delete_playlist(&self, id: Uuid) -> lipl_core::Result<()> {
         delete_by_id(self.tx.clone(), id, Request::PlaylistDelete)
             .err_into()
-            .boxed()
+            .await
     }
 
-    fn stop(&self) -> BoxFuture<'_, lipl_core::Result<()>> {
-        select(self.tx.clone(), Request::Stop).err_into().boxed()
+    async fn stop(&self) -> lipl_core::Result<()> {
+        select(self.tx.clone(), Request::Stop).err_into().await
     }
 }
 

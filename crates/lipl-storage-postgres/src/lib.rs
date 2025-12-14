@@ -1,6 +1,6 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::TryFutureExt;
-use lipl_core::{Error, LiplRepo, Result, postgres_error};
+use lipl_core::{Error, Repo, Result, postgres_error};
 use serde::Serialize;
 use tokio_postgres::{
     NoTls, Row,

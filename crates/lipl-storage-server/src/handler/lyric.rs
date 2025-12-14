@@ -9,13 +9,10 @@ use axum::{
     response::Response,
 };
 use futures_util::TryFutureExt;
-use lipl_core::{LiplRepo, LyricPost};
+use lipl_core::{LyricPost, Repo};
 
 /// Handler for getting all lyrics
-pub async fn list(
-    State(connection): State<Arc<dyn LiplRepo>>,
-    query: Query<ListQuery>,
-) -> Response {
+pub async fn list<R: Repo>(State(connection): State<Arc<R>>, query: Query<ListQuery>) -> Response {
     if query.full == Some(true) {
         connection
             .get_lyrics()
@@ -30,7 +27,7 @@ pub async fn list(
 }
 
 /// Handler for getting a specific lyric
-pub async fn item(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Response {
+pub async fn item<R: Repo>(State(connection): State<Arc<R>>, key: Key) -> Response {
     connection
         .get_lyric(key.id)
         .map_ok_or_else(to_error_response, to_json_response(StatusCode::OK))
@@ -38,8 +35,8 @@ pub async fn item(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Resp
 }
 
 /// Handler for posting a new lyric
-pub async fn post(
-    State(connection): State<Arc<dyn LiplRepo>>,
+pub async fn post<R: Repo>(
+    State(connection): State<Arc<R>>,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response {
     connection
@@ -49,7 +46,7 @@ pub async fn post(
 }
 
 /// Handler for deleting a specific lyric
-pub async fn delete(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Response {
+pub async fn delete<R: Repo>(State(connection): State<Arc<R>>, key: Key) -> Response {
     connection
         .delete_lyric(key.id)
         .map_ok_or_else(to_error_response, to_status_ok)
@@ -57,8 +54,8 @@ pub async fn delete(State(connection): State<Arc<dyn LiplRepo>>, key: Key) -> Re
 }
 
 /// Handler for changing a specific lyric
-pub async fn put(
-    State(connection): State<Arc<dyn LiplRepo>>,
+pub async fn put<R: Repo>(
+    State(connection): State<Arc<R>>,
     key: Key,
     Json(lyric_post): Json<LyricPost>,
 ) -> Response {

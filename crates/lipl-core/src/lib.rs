@@ -11,7 +11,6 @@ MemoryRepo is usefull for testing perposes.
 pub use crate::uuid::Uuid;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 pub use error::{Error, postgres_error, redis_error};
-use futures_util::{FutureExt, future::BoxFuture};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -30,48 +29,91 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub const TOML_PREFIX: &str = "+++";
 // const YAML_PREFIX: &str = "---";
 
-pub trait LiplRepo: Send + Sync {
-    fn get_lyrics(&self) -> BoxFuture<'_, Result<Vec<Lyric>>>;
-    fn get_lyric_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>>;
-    fn get_lyric(&self, id: Uuid) -> BoxFuture<'_, Result<Lyric>>;
-    fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, Result<Lyric>>;
-    fn delete_lyric(&self, id: Uuid) -> BoxFuture<'_, Result<()>>;
-    fn get_playlists(&self) -> BoxFuture<'_, Result<Vec<Playlist>>>;
-    fn get_playlist_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>>;
-    fn get_playlist(&self, id: Uuid) -> BoxFuture<'_, Result<Playlist>>;
-    fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, Result<Playlist>>;
-    fn delete_playlist(&self, id: Uuid) -> BoxFuture<'_, Result<()>>;
-    fn get_db(&self) -> BoxFuture<'_, Result<RepoDb>> {
-        async move {
-            let lyrics = self.get_lyrics().await?;
-            let playlists = self.get_playlists().await?;
-            Ok(RepoDb { lyrics, playlists })
-        }
-        .boxed()
-    }
-    fn replace_db(&self, db: RepoDb) -> BoxFuture<'_, Result<()>> {
-        async move {
-            for playlist in self.get_playlists().await? {
-                self.delete_playlist(playlist.id).await?
-            }
-            for lyric in self.get_lyrics().await? {
-                self.delete_lyric(lyric.id).await?;
-            }
-            for lyric in db.lyrics {
-                self.upsert_lyric(lyric).await?;
-            }
-            for playlist in db.playlists {
-                self.upsert_playlist(playlist).await?;
-            }
-            Ok(())
-        }
-        .boxed()
-    }
-    fn stop(&self) -> BoxFuture<'_, Result<()>>;
+#[allow(async_fn_in_trait)]
+#[trait_variant::make(Send)]
+pub trait Repo {
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>>;
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_lyric(&self, id: Uuid) -> Result<Lyric>;
+    async fn upsert_lyric(&self, lyric: Lyric) -> Result<Lyric>;
+    async fn delete_lyric(&self, id: Uuid) -> Result<()>;
+    async fn get_playlists(&self) -> Result<Vec<Playlist>>;
+    async fn get_playlist_summaries(&self) -> Result<Vec<Summary>>;
+    async fn get_playlist(&self, id: Uuid) -> Result<Playlist>;
+    async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist>;
+    async fn delete_playlist(&self, id: Uuid) -> Result<()>;
+    // fn get_db(&self) -> BoxFuture<'_, Result<RepoDb>> {
+    //     async move {
+    //         let lyrics = self.get_lyrics().await?;
+    //         let playlists = self.get_playlists().await?;
+    //         Ok(RepoDb { lyrics, playlists })
+    //     }
+    //     .boxed()
+    // }
+    // fn replace_db(&self, db: RepoDb) -> BoxFuture<'_, Result<()>> {
+    //     async move {
+    //         for playlist in self.get_playlists().await? {
+    //             self.delete_playlist(playlist.id).await?
+    //         }
+    //         for lyric in self.get_lyrics().await? {
+    //             self.delete_lyric(lyric.id).await?;
+    //         }
+    //         for lyric in db.lyrics {
+    //             self.upsert_lyric(lyric).await?;
+    //         }
+    //         for playlist in db.playlists {
+    //             self.upsert_playlist(playlist).await?;
+    //         }
+    //         Ok(())
+    //     }
+    //     .boxed()
+    // }
+
+    async fn stop(&self) -> Result<()>;
 }
 
+// pub trait LiplRepo: Send + Sync {
+//     fn get_lyrics(&self) -> BoxFuture<'_, Result<Vec<Lyric>>>;
+//     fn get_lyric_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>>;
+//     fn get_lyric(&self, id: Uuid) -> BoxFuture<'_, Result<Lyric>>;
+//     fn upsert_lyric(&self, lyric: Lyric) -> BoxFuture<'_, Result<Lyric>>;
+//     fn delete_lyric(&self, id: Uuid) -> BoxFuture<'_, Result<()>>;
+//     fn get_playlists(&self) -> BoxFuture<'_, Result<Vec<Playlist>>>;
+//     fn get_playlist_summaries(&self) -> BoxFuture<'_, Result<Vec<Summary>>>;
+//     fn get_playlist(&self, id: Uuid) -> BoxFuture<'_, Result<Playlist>>;
+//     fn upsert_playlist(&self, playlist: Playlist) -> BoxFuture<'_, Result<Playlist>>;
+//     fn delete_playlist(&self, id: Uuid) -> BoxFuture<'_, Result<()>>;
+//     fn get_db(&self) -> BoxFuture<'_, Result<RepoDb>> {
+//         async move {
+//             let lyrics = self.get_lyrics().await?;
+//             let playlists = self.get_playlists().await?;
+//             Ok(RepoDb { lyrics, playlists })
+//         }
+//         .boxed()
+//     }
+//     fn replace_db(&self, db: RepoDb) -> BoxFuture<'_, Result<()>> {
+//         async move {
+//             for playlist in self.get_playlists().await? {
+//                 self.delete_playlist(playlist.id).await?
+//             }
+//             for lyric in self.get_lyrics().await? {
+//                 self.delete_lyric(lyric.id).await?;
+//             }
+//             for lyric in db.lyrics {
+//                 self.upsert_lyric(lyric).await?;
+//             }
+//             for playlist in db.playlists {
+//                 self.upsert_playlist(playlist).await?;
+//             }
+//             Ok(())
+//         }
+//         .boxed()
+//     }
+//     fn stop(&self) -> BoxFuture<'_, Result<()>>;
+// }
+
 pub trait ToRepo {
-    type Repo: LiplRepo;
+    type Repo: Repo;
     fn to_repo(self) -> Result<Self::Repo>;
 }
 

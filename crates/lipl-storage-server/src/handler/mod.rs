@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
+use crate::error::ErrorReport;
 use axum::{
     extract::FromRequestParts,
     response::{IntoResponse, Json, Response},
 };
 use hyper::StatusCode;
-use lipl_core::LiplRepo;
+use lipl_core::Repo;
 use serde::{Deserialize, Serialize};
-
-use crate::error::ErrorReport;
+use std::sync::Arc;
 
 pub mod db;
 pub mod lyric;
@@ -29,12 +27,12 @@ impl Key {
     }
 }
 
-impl FromRequestParts<Arc<dyn LiplRepo>> for Key {
+impl<R: Repo + Sync> FromRequestParts<Arc<R>> for Key {
     type Rejection = StatusCode;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
-        _state: &Arc<dyn LiplRepo>,
+        _state: &Arc<R>,
     ) -> Result<Self, Self::Rejection> {
         parts
             .uri

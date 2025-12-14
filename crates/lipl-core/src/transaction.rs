@@ -3,7 +3,7 @@ use std::{
     thread::JoinHandle,
 };
 
-use crate::{LiplRepo, Lyric, Playlist, Summary, Uuid};
+use crate::{Lyric, Playlist, Repo, Summary, Uuid};
 use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
 
@@ -105,7 +105,7 @@ fn line_to_transaction(line: std::io::Result<String>) -> crate::Result<Transacti
 pub async fn build_from_log<R, DB>(r: R, db: DB) -> crate::Result<()>
 where
     R: std::io::Read,
-    DB: LiplRepo,
+    DB: Repo,
 {
     let transactions = BufReader::new(r)
         .lines()
