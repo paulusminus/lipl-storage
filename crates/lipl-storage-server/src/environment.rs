@@ -11,49 +11,49 @@ fn include_sample_data() -> Result<bool> {
     var("LIPL_STORAGE_MEMORY_SAMPLE").and_then(|s| s.parse::<bool>().map_err(Error::from))
 }
 
-pub fn repo() -> Result<Router> {
-    var("LIPL_STORAGE_REPO_TYPE").and_then(|s| {
-        let repo_type = s.trim().to_lowercase();
-        let r = repo_type.as_str();
+pub async fn repo() -> Result<Router> {
+    let repo_type = var("LIPL_STORAGE_REPO_TYPE")?;
+    let trimmed = repo_type.trim().to_lowercase();
+    let r = trimmed.as_str();
 
-        #[cfg(feature = "postgres")]
-        if r == "postgres" {
-            use lipl_storage_postgres::connection_pool;
-            let s = postgres_connection()?;
-            let pool = connection_pool(&s)?;
-            return Ok(create_router(pool));
+    #[cfg(feature = "postgres")]
+    if r == "postgres" {
+        use lipl_storage_postgres::PostgresConfig;
+        let s = postgres_connection()?;
+        let repo = PostgresConfig::from(s).to_repo().await?;
+        return Ok(create_router(repo));
+    }
+
+    #[cfg(feature = "fs")]
+    if r == "fs" {
+        use lipl_storage_fs::FileRepoConfig;
+        let s = file_path();
+        let repo = s.parse::<FileRepoConfig>()?.to_repo().await?;
+        return Ok(create_router(repo));
+    }
+
+    #[cfg(feature = "memory")]
+    if r == "memory" {
+        use lipl_storage_memory::MemoryRepoConfig;
+        let s = include_sample_data()?;
+        let repo = MemoryRepoConfig {
+            sample_data: s,
+            transaction_log: None,
         }
+        .to_repo()
+        .await?;
+        return Ok(create_router(repo));
+    }
 
-        #[cfg(feature = "fs")]
-        if r == "fs" {
-            use lipl_storage_fs::FileRepoConfig;
-            let s = file_path();
-            let repo = s.parse::<FileRepoConfig>()?.to_repo()?;
-            return Ok(create_router(repo));
-        }
+    #[cfg(feature = "redis")]
+    if r == "redis" {
+        use lipl_storage_redis::RedisRepoConfig;
+        let s = redis_connection()?;
+        let repo = s.parse::<RedisRepoConfig<_>>()?.to_repo().await?;
+        return Ok(create_router(repo));
+    }
 
-        #[cfg(feature = "memory")]
-        if r == "memory" {
-            use lipl_storage_memory::MemoryRepoConfig;
-            let s = include_sample_data()?;
-            let repo = MemoryRepoConfig {
-                sample_data: s,
-                transaction_log: None,
-            }
-            .to_repo()?;
-            return Ok(create_router(repo));
-        }
-
-        #[cfg(feature = "redis")]
-        if r == "redis" {
-            use lipl_storage_redis::RedisRepoConfig;
-            let s = redis_connection()?;
-            let repo = s.parse::<RedisRepoConfig<_>>()?.to_repo()?;
-            return Ok(create_router(repo));
-        }
-
-        Err(Error::InvalidConfiguration)
-    })
+    Err(Error::InvalidConfiguration)
 }
 
 #[cfg(feature = "postgres")]

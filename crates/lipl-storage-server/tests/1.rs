@@ -16,13 +16,14 @@ const PLAYLIST: &str = "playlist";
 const HEALTH: &str = "health";
 const PREFIX: &str = "/lipl/api/v1/";
 
-fn router() -> Router {
+async fn router() -> Router {
     create_router(
         MemoryRepoConfig {
             sample_data: false,
             transaction_log: None,
         }
         .to_repo()
+        .await
         .unwrap(),
     )
 }
@@ -63,18 +64,18 @@ fn roodkapje() -> LyricPost {
     }
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn health_check() {
-    let service = router();
+    let service = router().await;
 
     let status = health(&service, HEALTH).await;
 
     assert_eq!(status, StatusCode::OK);
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn lyric_list() {
-    let service = router();
+    let service = router().await;
 
     let _daar_bij_die_molen: Lyric = post(&service, LYRIC, &daar_bij_die_molen()).await;
     let _roodkapje: Lyric = post(&service, LYRIC, &roodkapje()).await;
@@ -84,9 +85,9 @@ async fn lyric_list() {
     assert_eq!(lyrics[1].title, "Roodkapje".to_owned());
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn lyric_post() {
-    let service = router();
+    let service = router().await;
 
     let lyric_post = LyricPost {
         title: "Er is er één jarig".to_owned(),
@@ -98,9 +99,9 @@ async fn lyric_post() {
     assert_eq!(lyric.parts, lyric_post.parts);
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn lyric_post_change() {
-    let service = router();
+    let service = router().await;
 
     let mut lyric_post = daar_bij_die_molen();
 
@@ -115,9 +116,9 @@ async fn lyric_post_change() {
     assert_eq!(lyric_changed.title, lyric_post.title);
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn lyric_delete() {
-    let service = router();
+    let service = router().await;
 
     let list_before_post: Vec<Summary> = list(&service, LYRIC).await;
     assert_eq!(list_before_post.len(), 0);
@@ -134,9 +135,9 @@ async fn lyric_delete() {
     assert_eq!(list_after_delete.len(), 0);
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn playlist_list() {
-    let service = router();
+    let service = router().await;
 
     let playlist_post = PlaylistPost {
         title: "Alle 13 goed".to_owned(),
@@ -149,9 +150,9 @@ async fn playlist_list() {
     assert_eq!(playlists[0].title, "Alle 13 goed".to_owned());
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn playlist_post() {
-    let service = router();
+    let service = router().await;
 
     let playlist_post = PlaylistPost {
         title: "Alle 13 goed".to_owned(),
@@ -165,9 +166,9 @@ async fn playlist_post() {
     assert_eq!(playlist.members, members);
 }
 
-#[tokio::test(flavor = "current_thread")]
+#[tokio::test(flavor = "multi_thread")]
 async fn playlist_post_lyric_delete() {
-    let service = router();
+    let service = router().await;
 
     let roodkapje: Lyric = post(&service, LYRIC, &roodkapje()).await;
     let daar_bij_die_molen: Lyric = post(&service, LYRIC, &daar_bij_die_molen()).await;

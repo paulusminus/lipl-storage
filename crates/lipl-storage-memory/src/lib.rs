@@ -47,7 +47,7 @@ impl std::str::FromStr for MemoryRepoConfig {
 
 impl ToRepo for MemoryRepoConfig {
     type Repo = MemoryRepo;
-    fn to_repo(self) -> lipl_core::Result<Self::Repo> {
+    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         if self.sample_data {
             let repo = lipl_sample_data::repo_db();
             Ok(MemoryRepo::from(repo))

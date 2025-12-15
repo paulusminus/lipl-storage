@@ -29,17 +29,19 @@ mod message;
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg(feature = "pwa")]
-pub fn router_from_environment() -> Result<Router> {
+pub async fn router_from_environment() -> Result<Router> {
     use environment::www_root;
     use tower_http::services::ServeDir;
 
-    let router = environment::repo()?.fallback_service(ServeDir::new(www_root()));
+    let router = environment::repo()
+        .await?
+        .fallback_service(ServeDir::new(www_root()));
     Ok(router)
 }
 
 #[cfg(not(feature = "pwa"))]
-pub fn router_from_environment() -> Result<Router> {
-    let router = environment::repo()?;
+pub async fn router_from_environment() -> Result<Router> {
+    let router = environment::repo().await?;
     Ok(router)
 }
 

@@ -98,16 +98,17 @@ where
     pub fn new(clear: bool, url: T) -> Self {
         Self { clear, url }
     }
-
-    pub fn to_repo(self) -> lipl_core::Result<RedisRepo> {
-        let (tx, rx) = std::sync::mpsc::channel();
-        tokio::spawn(async move {
-            let repo = RedisRepo::new(self).await.unwrap();
-            tx.send(repo).unwrap();
-        });
-        rx.recv().map_err(Into::into)
-    }
 }
+
+// impl<T> ToRepo for RedisRepoConfig<T>
+// where
+//     T: IntoConnectionInfo + Send + 'static,
+// {
+//     type Repo = RedisRepo;
+//     async fn to_repo(self) -> Result<Self::Repo> {
+//         RedisRepo::new(self).await
+//     }
+// }
 
 impl Default for RedisRepoConfig<String> {
     fn default() -> Self {
@@ -133,9 +134,8 @@ where
     T: IntoConnectionInfo + Send + Clone + 'static,
 {
     type Repo = RedisRepo;
-    fn to_repo(self) -> lipl_core::Result<Self::Repo> {
-        let handle = tokio::runtime::Handle::current();
-        handle.block_on(RedisRepo::new(self))
+    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
+        RedisRepo::new(self).await
     }
 }
 

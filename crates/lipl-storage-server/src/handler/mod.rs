@@ -55,17 +55,18 @@ where
     move |t| (status_code, Json(t)).into_response()
 }
 
-pub(crate) fn to_error_response(error: lipl_core::Error) -> Response {
+fn not_found_or_internal_server(error: &lipl_core::Error) -> StatusCode {
     match error {
-        lipl_core::Error::NoKey(_) => {
-            (StatusCode::NOT_FOUND, Json(ErrorReport::from(error))).into_response()
-        }
-        _ => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorReport::from(error)),
-        )
-            .into_response(),
+        lipl_core::Error::NoKey(_) => StatusCode::NOT_FOUND,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
     }
+}
+pub(crate) fn to_error_response(error: lipl_core::Error) -> Response {
+    (
+        not_found_or_internal_server(&error),
+        Json(ErrorReport::from(error)),
+    )
+        .into_response()
 }
 
 pub(crate) fn to_status_ok<T>(_: T) -> Response {

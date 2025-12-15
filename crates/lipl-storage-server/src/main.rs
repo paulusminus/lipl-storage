@@ -33,13 +33,13 @@ fn log_filter() -> String {
     std::env::var(constant::RUST_LOG).unwrap_or_else(|_| constant::DEFAULT_LOG_FILTER.to_owned())
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 pub async fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
         .with_env_filter(log_filter())
         .init();
 
-    let router = router_from_environment()?;
+    let router = router_from_environment().await?;
     run(router)
         .await
         .inspect_err(|error| tracing::error!("Failed with error {error}"))

@@ -43,9 +43,10 @@ pub trait Repo {
     async fn stop(&self) -> Result<()>;
 }
 
+#[allow(async_fn_in_trait)]
 pub trait ToRepo {
     type Repo: Repo;
-    fn to_repo(self) -> Result<Self::Repo>;
+    async fn to_repo(self) -> Result<Self::Repo>;
 }
 
 pub trait HasSummary {

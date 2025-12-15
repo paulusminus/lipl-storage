@@ -35,7 +35,7 @@ impl FromStr for FileRepoConfig {
 
 impl ToRepo for FileRepoConfig {
     type Repo = FileRepo;
-    fn to_repo(self) -> lipl_core::Result<Self::Repo> {
+    async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         FileRepo::new(self.path)
     }
 }
