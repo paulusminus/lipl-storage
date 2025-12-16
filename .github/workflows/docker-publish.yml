@@ -104,3 +104,21 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      PORT: 3000
+      PREFIX: http://localhost:3000/lipl/api/v1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create docker volume
+        run: docker volume create lipl-storage-fs
+      - name: Check environment
+        run: echo prefix=${PREFIX},port=${PORT}
+      - name: Run the docker image
+        run: docker run -d -v lipl-storage-fs:/lipl -p ${{ env.PORT}}:${{ env.PORT }} --env LIPL_USERNAME --env LIPL_PASSWORD paulusminus/lipl-storage
+      - name: Fill the database with known data
+        run: cargo run --release -p hurl-runner
