@@ -272,7 +272,7 @@ mod tests {
     use super::MemoryRepo;
     use lipl_core::{LyricPost, PlaylistPost, Repo};
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn post_lyric() {
         let db = MemoryRepo::default();
 
@@ -288,7 +288,7 @@ mod tests {
         assert_eq!(lyrics[0].id, lyric.id);
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn post_lyric_change() {
         let db = MemoryRepo::default();
 
@@ -309,7 +309,7 @@ mod tests {
         assert_eq!(lyrics[0].id, lyric.id);
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn post_playlist() {
         let db = MemoryRepo::default();
 
