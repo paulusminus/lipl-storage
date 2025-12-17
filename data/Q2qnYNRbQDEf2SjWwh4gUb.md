@@ -1,6 +1,6 @@
 +++
 title = "Drie schuintamboers"
-hash = '"2448-283206410697014721377611109274190467968"'
+hash = '"2007-139570869678907422734550080411594101901"'
 +++
 
 Drie schuintamboers die kwamen uit het oosten,  

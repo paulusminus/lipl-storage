@@ -1,6 +1,6 @@
 +++
 title = "With a little help from my friends"
-hash = '"1701-273248003362297766851906536405333467351"'
+hash = '"1400-272860450226912227243343642225134739277"'
 +++
 
 What would you think if I sang out of tune?  
