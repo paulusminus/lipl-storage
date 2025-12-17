@@ -11,6 +11,7 @@ MemoryRepo is usefull for testing perposes.
 pub use crate::uuid::Uuid;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 pub use error::{Error, postgres_error, redis_error};
+use postcard::to_stdvec;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -234,9 +235,12 @@ pub trait Etag {
     fn etag(&self) -> Option<String>;
 }
 
-impl<T: Serialize> Etag for T {
+impl<T> Etag for T
+where
+    T: Serialize + ?Sized,
+{
     fn etag(&self) -> Option<String> {
-        bincode::serde::encode_to_vec(self, bincode::config::standard().with_fixed_int_encoding())
+        to_stdvec(self)
             .map(|bytes| etag::EntityTag::const_from_data(&bytes))
             .map(|etag| etag.to_string())
             .ok()
@@ -343,7 +347,8 @@ mod test {
         let lyric = lyric();
         assert_eq!(
             lyric.etag().unwrap(),
-            "\"56-48630228493704143785053775946993106597\""
+            // "\"56-48630228493704143785053775946993106597\""
+            "\"35-108998711609601653534695633279211267062\""
         );
     }
 
@@ -352,7 +357,8 @@ mod test {
         let uuid = uuid();
         assert_eq!(
             uuid.etag().unwrap(),
-            "\"30-24337412146940561941725448827086629913\""
+            // "\"30-24337412146940561941725448827086629913\""
+            "\"23-149721190323184319769187372888878724744\""
         );
     }
 
@@ -361,7 +367,8 @@ mod test {
         let lyric_post = lyric_post();
         assert_eq!(
             lyric_post.etag().unwrap(),
-            "\"26-328567728742927140900783181828566710110\""
+            // "\"26-328567728742927140900783181828566710110\""
+            "\"12-126345003074275575362181332723693993837\""
         );
     }
 
@@ -370,7 +377,8 @@ mod test {
         let playlist = playlist();
         assert_eq!(
             playlist.etag().unwrap(),
-            "\"51-153574784935411525780941638844058540530\""
+            // "\"51-153574784935411525780941638844058540530\""
+            "\"30-185034181396151291232188877551098360080\""
         );
     }
 
@@ -379,7 +387,8 @@ mod test {
         let playlist_post = playlist_post();
         assert_eq!(
             playlist_post.etag().unwrap(),
-            "\"21-10802477096456745637733263246531066696\""
+            // "\"21-10802477096456745637733263246531066696\""
+            "\"7-154128550217482494187732339974478968840\""
         );
     }
 }

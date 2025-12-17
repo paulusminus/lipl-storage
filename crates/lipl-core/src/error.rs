@@ -11,8 +11,6 @@ pub enum Error {
     #[error("IO Error: {0}")]
     IOError(#[from] std::io::Error),
 
-    // #[error("Yaml Error: {0}")]
-    // YamlError(#[from] serde_yaml::Error),
     #[error("Toml serialization error: {0}")]
     TomlSerError(#[from] toml_edit::ser::Error),
 
@@ -25,8 +23,8 @@ pub enum Error {
     #[error("Cannot find directory {0:?}")]
     CannotFindDirectory(Option<String>),
 
-    #[error("Bincode serialization failed: {0}")]
-    BincodeError(#[from] Box<bincode::error::EncodeError>),
+    #[error("Postcard serialization failed: {0}")]
+    PostcardError(#[from] Box<postcard::Error>),
 
     #[error("Decode error: {0}")]
     Bs58DecodeError(#[from] bs58::decode::Error),

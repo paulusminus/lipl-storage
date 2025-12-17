@@ -262,11 +262,8 @@ mod tests {
         assert_eq!(lyric_meta.title, HERTOG_JAN_TITLE.to_owned());
         assert_eq!(
             lyric_meta.hash,
-            Some("\"2530-189459479300553739784561073837696755448\"".to_owned())
-        );
-        assert_eq!(
-            lyric_meta.hash,
-            Some("\"2530-189459479300553739784561073837696755448\"".to_owned())
+            // Some("\"2530-189459479300553739784561073837696755448\"".to_owned())
+            Some("\"2005-3686617884025909392674051952652892446\"".to_owned())
         );
     }
 
