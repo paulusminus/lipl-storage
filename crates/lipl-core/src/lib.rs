@@ -11,7 +11,7 @@ MemoryRepo is usefull for testing perposes.
 pub use crate::uuid::Uuid;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 pub use error::{Error, postgres_error, redis_error};
-use postcard::to_stdvec;
+// use postcard::to_stdvec;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -240,10 +240,17 @@ where
     T: Serialize + ?Sized,
 {
     fn etag(&self) -> Option<String> {
-        to_stdvec(self)
-            .map(|bytes| etag::EntityTag::const_from_data(&bytes))
+        toml_edit::ser::to_string(self)
+            .inspect(|s| {
+                dbg!(s);
+            })
+            .map(|s| etag::EntityTag::const_from_data(s.as_bytes()))
             .map(|etag| etag.to_string())
             .ok()
+        // to_stdvec(self)
+        //     .map(|bytes| etag::EntityTag::const_from_data(&bytes))
+        //     .map(|etag| etag.to_string())
+        //     .ok()
     }
 }
 

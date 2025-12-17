@@ -1,0 +1,15 @@
++++
+title = "Tulpen uit Amsterdam"
+hash = '"331-335765632076345800921890303042973727644"'
++++
+
+Als de lente komt dan stuur ik jou  
+tulpen uit Amsterdam.  
+Als de lente komt pluk ik voor jou  
+tulpen uit Amsterdam.  
+Als ik wederkom dan breng ik jou  
+tulpen uit Amsterdam.  
+Duizend gele, duizend rooie,  
+wensen jou het allermooiste.  
+Wat m'n mond niet zeggen kan  
+zeggen tulpen uit Amsterdam.

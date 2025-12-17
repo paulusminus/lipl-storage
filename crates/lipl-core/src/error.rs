@@ -23,9 +23,6 @@ pub enum Error {
     #[error("Cannot find directory {0:?}")]
     CannotFindDirectory(Option<String>),
 
-    #[error("Postcard serialization failed: {0}")]
-    PostcardError(#[from] Box<postcard::Error>),
-
     #[error("Decode error: {0}")]
     Bs58DecodeError(#[from] bs58::decode::Error),
 
