@@ -7,10 +7,7 @@ use crate::error::Error;
 use crate::vec_ext::VecExt;
 use crate::{Etag, Lyric, LyricMeta, LyricPost, Playlist, PlaylistPost, TOML_PREFIX};
 
-fn lines_to_lyric_post(
-    acc: LyricPost,
-    mut lines: Lines,
-) -> Result<LyricPost, toml_edit::de::Error> {
+fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, toml::de::Error> {
     let next = lines
         .by_ref()
         .skip_while(|l| l.trim().is_empty())
@@ -23,7 +20,7 @@ fn lines_to_lyric_post(
         Ok(acc)
     } else if next.first().map(|s| s.trim()) == Some(TOML_PREFIX) {
         let new = next.without(&TOML_PREFIX.to_owned());
-        let meta: LyricMeta = toml_edit::de::from_str(&new.join("\n"))?;
+        let meta: LyricMeta = toml::de::from_str(&new.join("\n"))?;
         lines_to_lyric_post(
             LyricPost {
                 title: meta.title,
@@ -56,7 +53,7 @@ impl Display for Lyric {
             title: self.title.clone(),
             hash: self.etag(),
         };
-        let yaml = toml_edit::ser::to_string_pretty(&lyric_meta).unwrap();
+        let yaml = toml::ser::to_string_pretty(&lyric_meta).unwrap();
         let parts_string: String = self
             .parts
             .iter()
@@ -70,14 +67,14 @@ impl Display for Lyric {
 impl FromStr for PlaylistPost {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        toml_edit::de::from_str::<PlaylistPost>(s).map_err(Into::into)
+        toml::de::from_str::<PlaylistPost>(s).map_err(Into::into)
     }
 }
 
 impl Display for Playlist {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let playlist_post = PlaylistPost::from(self.clone());
-        let yaml = toml_edit::ser::to_string_pretty(&playlist_post).unwrap_or_default();
+        let yaml = toml::ser::to_string_pretty(&playlist_post).unwrap_or_default();
         write!(f, "{yaml}")
     }
 }
@@ -104,7 +101,7 @@ impl FromStr for LyricMeta {
             .collect::<Vec<_>>()
             .join("\n");
 
-        toml_edit::de::from_str(&yaml).map_err(Into::into)
+        toml::de::from_str(&yaml).map_err(Into::into)
     }
 }
 
@@ -244,10 +241,7 @@ mod tests {
     #[test]
     fn lyric_post_parse_equals_display() {
         let lyric_post: LyricPost = hertog_jan_lyric().to_string().parse().unwrap();
-        println!(
-            "{}",
-            &toml_edit::ser::to_string_pretty(&lyric_post).unwrap()
-        );
+        println!("{}", &toml::ser::to_string_pretty(&lyric_post).unwrap());
         let uuid = HERTOG_JAN_ID.to_owned().parse::<Uuid>().unwrap();
         let lyric = Lyric::from((Some(uuid), lyric_post));
         assert_eq!(
@@ -279,6 +273,6 @@ mod tests {
             ],
         };
 
-        println!("{}", toml_edit::ser::to_string_pretty(&playlist).unwrap());
+        println!("{}", toml::ser::to_string_pretty(&playlist).unwrap());
     }
 }

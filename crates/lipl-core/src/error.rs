@@ -12,10 +12,10 @@ pub enum Error {
     IOError(#[from] std::io::Error),
 
     #[error("Toml serialization error: {0}")]
-    TomlSerError(#[from] toml_edit::ser::Error),
+    TomlSerError(#[from] toml::ser::Error),
 
     #[error("Toml deserialization error: {0}")]
-    TomlDeError(#[from] toml_edit::de::Error),
+    TomlDeError(#[from] toml::de::Error),
 
     #[error("Lyric with id {1} not found. Cannot add to playlist with id {0}")]
     PlaylistInvalidMember(String, String),

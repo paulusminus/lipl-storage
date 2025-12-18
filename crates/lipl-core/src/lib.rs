@@ -240,7 +240,7 @@ where
     T: Serialize + ?Sized,
 {
     fn etag(&self) -> Option<String> {
-        toml_edit::ser::to_string(self)
+        toml::ser::to_string(self)
             .inspect(|s| {
                 dbg!(s);
             })
@@ -278,7 +278,7 @@ impl RepoDb {
     }
 
     pub fn to_yaml(&self) -> Result<String> {
-        let s = toml_edit::ser::to_string(self)?;
+        let s = toml::ser::to_string(self)?;
         Ok(s)
     }
 }

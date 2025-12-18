@@ -1,3 +1,3 @@
 pub use serde;
-pub use toml_edit;
+pub use toml;
 pub use uuid;
