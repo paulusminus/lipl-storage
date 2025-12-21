@@ -2,8 +2,8 @@ use futures_util::TryFutureExt;
 use lipl_core::Repo;
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{
-    Error, HasSummary, Lyric, LyricPost, Playlist, PlaylistPost, RepoDb, Result, Summary, ToRepo,
-    Toml, Uuid, by_title, reexport::toml,
+    Error, HasSummary, Lyric, LyricPost, Playlist, PlaylistPost, RepoConfig, RepoDb, Result,
+    Summary, Toml, Uuid, by_title, reexport::toml,
 };
 use std::io::read_to_string;
 use std::{
@@ -45,7 +45,7 @@ impl std::str::FromStr for MemoryRepoConfig {
     }
 }
 
-impl ToRepo for MemoryRepoConfig {
+impl RepoConfig for MemoryRepoConfig {
     type Repo = MemoryRepo;
     async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         if self.sample_data {

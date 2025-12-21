@@ -6,7 +6,7 @@ use bb8_redis::{
 };
 use futures_util::{FutureExt, TryFutureExt, future::try_join_all};
 use lipl_core::{
-    Error, Lyric, Playlist, Repo, Result, Summary, ToRepo, Uuid, by_title,
+    Error, Lyric, Playlist, Repo, RepoConfig, Result, Summary, Uuid, by_title,
     parts::{to_parts, to_text},
     redis_error,
 };
@@ -129,7 +129,7 @@ impl FromStr for RedisRepoConfig<String> {
     }
 }
 
-impl<T> ToRepo for RedisRepoConfig<T>
+impl<T> RepoConfig for RedisRepoConfig<T>
 where
     T: IntoConnectionInfo + Send + Clone + 'static,
 {

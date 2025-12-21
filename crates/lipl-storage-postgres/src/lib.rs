@@ -1,6 +1,6 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::TryFutureExt;
-use lipl_core::{Error, Repo, Result, ToRepo, postgres_error};
+use lipl_core::{Error, Repo, RepoConfig, Result, postgres_error};
 use serde::Serialize;
 use tokio_postgres::{
     NoTls, Row,
@@ -109,7 +109,7 @@ impl From<String> for PostgresConfig {
     }
 }
 
-impl ToRepo for PostgresConfig {
+impl RepoConfig for PostgresConfig {
     type Repo = PostgresConnectionPool;
     async fn to_repo(self) -> Result<Self::Repo> {
         connection_pool(&self.connection_string).await

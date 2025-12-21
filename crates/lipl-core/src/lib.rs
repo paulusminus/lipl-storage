@@ -11,7 +11,6 @@ MemoryRepo is usefull for testing perposes.
 pub use crate::uuid::Uuid;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 pub use error::{Error, postgres_error, redis_error};
-// use postcard::to_stdvec;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -45,7 +44,7 @@ pub trait Repo {
 }
 
 #[allow(async_fn_in_trait)]
-pub trait ToRepo {
+pub trait RepoConfig {
     type Repo: Repo;
     async fn to_repo(self) -> Result<Self::Repo>;
 }

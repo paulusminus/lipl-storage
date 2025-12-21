@@ -13,7 +13,7 @@ use futures_channel::mpsc;
 use futures_util::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
 pub use lipl_core::error::{Error, ErrorExtension};
 use lipl_core::vec_ext::VecExt;
-use lipl_core::{Lyric, Playlist, Summary, ToRepo, Uuid, transaction::Request};
+use lipl_core::{Lyric, Playlist, RepoConfig, Summary, Uuid, transaction::Request};
 use request::{delete_by_id, post, select, select_by_id};
 
 pub mod constant;
@@ -33,7 +33,7 @@ impl FromStr for FileRepoConfig {
     }
 }
 
-impl ToRepo for FileRepoConfig {
+impl RepoConfig for FileRepoConfig {
     type Repo = FileRepo;
     async fn to_repo(self) -> lipl_core::Result<Self::Repo> {
         FileRepo::new(self.path)

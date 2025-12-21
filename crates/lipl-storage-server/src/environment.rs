@@ -1,5 +1,5 @@
 use crate::create_router;
-use crate::{Error, Result, ToRepo};
+use crate::{Error, RepoConfig, Result};
 use axum::Router;
 
 fn var(key: &'static str) -> Result<String> {
@@ -16,41 +16,46 @@ pub async fn repo() -> Result<Router> {
     let trimmed = repo_type.trim().to_lowercase();
     let r = trimmed.as_str();
 
+    async fn to_router<T>(repo_config: T) -> Result<Router>
+    where
+        T: RepoConfig + Send + Sync + 'static,
+        <T as RepoConfig>::Repo: Send + Sync + 'static,
+    {
+        repo_config
+            .to_repo()
+            .await
+            .map_err(Into::into)
+            .map(create_router)
+    }
+
     #[cfg(feature = "postgres")]
     if r == "postgres" {
         use lipl_storage_postgres::PostgresConfig;
         let s = postgres_connection()?;
-        let repo = PostgresConfig::from(s).to_repo().await?;
-        return Ok(create_router(repo));
+        return to_router(PostgresConfig::from(s)).await;
     }
 
     #[cfg(feature = "fs")]
     if r == "fs" {
         use lipl_storage_fs::FileRepoConfig;
-        let s = file_path();
-        let repo = s.parse::<FileRepoConfig>()?.to_repo().await?;
-        return Ok(create_router(repo));
+        return to_router(file_path().parse::<FileRepoConfig>()?).await;
     }
 
     #[cfg(feature = "memory")]
     if r == "memory" {
         use lipl_storage_memory::MemoryRepoConfig;
-        let s = include_sample_data()?;
-        let repo = MemoryRepoConfig {
-            sample_data: s,
+        let sample_data = include_sample_data()?;
+        return to_router(MemoryRepoConfig {
+            sample_data,
             transaction_log: None,
-        }
-        .to_repo()
-        .await?;
-        return Ok(create_router(repo));
+        })
+        .await;
     }
 
     #[cfg(feature = "redis")]
     if r == "redis" {
         use lipl_storage_redis::RedisRepoConfig;
-        let s = redis_connection()?;
-        let repo = s.parse::<RedisRepoConfig<_>>()?.to_repo().await?;
-        return Ok(create_router(repo));
+        return to_router(redis_connection()?.parse::<RedisRepoConfig<_>>()?).await;
     }
 
     Err(Error::InvalidConfiguration)

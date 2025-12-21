@@ -1233,7 +1233,6 @@ dependencies = [
 name = "lipl-storage-fs"
 version = "0.5.7"
 dependencies = [
- "async-trait",
  "futures-channel",
  "futures-util",
  "lipl-core",
@@ -1242,6 +1241,10 @@ dependencies = [
  "tokio-stream",
  "tracing",
 ]
+
+[[package]]
+name = "lipl-storage-fs-cap"
+version = "0.5.7"
 
 [[package]]
 name = "lipl-storage-memory"

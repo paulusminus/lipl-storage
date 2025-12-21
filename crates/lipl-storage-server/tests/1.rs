@@ -5,7 +5,7 @@ use axum::{
 };
 use base64::{Engine, engine::general_purpose};
 use http_body_util::BodyExt;
-use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, Summary, ToRepo, Uuid};
+use lipl_core::{Lyric, LyricPost, Playlist, PlaylistPost, RepoConfig, Summary, Uuid};
 use lipl_storage_memory::MemoryRepoConfig;
 use lipl_storage_server::create_router;
 use serde::{Serialize, de::DeserializeOwned};

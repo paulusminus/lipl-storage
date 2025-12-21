@@ -1,7 +1,7 @@
 use axum::Router;
 use axum::routing::get;
 use hyper::StatusCode;
-use lipl_core::{Repo, ToRepo};
+use lipl_core::{Repo, RepoConfig};
 use std::sync::Arc;
 use tokio::signal::unix::{SignalKind, signal};
 use tower::ServiceBuilder;

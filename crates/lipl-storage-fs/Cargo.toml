@@ -9,7 +9,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-async-trait = "0.1.88"
+# async-trait = "0.1.88"
 futures-channel = "0.3.31"
 futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core", features = [

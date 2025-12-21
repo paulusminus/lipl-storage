@@ -2,7 +2,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 
-use async_trait::async_trait;
+// use async_trait::async_trait;
 use futures_util::future::{Ready, ready};
 use futures_util::{Stream, StreamExt, TryFutureExt, TryStreamExt};
 use tokio::fs::{File, read_dir, remove_file};
@@ -14,7 +14,7 @@ use lipl_core::{TOML_PREFIX, Uuid};
 
 type Result<T> = std::result::Result<T, Error>;
 
-#[async_trait]
+// #[async_trait]
 pub trait IO {
     async fn read_string(&self) -> Result<String>;
     async fn read_frontmatter(&self) -> Result<String>;
@@ -33,7 +33,7 @@ pub trait IO {
     fn id(&self) -> Result<Uuid>;
 }
 
-#[async_trait]
+// #[async_trait]
 impl<P> IO for P
 where
     P: AsRef<Path> + Send + Sync,
