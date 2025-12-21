@@ -8,7 +8,7 @@ members = [
     "crates/lipl-storage-memory",
     "crates/lipl-storage-postgres",
     "crates/lipl-storage-redis",
-    "crates/hurl-runner", "crates/lipl-storage-fs-cap",
+    "crates/hurl-runner",
 ]
 
 [workspace.package]
