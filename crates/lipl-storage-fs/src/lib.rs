@@ -110,6 +110,12 @@ where
                 .map(send(sender, "LyricList"))
                 .await
         }
+        Request::LyricListStream(sender) => {
+            io::get_stream(&source_dir, LYRIC_EXTENSION, io::get_lyric)
+                .err_into()
+                .map(send(sender, "LyricListStream"))
+                .await
+        }
         Request::LyricItem(uuid, sender) => {
             io::get_lyric(lyric_path(&uuid))
                 .err_into()

@@ -1,11 +1,12 @@
+use crate::{Error, Lyric, Playlist, Repo, Summary, Uuid};
+use chrono::SecondsFormat;
+use futures_core::Stream;
+use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader},
+    pin::Pin,
     thread::JoinHandle,
 };
-
-use crate::{Lyric, Playlist, Repo, Summary, Uuid};
-use chrono::SecondsFormat;
-use serde::{Deserialize, Serialize};
 
 pub type ResultSender<T> = futures_channel::oneshot::Sender<crate::Result<T>>;
 pub type OptionalTransaction = Option<Transaction>;
@@ -28,6 +29,7 @@ pub enum RequestNew {
 pub enum Request {
     LyricSummaries(ResultSender<Vec<Summary>>),
     LyricList(ResultSender<Vec<Lyric>>),
+    LyricListStream(ResultSender<Pin<Box<dyn Stream<Item = Result<Lyric, Error>>>>>),
     LyricItem(Uuid, ResultSender<Lyric>),
     LyricDelete(Uuid, ResultSender<()>),
     LyricPost(Lyric, ResultSender<Lyric>),

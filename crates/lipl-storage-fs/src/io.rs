@@ -1,5 +1,6 @@
-use futures_util::{TryFuture, TryStreamExt};
+use futures_util::{Stream, StreamExt, TryFuture, TryStreamExt};
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::str::FromStr;
 
 use crate::fs::IO;
@@ -44,6 +45,24 @@ where
         .await
 }
 
+#[allow(dead_code)]
+pub async fn get_stream<'a, P, T, F, Fut>(
+    path: P,
+    ext: &'a str,
+    f: F,
+) -> Result<Pin<Box<dyn Stream<Item = Result<T>> + Send + 'a>>>
+where
+    P: AsRef<Path> + Send + Sync,
+    F: FnMut(PathBuf) -> Fut + Send + Sync + 'a,
+    Fut: TryFuture<Ok = T, Error = Error> + Send + Sync + 'a,
+{
+    Ok(path
+        .get_files(crate::fs::extension_filter(ext))
+        .await?
+        .and_then(f)
+        .boxed())
+}
+
 pub async fn post_item<D, P>(path: P, d: D) -> Result<()>
 where
     D: std::fmt::Display,
@@ -57,4 +76,63 @@ where
     P: AsRef<Path> + Send + Sync,
 {
     get_item::<LyricPost, Lyric>(path.read_string().await?, path.id()?)
+}
+
+#[cfg(test)]
+mod test {
+    use futures_util::TryStreamExt;
+    use lipl_core::to_summary;
+    use std::path::PathBuf;
+
+    use crate::{
+        constant::{LYRIC_EXTENSION, TOML_EXTENSION},
+        io::{get_lyric, get_lyric_summary, get_playlist},
+    };
+
+    use super::get_stream;
+
+    fn data_dir() -> PathBuf {
+        std::env::var("DATA_DIR").unwrap().into()
+    }
+
+    #[tokio::test]
+    async fn test_get_lyric_stream() {
+        let mut stream = get_stream(data_dir(), LYRIC_EXTENSION, get_lyric)
+            .await
+            .unwrap();
+        while let Some(item) = stream.try_next().await.unwrap() {
+            dbg!(item);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_lyric_summary_stream() {
+        let mut stream = get_stream(data_dir(), LYRIC_EXTENSION, get_lyric_summary)
+            .await
+            .unwrap();
+        while let Some(item) = stream.try_next().await.unwrap() {
+            dbg!(item);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_playlist_stream() {
+        let mut stream = get_stream(data_dir(), TOML_EXTENSION, get_playlist)
+            .await
+            .unwrap();
+        while let Some(item) = stream.try_next().await.unwrap() {
+            dbg!(item);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_playlist_summary_stream() {
+        let mut stream = get_stream(data_dir(), TOML_EXTENSION, get_playlist)
+            .await
+            .unwrap()
+            .map_ok(|playlist| to_summary(&playlist));
+        while let Some(item) = stream.try_next().await.unwrap() {
+            dbg!(item);
+        }
+    }
 }
