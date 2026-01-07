@@ -247,7 +247,7 @@ impl FileRepo {
 
 impl FileRepo {
     #[allow(dead_code)]
-    async fn get_lyrics_stream(
+    pub async fn get_lyrics_stream(
         &self,
     ) -> lipl_core::Result<Pin<Box<dyn Stream<Item = Result<Lyric, Error>> + Send>>> {
         select(self.tx.clone(), Request::LyricListStream)
@@ -256,7 +256,7 @@ impl FileRepo {
     }
 
     #[allow(dead_code)]
-    async fn get_playlist_stream(
+    pub async fn get_playlist_stream(
         &self,
     ) -> lipl_core::Result<Pin<Box<dyn Stream<Item = Result<Playlist, Error>> + Send>>> {
         select(self.tx.clone(), Request::PlaylistListStream)
