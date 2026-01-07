@@ -25,16 +25,19 @@ pub enum RequestNew {
     PlaylistPost(Playlist),
 }
 
+type BoxedStream<T> = Pin<Box<dyn Stream<Item = Result<T, Error>> + Send>>;
+
 #[derive(Debug)]
 pub enum Request {
     LyricSummaries(ResultSender<Vec<Summary>>),
     LyricList(ResultSender<Vec<Lyric>>),
-    LyricListStream(ResultSender<Pin<Box<dyn Stream<Item = Result<Lyric, Error>>>>>),
+    LyricListStream(ResultSender<BoxedStream<Lyric>>),
     LyricItem(Uuid, ResultSender<Lyric>),
     LyricDelete(Uuid, ResultSender<()>),
     LyricPost(Lyric, ResultSender<Lyric>),
     PlaylistSummaries(ResultSender<Vec<Summary>>),
     PlaylistList(ResultSender<Vec<Playlist>>),
+    PlaylistListStream(ResultSender<BoxedStream<Playlist>>),
     PlaylistItem(Uuid, ResultSender<Playlist>),
     PlaylistDelete(Uuid, ResultSender<()>),
     PlaylistPost(Playlist, ResultSender<Playlist>),

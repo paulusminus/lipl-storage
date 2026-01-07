@@ -3,6 +3,7 @@ use lipl_core::transaction::{OptionalTransaction, start_log_thread};
 use std::fmt::{Debug, Display};
 use std::fs::OpenOptions;
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::task::JoinHandle;
@@ -10,7 +11,7 @@ use tokio::task::JoinHandle;
 use constant::{LYRIC_EXTENSION, TOML_EXTENSION};
 use fs::IO;
 use futures_channel::mpsc;
-use futures_util::{FutureExt, StreamExt, TryFutureExt, TryStreamExt};
+use futures_util::{FutureExt, Stream, StreamExt, TryFutureExt, TryStreamExt};
 pub use lipl_core::error::{Error, ErrorExtension};
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{Lyric, Playlist, RepoConfig, Summary, Uuid, transaction::Request};
@@ -164,6 +165,12 @@ where
                 .map(send(sender, "PlaylistList"))
                 .await
         }
+        Request::PlaylistListStream(sender) => {
+            io::get_stream(&source_dir, TOML_EXTENSION, io::get_playlist)
+                .err_into()
+                .map(send(sender, "PlaylistListStream"))
+                .await
+        }
         Request::PlaylistItem(uuid, sender) => {
             io::get_playlist(playlist_path(&uuid))
                 .err_into()
@@ -238,6 +245,26 @@ impl FileRepo {
     }
 }
 
+impl FileRepo {
+    #[allow(dead_code)]
+    async fn get_lyrics_stream(
+        &self,
+    ) -> lipl_core::Result<Pin<Box<dyn Stream<Item = Result<Lyric, Error>> + Send>>> {
+        select(self.tx.clone(), Request::LyricListStream)
+            .err_into()
+            .await
+    }
+
+    #[allow(dead_code)]
+    async fn get_playlist_stream(
+        &self,
+    ) -> lipl_core::Result<Pin<Box<dyn Stream<Item = Result<Playlist, Error>> + Send>>> {
+        select(self.tx.clone(), Request::PlaylistListStream)
+            .err_into()
+            .await
+    }
+}
+
 impl Repo for FileRepo {
     async fn get_lyrics(&self) -> lipl_core::Result<Vec<Lyric>> {
         select(self.tx.clone(), Request::LyricList).err_into().await
@@ -303,4 +330,27 @@ impl Repo for FileRepo {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use super::FileRepo;
+    use futures_util::TryStreamExt;
+
+    #[tokio::test]
+    async fn test_get_lyrics_stream() {
+        let path = std::env::var("DATA_DIR").unwrap();
+        let repo = FileRepo::new(path).unwrap();
+        let mut lyrics = repo.get_lyrics_stream().await.unwrap();
+        while let Some(lyric) = lyrics.try_next().await.unwrap() {
+            dbg!(lyric);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_playlist_stream() {
+        let path = std::env::var("DATA_DIR").unwrap();
+        let repo = FileRepo::new(path).unwrap();
+        let mut playlists = repo.get_playlist_stream().await.unwrap();
+        while let Some(playlist) = playlists.try_next().await.unwrap() {
+            dbg!(playlist);
+        }
+    }
+}
