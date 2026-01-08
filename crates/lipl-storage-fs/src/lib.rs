@@ -202,6 +202,14 @@ fn path(source_dir: String, extension: &'static str) -> impl Fn(&Uuid) -> PathBu
 }
 
 impl FileRepo {
+    pub fn new_streaming(source_dir: String) -> lipl_core::Result<Self> {
+        Ok(Self {
+            path: source_dir.clone(),
+            tx: mpsc::channel::<Request>(1).0,
+            _join_handle: Arc::new(tokio::spawn(async move { true })),
+        })
+    }
+
     pub fn new(source_dir: String) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
@@ -260,9 +268,7 @@ impl FileRepo {
     pub async fn get_playlist_stream(
         &self,
     ) -> lipl_core::Result<Pin<Box<dyn Stream<Item = Result<Playlist, Error>> + Send>>> {
-        select(self.tx.clone(), Request::PlaylistListStream)
-            .err_into()
-            .await
+        io::get_stream(&self.path, TOML_EXTENSION, io::get_playlist).await
     }
 }
 
@@ -338,7 +344,7 @@ mod test {
     #[tokio::test]
     async fn test_get_lyrics_stream() {
         let path = std::env::var("DATA_DIR").unwrap();
-        let repo = FileRepo::new(path).unwrap();
+        let repo = FileRepo::new_streaming(path).unwrap();
         let mut lyrics = repo.get_lyrics_stream().await.unwrap();
         while let Some(lyric) = lyrics.try_next().await.unwrap() {
             dbg!(lyric);
@@ -348,7 +354,7 @@ mod test {
     #[tokio::test]
     async fn test_get_playlist_stream() {
         let path = std::env::var("DATA_DIR").unwrap();
-        let repo = FileRepo::new(path).unwrap();
+        let repo = FileRepo::new_streaming(path).unwrap();
         let mut playlists = repo.get_playlist_stream().await.unwrap();
         while let Some(playlist) = playlists.try_next().await.unwrap() {
             dbg!(playlist);
