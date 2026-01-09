@@ -259,9 +259,6 @@ impl FileRepo {
         &self,
     ) -> lipl_core::Result<Pin<Box<dyn Stream<Item = Result<Lyric, Error>> + Send>>> {
         io::get_stream(&self.path, LYRIC_EXTENSION, io::get_lyric).await
-        // select(self.tx.clone(), Request::LyricListStream)
-        //     .err_into()
-        //     .await
     }
 
     #[allow(dead_code)]

@@ -14,7 +14,6 @@ use lipl_core::{TOML_PREFIX, Uuid};
 
 type Result<T> = std::result::Result<T, Error>;
 
-// #[async_trait]
 pub trait IO {
     async fn read_string(&self) -> Result<String>;
     async fn read_frontmatter(&self) -> Result<String>;
@@ -33,7 +32,6 @@ pub trait IO {
     fn id(&self) -> Result<Uuid>;
 }
 
-// #[async_trait]
 impl<P> IO for P
 where
     P: AsRef<Path> + Send + Sync,

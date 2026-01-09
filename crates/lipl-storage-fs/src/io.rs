@@ -92,11 +92,17 @@ mod test {
     use super::get_stream;
 
     fn data_dir() -> PathBuf {
-        std::env::var("DATA_DIR").unwrap().into()
+        if let Ok(workspace) = std::env::var("WORKSPACE") {
+            let test_path = PathBuf::from(workspace).join("test");
+            test_path
+        } else {
+            std::env::var("DATA_DIR").unwrap().into()
+        }
     }
 
     #[tokio::test]
     async fn test_get_lyric_stream() {
+        tokio::fs::create_dir_all(data_dir()).await.unwrap();
         let mut stream = get_stream(data_dir(), LYRIC_EXTENSION, get_lyric)
             .await
             .unwrap();
@@ -107,6 +113,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_lyric_summary_stream() {
+        tokio::fs::create_dir_all(data_dir()).await.unwrap();
         let mut stream = get_stream(data_dir(), LYRIC_EXTENSION, get_lyric_summary)
             .await
             .unwrap();
@@ -117,6 +124,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_playlist_stream() {
+        tokio::fs::create_dir_all(data_dir()).await.unwrap();
         let mut stream = get_stream(data_dir(), TOML_EXTENSION, get_playlist)
             .await
             .unwrap();
@@ -127,6 +135,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_playlist_summary_stream() {
+        tokio::fs::create_dir_all(data_dir()).await.unwrap();
         let mut stream = get_stream(data_dir(), TOML_EXTENSION, get_playlist)
             .await
             .unwrap()

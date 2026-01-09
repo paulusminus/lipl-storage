@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -12,10 +12,10 @@ env:
   POSTGRES_DB: postgres
   LIPL_USERNAME: ${{ secrets.LIPL_USERNAME }}
   LIPL_PASSWORD: ${{ secrets.LIPL_PASSWORD }}
+  WORKSPACE: ${{ github.workspace }}
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     services:
@@ -41,18 +41,18 @@ jobs:
           - 6379:6379
 
     steps:
-    - name: Install musl-tools
-      run: sudo apt install -u musl-tools
-    - name: Install rust musl target
-      run: rustup target add x86_64-unknown-linux-musl
-    - uses: actions/checkout@v4
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
-    - name: Check code formatting
-      run: cargo fmt --check
-    - name: Code linting
-      run: cargo clippy -- -D warnings
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Build fs postgres and redis version
-      run: cargo build --release --verbose -p lipl-storage-server
+      - name: Install musl-tools
+        run: sudo apt install -u musl-tools
+      - name: Install rust musl target
+        run: rustup target add x86_64-unknown-linux-musl
+      - uses: actions/checkout@v4
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      - name: Check code formatting
+        run: cargo fmt --check
+      - name: Code linting
+        run: cargo clippy -- -D warnings
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Build fs postgres and redis version
+        run: cargo build --release --verbose -p lipl-storage-server
