@@ -335,12 +335,24 @@ impl Repo for FileRepo {
 
 #[cfg(test)]
 mod test {
+    use std::path::PathBuf;
+
     use super::FileRepo;
     use futures_util::TryStreamExt;
 
+    fn data_dir() -> PathBuf {
+        if let Ok(workspace) = std::env::var("WORKSPACE") {
+            let test_path = PathBuf::from(workspace).join("test");
+            test_path
+        } else {
+            std::env::var("DATA_DIR").unwrap().into()
+        }
+    }
+
     #[tokio::test]
     async fn test_get_lyrics_stream() {
-        let path = std::env::var("DATA_DIR").unwrap();
+        let path = data_dir().to_string_lossy().to_string();
+        tokio::fs::create_dir_all(&path).await.unwrap();
         let repo = FileRepo::new_streaming(path).unwrap();
         let mut lyrics = repo.get_lyrics_stream().await.unwrap();
         while let Some(lyric) = lyrics.try_next().await.unwrap() {
@@ -350,7 +362,8 @@ mod test {
 
     #[tokio::test]
     async fn test_get_playlist_stream() {
-        let path = std::env::var("DATA_DIR").unwrap();
+        let path = data_dir().to_string_lossy().to_string();
+        tokio::fs::create_dir_all(&path).await.unwrap();
         let repo = FileRepo::new_streaming(path).unwrap();
         let mut playlists = repo.get_playlist_stream().await.unwrap();
         while let Some(playlist) = playlists.try_next().await.unwrap() {
