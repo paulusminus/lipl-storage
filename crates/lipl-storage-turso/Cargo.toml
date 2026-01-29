@@ -1,0 +1,22 @@
+[package]
+name = "lipl-storage-turso"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]
+futures-core = "0.3.31"
+futures-util = "0.3.31"
+lipl-core = { version = "0.5", path = "../lipl-core" }
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = "2.0.18"
+tokio = { version = "1.49.0", features = ["rt", "macros"] }
+tokio-stream = "0.1.18"
+tracing = "0.1.44"
+turso = "0.4.3"
+
+[dev-dependencies]
+lipl-storage-memory = { path = "../lipl-storage-memory" }
