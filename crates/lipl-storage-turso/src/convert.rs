@@ -24,8 +24,7 @@ pub fn to_lyric(row: Row) -> Result<Lyric> {
         id: row
             .get::<String>(0)
             .map_err(postgres_error)
-            .and_then(|s| s.parse::<Uuid>())?
-            .into(),
+            .and_then(|s| s.parse::<Uuid>())?,
         title: row.get::<String>(1).map_err(postgres_error)?,
         parts: lipl_core::parts::to_parts(&row.get::<String>(2).map_err(postgres_error)?),
     })
@@ -54,8 +53,7 @@ pub fn to_summary(row: Row) -> Result<Summary> {
         id: row
             .get::<String>(0)
             .map_err(postgres_error)
-            .and_then(|s| s.parse::<Uuid>())?
-            .into(),
+            .and_then(|s| s.parse::<Uuid>())?,
         title: row.get::<String>(1).map_err(postgres_error)?,
     })
 }

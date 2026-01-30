@@ -52,6 +52,11 @@ impl TursoDatabase {
         let result = statement.query_row(params).await.map_err(postgres_error)?;
         convert(result)
     }
+
+    #[allow(dead_code)]
+    async fn clear(&self) -> Result<()> {
+        self.batch_execute(include_str!("delete_data_db.sql")).await
+    }
 }
 
 pub struct TursoConfig {
@@ -79,21 +84,19 @@ impl RepoConfig for TursoConfig {
 
 #[cfg(test)]
 mod test {
-    use super::TursoConfig;
+    use super::{TursoConfig, TursoDatabase};
     use lipl_core::{Repo, RepoConfig};
 
     pub const TEST_DATABASE_NAME: &str =
         "/home/paul/Code/rust/lipl-storage/crates/lipl-storage-turso/data/lipl.sqlite";
 
-    #[tokio::test]
-    async fn create_database() {
+    async fn create_database() -> TursoDatabase {
         let config = TursoConfig::from(TEST_DATABASE_NAME.to_owned());
         let repo = config.to_repo().await.unwrap();
         repo.batch_execute(include_str!("create_db.sql"))
             .await
             .unwrap();
-
-        // Test query functionality
+        repo
     }
 
     #[tokio::test]
@@ -106,16 +109,8 @@ mod test {
         .await
         .unwrap();
 
-        let turso_repo = TursoConfig::from(TEST_DATABASE_NAME.to_owned())
-            .to_repo()
-            .await
-            .unwrap();
-
-        // Clear existing data
-        turso_repo
-            .batch_execute(include_str!("delete_data_db.sql"))
-            .await
-            .unwrap();
+        let turso_repo = create_database().await;
+        turso_repo.clear().await.unwrap();
 
         // Copy data from memory to Turso
         for lyric in memory_repo.get_lyrics().await.unwrap() {
@@ -127,5 +122,14 @@ mod test {
             dbg!(&playlist);
             turso_repo.upsert_playlist(playlist).await.unwrap();
         }
+    }
+
+    #[tokio::test]
+    async fn test_get_playlists() {
+        let turso_repo = create_database().await;
+
+        let playlists = turso_repo.get_playlists().await.unwrap();
+        dbg!(playlists.first());
+        assert!(!playlists.is_empty());
     }
 }
