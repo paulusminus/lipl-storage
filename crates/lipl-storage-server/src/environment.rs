@@ -58,6 +58,12 @@ pub async fn repo() -> Result<Router> {
         return to_router(redis_connection()?.parse::<RedisRepoConfig<_>>()?).await;
     }
 
+    #[cfg(feature = "turso")]
+    if r == "turso" {
+        use lipl_storage_turso::TursoConfig;
+        return to_router(turso_connection().map(TursoConfig::from)?).await;
+    }
+
     Err(Error::InvalidConfiguration)
 }
 
@@ -69,6 +75,11 @@ fn postgres_connection() -> Result<String> {
 #[cfg(feature = "redis")]
 fn redis_connection() -> Result<String> {
     var("LIPL_STORAGE_REDIS_CONNECTION")
+}
+
+#[cfg(feature = "turso")]
+fn turso_connection() -> Result<String> {
+    var("LIPL_STORAGE_TURSO_DATABASE_PATH")
 }
 
 #[cfg(feature = "fs")]

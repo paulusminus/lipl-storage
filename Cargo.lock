@@ -1702,6 +1702,7 @@ dependencies = [
  "lipl-storage-memory",
  "lipl-storage-postgres",
  "lipl-storage-redis",
+ "lipl-storage-turso",
  "mimalloc",
  "serde",
  "serde_json",

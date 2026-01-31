@@ -9,11 +9,12 @@ repository.workspace = true
 version.workspace = true
 
 [features]
-default = ["fs", "memory", "postgres", "pwa", "redis"]
+default = ["fs", "memory", "postgres", "pwa", "redis", "turso"]
 postgres = ["dep:lipl-storage-postgres"]
 memory = ["dep:lipl-storage-memory"]
 fs = ["dep:lipl-storage-fs"]
 redis = ["dep:lipl-storage-redis"]
+turso = ["dep:lipl-storage-turso"]
 pwa = ["tower-http/fs"]
 
 [dependencies]
@@ -24,6 +25,7 @@ lipl-storage-postgres = { version = "0.5", path = "../lipl-storage-postgres", op
 lipl-storage-memory = { version = "0.5", path = "../lipl-storage-memory", optional = true }
 lipl-storage-fs = { version = "0.5", path = "../lipl-storage-fs", optional = true }
 lipl-storage-redis = { version = "0.5", path = "../lipl-storage-redis", optional = true }
+lipl-storage-turso = { version = "0.5", path = "../lipl-storage-turso", optional = true }
 lipl-core = { version = "0.5", path = "../lipl-core" }
 serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
