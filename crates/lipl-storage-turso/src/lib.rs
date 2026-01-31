@@ -98,8 +98,7 @@ mod test {
     use super::{TursoConfig, TursoDatabase};
     use lipl_core::{Playlist, Repo, RepoConfig, Uuid};
 
-    pub const TEST_DATABASE_NAME: &str =
-        "/home/paul/Code/rust/lipl-storage/crates/lipl-storage-turso/data/lipl.sqlite";
+    pub const TEST_DATABASE_NAME: &str = "data/lipl.sqlite";
 
     async fn create_database() -> TursoDatabase {
         let config = TursoConfig::from(TEST_DATABASE_NAME.to_owned());
@@ -133,33 +132,20 @@ mod test {
             dbg!(&playlist);
             turso_repo.upsert_playlist(playlist).await.unwrap();
         }
-    }
-
-    #[tokio::test]
-    async fn test_get_playlists() {
-        let turso_repo = create_database().await;
 
         let playlists = turso_repo.get_playlists().await.unwrap();
         dbg!(playlists.first());
         assert!(!playlists.is_empty());
-    }
 
-    #[tokio::test]
-    async fn test_get_playlist() {
-        let turso_repo = create_database().await;
-        let id = "Tpsi3jQaQmK5wnM8hv8kGq".parse::<Uuid>().unwrap();
-        let playlist = turso_repo.get_playlist(id).await.unwrap();
-        dbg!(playlist);
-    }
-
-    #[tokio::test]
-    async fn add_playlist() {
-        let turso_repo = create_database().await;
+        let id = Uuid::default();
         let playlist = Playlist {
-            id: Uuid::default(),
+            id,
             title: "New Playlist".to_string(),
             members: vec![],
         };
         turso_repo.upsert_playlist(playlist).await.unwrap();
+
+        let playlist = turso_repo.get_playlist(id).await.unwrap();
+        assert_eq!(playlist.title, *"New Playlist");
     }
 }
