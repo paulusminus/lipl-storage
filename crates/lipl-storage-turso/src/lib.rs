@@ -66,8 +66,11 @@ impl TursoDatabase {
         convert(result)
     }
 
-    #[allow(dead_code)]
-    async fn clear(&self) -> Result<()> {
+    pub async fn schema(&self) -> Result<()> {
+        self.batch_execute(include_str!("create_db.sql")).await
+    }
+
+    pub async fn clear(&self) -> Result<()> {
         self.batch_execute(include_str!("delete_data_db.sql")).await
     }
 }
@@ -90,62 +93,5 @@ impl RepoConfig for TursoConfig {
             .await
             .err_into()
             .and_then(|db| db.connect().map(|c| TursoDatabase { inner: c }).err_into())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::{TursoConfig, TursoDatabase};
-    use lipl_core::{Playlist, Repo, RepoConfig, Uuid};
-
-    pub const TEST_DATABASE_NAME: &str = "data/lipl.sqlite";
-
-    async fn create_database() -> TursoDatabase {
-        let config = TursoConfig::from(TEST_DATABASE_NAME.to_owned());
-        let repo = config.to_repo().await.unwrap();
-        repo.batch_execute(include_str!("create_db.sql"))
-            .await
-            .unwrap();
-        repo
-    }
-
-    #[tokio::test]
-    async fn copy_memory_database() {
-        let memory_repo = lipl_storage_memory::MemoryRepoConfig {
-            sample_data: true,
-            transaction_log: None,
-        }
-        .to_repo()
-        .await
-        .unwrap();
-
-        let turso_repo = create_database().await;
-        turso_repo.clear().await.unwrap();
-
-        // Copy data from memory to Turso
-        for lyric in memory_repo.get_lyrics().await.unwrap() {
-            dbg!(&lyric);
-            turso_repo.upsert_lyric(lyric).await.unwrap();
-        }
-
-        for playlist in memory_repo.get_playlists().await.unwrap() {
-            dbg!(&playlist);
-            turso_repo.upsert_playlist(playlist).await.unwrap();
-        }
-
-        let playlists = turso_repo.get_playlists().await.unwrap();
-        dbg!(playlists.first());
-        assert!(!playlists.is_empty());
-
-        let id = Uuid::default();
-        let playlist = Playlist {
-            id,
-            title: "New Playlist".to_string(),
-            members: vec![],
-        };
-        turso_repo.upsert_playlist(playlist).await.unwrap();
-
-        let playlist = turso_repo.get_playlist(id).await.unwrap();
-        assert_eq!(playlist.title, *"New Playlist");
     }
 }

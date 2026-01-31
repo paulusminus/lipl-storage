@@ -2,3 +2,5 @@
 data/
 data_lipl/
 target/
+lipl.sqlite
+lipl.sqlite-wal
