@@ -89,6 +89,9 @@ pub enum Error {
     #[error("Redis: {0}")]
     Redis(Box<dyn std::error::Error + Send + Sync>),
 
+    #[error("Turso: {0}")]
+    Turso(Box<dyn std::error::Error + Send + Sync>),
+
     #[error("Key: {0}")]
     Key(String),
 

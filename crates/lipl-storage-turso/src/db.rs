@@ -77,7 +77,7 @@ impl Repo for TursoDatabase {
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {
         use futures_util::stream::TryStreamExt;
         self.query(
-            playlist::LIST_FULL_SQLITE,
+            playlist::LIST_FULL,
             convert::to_playlist,
             Vec::<&str>::new(),
         )
@@ -89,7 +89,7 @@ impl Repo for TursoDatabase {
     async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
         let playlist = self
             .query_one(
-                playlist::ITEM_SQLITE,
+                playlist::ITEM,
                 convert::to_playlist,
                 &[uuid.to_string().as_str()],
             )
@@ -157,8 +157,8 @@ mod lyric {
 
 mod playlist {
     pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
-    pub const LIST_FULL_SQLITE: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
-    pub const ITEM_SQLITE: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1";
+    pub const LIST_FULL: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist LEFT JOIN (SELECT * FROM member ORDER BY ordering) ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
+    pub const ITEM: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1";
     pub const DELETE: &str = "DELETE FROM playlist WHERE id = $1;";
     pub const UPSERT: &str = "INSERT INTO playlist (id, title) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET title = $2;";
 }

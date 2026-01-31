@@ -1,4 +1,4 @@
-use lipl_core::{RepoConfig, Result, postgres_error};
+use lipl_core::{RepoConfig, Result};
 use serde::Serialize;
 use tokio_stream::wrappers::ReceiverStream;
 use turso::{Builder, IntoParams, Row};
@@ -8,6 +8,19 @@ mod db;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 
+trait ErrInto<T> {
+    fn err_into(self) -> Result<T>;
+}
+
+impl<T, E> ErrInto<T> for std::result::Result<T, E>
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    fn err_into(self) -> Result<T> {
+        self.map_err(|e| lipl_core::Error::Turso(Box::new(e)))
+    }
+}
+
 #[derive(Clone)]
 pub struct TursoDatabase {
     inner: turso::Connection,
@@ -15,13 +28,13 @@ pub struct TursoDatabase {
 
 impl TursoDatabase {
     async fn execute(&self, sql: &'static str, params: impl IntoParams) -> Result<u64> {
-        let mut statement = self.inner.prepare(sql).await.map_err(postgres_error)?;
-        let count = statement.execute(params).await.map_err(postgres_error)?;
+        let mut statement = self.inner.prepare(sql).await.err_into()?;
+        let count = statement.execute(params).await.err_into()?;
         Ok(count)
     }
 
     pub async fn batch_execute(&self, sql: &str) -> Result<()> {
-        self.inner.execute_batch(sql).await.map_err(postgres_error)
+        self.inner.execute_batch(sql).await.err_into()
     }
 
     async fn query<T>(
@@ -33,8 +46,8 @@ impl TursoDatabase {
     where
         T: Serialize + Send + Sync + 'static,
     {
-        let mut statement = self.inner.prepare(sql).await.map_err(postgres_error)?;
-        let rows = statement.query(params).await.map_err(postgres_error)?;
+        let mut statement = self.inner.prepare(sql).await.err_into()?;
+        let rows = statement.query(params).await.err_into()?;
 
         convert::to_list(convert)(rows)
     }
@@ -48,8 +61,8 @@ impl TursoDatabase {
     where
         T: Serialize,
     {
-        let mut statement = self.inner.prepare(sql).await.map_err(postgres_error)?;
-        let result = statement.query_row(params).await.map_err(postgres_error)?;
+        let mut statement = self.inner.prepare(sql).await.err_into()?;
+        let result = statement.query_row(params).await.err_into()?;
         convert(result)
     }
 
@@ -72,20 +85,18 @@ impl From<String> for TursoConfig {
 impl RepoConfig for TursoConfig {
     type Repo = TursoDatabase;
     async fn to_repo(self) -> Result<Self::Repo> {
-        let db = Builder::new_local(&self.local)
+        Builder::new_local(&self.local)
             .build()
             .await
-            .map_err(postgres_error)?;
-        db.connect()
-            .map(|c| TursoDatabase { inner: c })
-            .map_err(postgres_error)
+            .err_into()
+            .and_then(|db| db.connect().map(|c| TursoDatabase { inner: c }).err_into())
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::{TursoConfig, TursoDatabase};
-    use lipl_core::{Repo, RepoConfig};
+    use lipl_core::{Playlist, Repo, RepoConfig, Uuid};
 
     pub const TEST_DATABASE_NAME: &str =
         "/home/paul/Code/rust/lipl-storage/crates/lipl-storage-turso/data/lipl.sqlite";
@@ -131,5 +142,24 @@ mod test {
         let playlists = turso_repo.get_playlists().await.unwrap();
         dbg!(playlists.first());
         assert!(!playlists.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_get_playlist() {
+        let turso_repo = create_database().await;
+        let playlists = turso_repo.get_playlists().await.unwrap();
+        dbg!(playlists);
+    }
+
+    #[tokio::test]
+    async fn add_playlist() {
+        let turso_repo = create_database().await;
+        let id = Uuid::default();
+        let playlist = Playlist {
+            id,
+            title: "New Playlist".to_string(),
+            members: vec![],
+        };
+        turso_repo.upsert_playlist(playlist).await.unwrap();
     }
 }
