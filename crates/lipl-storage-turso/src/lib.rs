@@ -147,16 +147,16 @@ mod test {
     #[tokio::test]
     async fn test_get_playlist() {
         let turso_repo = create_database().await;
-        let playlists = turso_repo.get_playlists().await.unwrap();
-        dbg!(playlists);
+        let id = "Tpsi3jQaQmK5wnM8hv8kGq".parse::<Uuid>().unwrap();
+        let playlist = turso_repo.get_playlist(id).await.unwrap();
+        dbg!(playlist);
     }
 
     #[tokio::test]
     async fn add_playlist() {
         let turso_repo = create_database().await;
-        let id = Uuid::default();
         let playlist = Playlist {
-            id,
+            id: Uuid::default(),
             title: "New Playlist".to_string(),
             members: vec![],
         };

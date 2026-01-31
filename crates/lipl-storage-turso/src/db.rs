@@ -158,7 +158,7 @@ mod lyric {
 mod playlist {
     pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
     pub const LIST_FULL: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist LEFT JOIN (SELECT * FROM member ORDER BY ordering) ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
-    pub const ITEM: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1";
+    pub const ITEM: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist LEFT JOIN (SELECT * FROM member ORDER BY ordering) ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1;";
     pub const DELETE: &str = "DELETE FROM playlist WHERE id = $1;";
     pub const UPSERT: &str = "INSERT INTO playlist (id, title) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET title = $2;";
 }
