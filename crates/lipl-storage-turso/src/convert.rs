@@ -39,7 +39,6 @@ pub fn to_playlist(row: Row) -> Result<Playlist> {
         .and_then(|s| s.parse::<Uuid>())?;
     let title = row.get::<String>(1).err_into()?;
     let nullable_row = row.get_value(2).err_into()?;
-    dbg!(&nullable_row);
     let members = if nullable_row.is_null() {
         vec![]
     } else {
@@ -58,6 +57,9 @@ pub fn to_summary(row: Row) -> Result<Summary> {
     row.get::<String>(0)
         .err_into()
         .and_then(|s| s.parse::<Uuid>())
-        .and_then(|id| row.get::<String>(1).err_into().map(|title| (id, title)))
-        .map(|(id, title)| Summary { id, title })
+        .and_then(|id| {
+            row.get::<String>(1)
+                .err_into()
+                .map(|title| Summary { id, title })
+        })
 }

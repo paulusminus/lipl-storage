@@ -1722,6 +1722,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "lipl-core",
+ "lipl-storage-fs",
  "lipl-storage-memory",
  "serde",
  "thiserror",

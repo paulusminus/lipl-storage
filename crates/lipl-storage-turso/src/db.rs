@@ -108,7 +108,6 @@ impl Repo for TursoDatabase {
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
         let mut connection = self.inner.clone();
         let transaction = connection.transaction().await.map_err(postgres_error)?;
-        dbg!("Starting upserting playlist");
         let _ = transaction
             .execute(
                 playlist::UPSERT,
@@ -116,14 +115,10 @@ impl Repo for TursoDatabase {
             )
             .await
             .map_err(postgres_error)?;
-        dbg!("Finished upserting playlist");
-        dbg!("Starting deleting members");
         let _ = transaction
             .execute(member::DELETE, &[playlist.id.to_string().as_str()])
             .await
             .map_err(postgres_error)?;
-        dbg!("Finished deleting members");
-        dbg!("Starting inserting members");
         for (index, lyric_id) in playlist.members.iter().enumerate() {
             let _ = transaction
                 .execute(
@@ -137,7 +132,6 @@ impl Repo for TursoDatabase {
                 .await
                 .map_err(postgres_error)?;
         }
-        dbg!("Finished inserting members");
         transaction.commit().await.map_err(postgres_error)?;
         Ok(playlist)
     }

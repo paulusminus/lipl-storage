@@ -20,4 +20,5 @@ turso = "0.4.3"
 
 [dev-dependencies]
 lipl-storage-memory = { path = "../lipl-storage-memory" }
+lipl-storage-fs = { path = "../lipl-storage-fs" }
 tokio = { version = "1.49.0", features = ["rt", "macros", "rt-multi-thread"] }
