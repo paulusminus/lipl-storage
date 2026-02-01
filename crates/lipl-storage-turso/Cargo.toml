@@ -16,7 +16,7 @@ thiserror = "2.0.18"
 tokio = { version = "1.49.0", features = ["rt", "macros"] }
 tokio-stream = "0.1.18"
 tracing = "0.1.44"
-turso = "0.4.3"
+turso = { version = "0.4.3", default-features = false }
 
 [dev-dependencies]
 lipl-storage-memory = { path = "../lipl-storage-memory" }

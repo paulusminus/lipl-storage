@@ -3060,7 +3060,6 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6906d37d281135404586b3cdf91be43259aff280e4cc7cccc3a6b3571f7fa359"
 dependencies = [
- "mimalloc",
  "thiserror",
  "tracing",
  "tracing-subscriber",
