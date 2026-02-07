@@ -5,6 +5,7 @@ use turso::{Builder, IntoParams, Row};
 
 mod convert;
 mod db;
+// mod turso_connection_ext;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 
@@ -21,7 +22,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TursoDatabase {
     inner: turso::Connection,
 }

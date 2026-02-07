@@ -56,25 +56,16 @@ pub fn to_lyric(row: Row) -> Result<Lyric> {
 }
 
 pub fn to_playlist(row: Row) -> Result<Playlist> {
-    let id = row.get_uuid(0)?;
-    let title = row.get_string(1)?;
-    let members = row.get_uuids(2)?;
-    // let nullable_row = row.get_value(2).err_into()?;
-    // let members = if nullable_row.is_null() {
-    //     vec![]
-    // } else {
-    //     nullable_row
-    //         .as_text()
-    //         .ok_or(turso::Error::QueryReturnedNoRows)
-    //         .err_into()?
-    //         .split(',')
-    //         .map(|member| member.parse::<Uuid>())
-    //         .collect::<Result<Vec<Uuid>>>()?
-    // };
-    Ok(Playlist { id, title, members })
+    Ok(Playlist {
+        id: row.get_uuid(0)?,
+        title: row.get_string(1)?,
+        members: row.get_uuids(2)?,
+    })
 }
 
 pub fn to_summary(row: Row) -> Result<Summary> {
-    row.get_uuid(0)
-        .and_then(|id| row.get_string(1).map(|title| Summary { id, title }))
+    Ok(Summary {
+        id: row.get_uuid(0)?,
+        title: row.get_string(1)?,
+    })
 }

@@ -1,9 +1,10 @@
 use futures_util::{TryFutureExt, TryStreamExt};
 use lipl_core::postgres_error;
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
+use tokio_stream::wrappers::ReceiverStream;
 use turso::Value;
 
-use crate::TursoDatabase;
+use crate::{ErrInto, TursoDatabase};
 
 use super::convert;
 
@@ -22,21 +23,39 @@ fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
     }
 }
 
-impl Repo for TursoDatabase {
-    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
-        self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
-            .map_err(postgres_error)
-            .await?
-            .try_collect::<Vec<Summary>>()
+impl TursoDatabase {
+    pub async fn lyrics_stream(&self) -> Result<ReceiverStream<Result<Lyric>>> {
+        self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
             .await
     }
 
-    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
-        self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
-            .map_err(postgres_error)
-            .await?
-            .try_collect::<Vec<Lyric>>()
+    pub async fn lyrics_summaries_stream(&self) -> Result<ReceiverStream<Result<Summary>>> {
+        self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
             .await
+    }
+
+    pub async fn playlists_stream(&self) -> Result<ReceiverStream<Result<Playlist>>> {
+        self.query(
+            playlist::LIST_FULL,
+            convert::to_playlist,
+            Vec::<&str>::new(),
+        )
+        .await
+    }
+
+    pub async fn playlists_summaries_stream(&self) -> Result<ReceiverStream<Result<Summary>>> {
+        self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
+            .await
+    }
+}
+
+impl Repo for TursoDatabase {
+    async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
+        self.lyrics_summaries_stream().await?.try_collect().await
+    }
+
+    async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
+        self.lyrics_stream().await?.try_collect().await
     }
 
     async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
@@ -55,7 +74,6 @@ impl Repo for TursoDatabase {
                 to_text(&lyric.parts).as_str(),
             ],
         )
-        .err_into()
         .await
     }
 
@@ -67,23 +85,11 @@ impl Repo for TursoDatabase {
     }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
-        self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
-            .map_err(postgres_error)
-            .await?
-            .try_collect::<Vec<Summary>>()
-            .await
+        self.playlists_summaries_stream().await?.try_collect().await
     }
 
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {
-        use futures_util::stream::TryStreamExt;
-        self.query(
-            playlist::LIST_FULL,
-            convert::to_playlist,
-            Vec::<&str>::new(),
-        )
-        .await?
-        .try_collect::<Vec<_>>()
-        .await
+        self.playlists_stream().await?.try_collect().await
     }
 
     async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
@@ -107,7 +113,7 @@ impl Repo for TursoDatabase {
 
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
         let mut connection = self.inner.clone();
-        let transaction = connection.transaction().await.map_err(postgres_error)?;
+        let transaction = connection.transaction().await.err_into()?;
         let _ = transaction
             .execute(
                 playlist::UPSERT,
@@ -118,7 +124,7 @@ impl Repo for TursoDatabase {
         let _ = transaction
             .execute(member::DELETE, &[playlist.id.to_string().as_str()])
             .await
-            .map_err(postgres_error)?;
+            .err_into()?;
         for (index, lyric_id) in playlist.members.iter().enumerate() {
             let _ = transaction
                 .execute(
@@ -130,9 +136,9 @@ impl Repo for TursoDatabase {
                     ],
                 )
                 .await
-                .map_err(postgres_error)?;
+                .err_into()?;
         }
-        transaction.commit().await.map_err(postgres_error)?;
+        transaction.commit().await.err_into()?;
         Ok(playlist)
     }
 
