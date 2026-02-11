@@ -29,5 +29,5 @@ thiserror = "2.0.12"
 tokio = { version = "1.46.1", features = ["rt"], optional = true }
 trait-variant = "0.1.2"
 uuid = { version = "1.17.0", features = ["v4"] }
-toml = { version = "0.9.8", features = ["serde"] }
+toml = { version = "1.0.0", features = ["serde"] }
 futures-core = "0.3.31"
