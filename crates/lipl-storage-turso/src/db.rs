@@ -1,5 +1,4 @@
 use futures_util::{TryFutureExt, TryStreamExt};
-use lipl_core::postgres_error;
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
 use tokio_stream::wrappers::ReceiverStream;
 use turso::Value;
@@ -51,11 +50,15 @@ impl TursoDatabase {
 
 impl Repo for TursoDatabase {
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
-        self.lyrics_summaries_stream().await?.try_collect().await
+        self.lyrics_summaries_stream()
+            .and_then(TryStreamExt::try_collect)
+            .await
     }
 
     async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
-        self.lyrics_stream().await?.try_collect().await
+        self.lyrics_stream()
+            .and_then(TryStreamExt::try_collect)
+            .await
     }
 
     async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
@@ -85,11 +88,15 @@ impl Repo for TursoDatabase {
     }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
-        self.playlists_summaries_stream().await?.try_collect().await
+        self.playlists_summaries_stream()
+            .and_then(TryStreamExt::try_collect)
+            .await
     }
 
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {
-        self.playlists_stream().await?.try_collect().await
+        self.playlists_stream()
+            .and_then(TryStreamExt::try_collect)
+            .await
     }
 
     async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
@@ -120,7 +127,7 @@ impl Repo for TursoDatabase {
                 &[playlist.id.to_string().as_str(), playlist.title.as_str()],
             )
             .await
-            .map_err(postgres_error)?;
+            .err_into()?;
         let _ = transaction
             .execute(member::DELETE, &[playlist.id.to_string().as_str()])
             .await

@@ -1757,13 +1757,10 @@ dependencies = [
 name = "lipl-storage-turso"
 version = "0.5.7"
 dependencies = [
- "futures-core",
  "futures-util",
  "lipl-core",
  "lipl-storage-fs",
  "lipl-storage-memory",
- "serde",
- "thiserror",
  "tokio",
  "tokio-stream",
  "tracing",

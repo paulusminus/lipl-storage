@@ -1,11 +1,10 @@
+use futures_util::TryFutureExt;
 use lipl_core::{RepoConfig, Result};
-use serde::Serialize;
 use tokio_stream::wrappers::ReceiverStream;
 use turso::{Builder, IntoParams, Row};
 
 mod convert;
 mod db;
-// mod turso_connection_ext;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 
@@ -22,16 +21,37 @@ where
     }
 }
 
+trait OkInto<E, T> {
+    fn ok_into(self) -> std::result::Result<T, E>;
+}
+
+impl<E, S, T> OkInto<E, T> for std::result::Result<S, E>
+where
+    S: Into<T>,
+{
+    fn ok_into(self) -> std::result::Result<T, E> {
+        self.map(Into::into)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct TursoDatabase {
     inner: turso::Connection,
 }
 
+impl From<turso::Connection> for TursoDatabase {
+    fn from(inner: turso::Connection) -> Self {
+        Self { inner }
+    }
+}
+
 impl TursoDatabase {
     async fn execute(&self, sql: &'static str, params: impl IntoParams) -> Result<u64> {
-        let mut statement = self.inner.prepare(sql).await.err_into()?;
-        let count = statement.execute(params).await.err_into()?;
-        Ok(count)
+        self.inner
+            .prepare(sql)
+            .and_then(|mut statement| async move { statement.execute(params).await })
+            .await
+            .err_into()
     }
 
     pub async fn batch_execute(&self, sql: &str) -> Result<()> {
@@ -45,12 +65,14 @@ impl TursoDatabase {
         params: impl IntoParams,
     ) -> Result<ReceiverStream<Result<T>>>
     where
-        T: Serialize + Send + Sync + 'static,
+        T: Send + Sync + 'static,
     {
-        let mut statement = self.inner.prepare(sql).await.err_into()?;
-        let rows = statement.query(params).await.err_into()?;
-
-        convert::to_list(convert)(rows)
+        self.inner
+            .prepare(sql)
+            .and_then(|mut statement| async move { statement.query(params).await })
+            .await
+            .err_into()
+            .and_then(convert::to_list(convert))
     }
 
     async fn query_one<T>(
@@ -58,13 +80,13 @@ impl TursoDatabase {
         sql: &'static str,
         convert: fn(Row) -> Result<T>,
         params: impl IntoParams,
-    ) -> Result<T>
-    where
-        T: Serialize,
-    {
-        let mut statement = self.inner.prepare(sql).await.err_into()?;
-        let result = statement.query_row(params).await.err_into()?;
-        convert(result)
+    ) -> Result<T> {
+        self.inner
+            .prepare(sql)
+            .and_then(|mut statement| async move { statement.query_row(params).await })
+            .await
+            .err_into()
+            .and_then(convert)
     }
 
     pub async fn schema(&self) -> Result<()> {
@@ -77,22 +99,27 @@ impl TursoDatabase {
 }
 
 pub struct TursoConfig {
-    local: String,
+    path: String,
 }
 
 impl From<String> for TursoConfig {
     fn from(path: String) -> Self {
-        TursoConfig { local: path }
+        Self { path }
     }
 }
 
 impl RepoConfig for TursoConfig {
     type Repo = TursoDatabase;
     async fn to_repo(self) -> Result<Self::Repo> {
-        Builder::new_local(&self.local)
+        fn connect(db: turso::Database) -> turso::Result<turso::Connection> {
+            db.connect()
+        }
+
+        Builder::new_local(&self.path)
             .build()
             .await
+            .and_then(connect)
+            .ok_into()
             .err_into()
-            .and_then(|db| db.connect().map(|c| TursoDatabase { inner: c }).err_into())
     }
 }

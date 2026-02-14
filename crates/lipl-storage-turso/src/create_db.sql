@@ -5,10 +5,14 @@ CREATE TABLE IF NOT EXISTS lyric (
     parts VARCHAR
 );
 
+CREATE INDEX IF NOT EXISTS lyric_title ON lyric (title);
+
 CREATE TABLE IF NOT EXISTS playlist (
     id VARCHAR PRIMARY KEY,
     title VARCHAR UNIQUE NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS playlist_title ON playlist (title);
 
 CREATE TABLE IF NOT EXISTS member (
     playlist_id VARCHAR NOT NULL REFERENCES playlist ON DELETE CASCADE,
