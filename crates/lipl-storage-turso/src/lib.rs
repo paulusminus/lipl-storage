@@ -5,6 +5,7 @@ use turso::{Builder, IntoParams, Row};
 
 mod convert;
 mod db;
+// mod row_stream;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 

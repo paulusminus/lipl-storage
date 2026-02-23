@@ -43,7 +43,7 @@ where
             }
             Ok::<_, lipl_core::Error>(())
         });
-        Ok(ReceiverStream::new(rx))
+        Ok(rx.into())
     }
 }
 
