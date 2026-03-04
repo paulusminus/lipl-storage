@@ -2211,9 +2211,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.44"
+version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21b2ebcf727b7760c461f091f9f0f539b77b8e87f2fd88131e7f1b433b3cece4"
+checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
 dependencies = [
  "proc-macro2",
 ]
@@ -2595,9 +2595,9 @@ checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 
 [[package]]
 name = "simsimd"
-version = "6.5.13"
+version = "6.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f81af684ca3dc160907f1478d779bdfd8bae52f55f4c58caba0229670a83a0d"
+checksum = "eccacd6981edc21fa50e79e0c13acd5552665e93a1c3c26f44ef636c0e2c3290"
 dependencies = [
  "cc",
 ]
