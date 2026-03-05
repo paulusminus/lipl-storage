@@ -13,7 +13,7 @@ lipl-core = { version = "0.5", path = "../lipl-core" }
 tokio = { version = "1.49.0", features = ["rt", "macros"] }
 tokio-stream = "0.1.18"
 tracing = "0.1.44"
-turso = { version = "0.4.3", default-features = false }
+turso = { version = "0.5.0", default-features = false }
 
 [dev-dependencies]
 lipl-storage-memory = { path = "../lipl-storage-memory" }
