@@ -119,6 +119,6 @@ jobs:
       - name: Check environment
         run: echo prefix=${PREFIX},port=${PORT}
       - name: Run the docker image
-        run: docker run -d -v lipl-storage-fs:/lipl -p ${{ env.PORT}}:${{ env.PORT }} --env LIPL_USERNAME --env LIPL_PASSWORD {{ env.REGISTRY }}/paulusminus/lipl-storage
+        run: docker run -d -v lipl-storage-fs:/lipl -p ${{ env.PORT}}:${{ env.PORT }} --env LIPL_USERNAME --env LIPL_PASSWORD ${{ env.REGISTRY }}/paulusminus/lipl-storage
       - name: Fill the database with known data
         run: cargo run --release -p hurl-runner
