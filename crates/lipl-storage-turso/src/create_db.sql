@@ -34,3 +34,13 @@ LEFT JOIN (SELECT * FROM member ORDER BY ordering)
 ON playlist.id = playlist_id
 GROUP BY playlist.id
 ORDER BY playlist.title;
+
+-- CREATE MATERIALIZED VIEW IF NOT EXISTS playlist_view_materialized AS
+-- SELECT
+--     id,
+--     title,
+--     GROUP_CONCAT(lyric_id) members
+-- FROM playlist
+-- LEFT JOIN (SELECT * FROM member)
+-- ON playlist.id = playlist_id
+-- GROUP BY playlist.id, playlist.title;

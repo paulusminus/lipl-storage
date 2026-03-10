@@ -117,6 +117,7 @@ impl RepoConfig for TursoConfig {
         }
 
         Builder::new_local(&self.path)
+            .experimental_materialized_views(true)
             .build()
             .await
             .and_then(connect)
