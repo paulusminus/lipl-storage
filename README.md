@@ -56,6 +56,17 @@ export LIPL_STORAGE_REPO_TYPE=redis
 export LIPL_STORAGE_REDIS_CONNECTION=redis://127.0.0.1/
 ```
 
+## lipl-storage-turso
+
+Storage in a sqlite database file
+
+### Example configuration
+
+```bash
+export LIPL_STORAGE_REPO_TYPE=turso
+export LIPL_STORAGE_TURSO_DATABASE_PATH=lipl.sqlite
+```
+
 ## lipl-sample-data
 
 Sample data that can be used to play a demo or for testing.
