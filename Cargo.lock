@@ -583,9 +583,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.6.0"
+version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b193af5b67834b676abd72466a96c1024e6a6ad978a1f484bd90b85c94041351"
+checksum = "1ddb117e43bbf7dacf0a4190fef4d345b9bad68dfc649cb349e7d17d28428e51"
 dependencies = [
  "clap_builder",
 ]
@@ -1344,7 +1344,7 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 [[package]]
 name = "hurl"
 version = "8.0.0-SNAPSHOT"
-source = "git+https://github.com/Orange-OpenSource/hurl#40cb7bb743e6c7a756d351d5fccca9321da21562"
+source = "git+https://github.com/Orange-OpenSource/hurl#c129daa7ffe93cb42bb027b2e1aa525a7b2b1737"
 dependencies = [
  "base64",
  "brotli",
@@ -1382,7 +1382,7 @@ dependencies = [
 [[package]]
 name = "hurl_core"
 version = "8.0.0-SNAPSHOT"
-source = "git+https://github.com/Orange-OpenSource/hurl#40cb7bb743e6c7a756d351d5fccca9321da21562"
+source = "git+https://github.com/Orange-OpenSource/hurl#c129daa7ffe93cb42bb027b2e1aa525a7b2b1737"
 dependencies = [
  "colored",
  "libxml",
@@ -3684,9 +3684,9 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.23.0"
+version = "1.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ac8b6f42ead25368cf5b098aeb3dc8a1a2c05a3eee8a9a1a68c640edbfc79d9"
+checksum = "ddd74a9687298c6858e9b88ec8935ec45d22e8fd5e6394fa1bd4e99a87789c76"
 dependencies = [
  "getrandom 0.4.2",
  "js-sys",
