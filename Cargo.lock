@@ -373,7 +373,7 @@ dependencies = [
  "bitflags",
  "cexpr",
  "clang-sys",
- "itertools 0.13.0",
+ "itertools 0.12.1",
  "proc-macro2",
  "quote",
  "regex",
@@ -1344,7 +1344,7 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 [[package]]
 name = "hurl"
 version = "8.0.0-SNAPSHOT"
-source = "git+https://github.com/Orange-OpenSource/hurl#66b1db1dcbb81eeac494854d5a8762254fceb189"
+source = "git+https://github.com/Orange-OpenSource/hurl#d8cde165505953ad0ef32d156b7b9ce4d528e784"
 dependencies = [
  "base64",
  "brotli",
@@ -1382,7 +1382,7 @@ dependencies = [
 [[package]]
 name = "hurl_core"
 version = "8.0.0-SNAPSHOT"
-source = "git+https://github.com/Orange-OpenSource/hurl#66b1db1dcbb81eeac494854d5a8762254fceb189"
+source = "git+https://github.com/Orange-OpenSource/hurl#d8cde165505953ad0ef32d156b7b9ce4d528e784"
 dependencies = [
  "colored",
  "libxml",
@@ -1625,15 +1625,6 @@ name = "itertools"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -3029,7 +3020,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.2",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.61.2",
