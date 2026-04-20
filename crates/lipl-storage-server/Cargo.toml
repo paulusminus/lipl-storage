@@ -53,4 +53,4 @@ http-body-util = "0.1.3"
 base64 = "0.22.1"
 
 [target.'cfg(target_env = "musl")'.dependencies]
-mimalloc = "0.1.47"
+mimalloc = "0.1.49"
