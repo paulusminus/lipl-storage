@@ -8,4 +8,5 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-hurl = { git = "https://github.com/Orange-OpenSource/hurl"}
+hurl = "8.0"
+hurl_core = "8.0"

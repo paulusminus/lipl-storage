@@ -6,6 +6,7 @@ use hurl::{
         term::{Stdout, WriteMode},
     },
 };
+use hurl_core::error::DisplaySourceError;
 use std::env::var;
 
 type Result<T, E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
@@ -54,7 +55,7 @@ fn handle_output(out: &mut Stdout) -> impl FnMut(HurlResult) -> Result<()> + '_ 
             out,
             true,
         )
-        .map_err(|error| format!("{:?} {:?}", error.kind, error.source_info).into())
+        .map_err(|error| error.description().into())
     }
 }
 
