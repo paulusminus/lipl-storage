@@ -61,8 +61,9 @@ fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
 //         .collect()
 // }
 
-pub fn to_parts(input: &str) -> Vec<Vec<String>> {
+pub fn to_parts(input: impl AsRef<str>) -> Vec<Vec<String>> {
     input
+        .as_ref()
         .lines()
         .map(|s| s.trim_end().to_string())
         .collect::<Vec<_>>()

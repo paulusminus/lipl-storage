@@ -4,6 +4,10 @@ use turso::{Row, Rows};
 
 use crate::ErrInto;
 
+fn to_uuid(s: impl AsRef<str>) -> Result<Uuid> {
+    s.as_ref().parse::<Uuid>().err_into()
+}
+
 trait RowExt {
     fn get_uuid(&self, index: usize) -> Result<Uuid>;
     fn get_uuids(&self, index: usize) -> Result<Vec<Uuid>>;
@@ -13,12 +17,12 @@ trait RowExt {
 
 impl RowExt for Row {
     fn get_uuid(&self, index: usize) -> Result<Uuid> {
-        self.get_string(index).and_then(|s| s.parse::<Uuid>())
+        self.get_string(index).and_then(to_uuid)
     }
 
     fn get_uuids(&self, index: usize) -> Result<Vec<Uuid>> {
         self.get_string(index)
-            .and_then(|s| s.split(',').map(|s| s.parse::<Uuid>()).collect())
+            .and_then(|s| s.split(',').map(to_uuid).collect())
     }
 
     fn get_string(&self, index: usize) -> Result<String> {
@@ -26,7 +30,7 @@ impl RowExt for Row {
     }
 
     fn get_parts(&self, index: usize) -> Result<Vec<Vec<String>>> {
-        self.get_string(index).map(|s| to_parts(&s))
+        self.get_string(index).map(to_parts)
     }
 }
 
@@ -48,11 +52,9 @@ where
 }
 
 pub fn to_lyric(row: Row) -> Result<Lyric> {
-    Ok(Lyric {
-        id: row.get_uuid(0)?,
-        title: row.get_string(1)?,
-        parts: row.get_parts(2)?,
-    })
+    row.get_uuid(0)
+        .and_then(|id| row.get_string(1).map(|title| (id, title)))
+        .and_then(|(id, title)| row.get_parts(2).map(|parts| Lyric { id, title, parts }))
 }
 
 pub fn to_playlist(row: Row) -> Result<Playlist> {
