@@ -41,6 +41,10 @@ jobs:
           - 6379:6379
 
     steps:
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
       - name: Install musl-tools
         run: sudo apt install -u musl-tools
       - name: Install rust musl target
