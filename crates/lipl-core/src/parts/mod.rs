@@ -69,8 +69,12 @@ pub fn to_parts(input: impl AsRef<str>) -> Vec<Vec<String>> {
         .collect::<Vec<_>>()
         .split(|c| c.is_empty())
         .map(Into::into)
-        .filter(|c: &Vec<String>| !c.is_empty())
+        .filter(not_empty)
         .collect()
+}
+
+fn not_empty<T>(c: &Vec<T>) -> bool {
+    !c.is_empty()
 }
 
 pub fn to_text(parts: &[Vec<String>]) -> String {
