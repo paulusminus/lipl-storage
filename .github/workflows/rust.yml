@@ -49,8 +49,10 @@ jobs:
         run: sudo apt install -u musl-tools
       - name: Install rust musl target
         run: rustup target add x86_64-unknown-linux-musl
-      - name: Install turbodb
-        run: cargo install turso_cli --git https://github.com/tursodatabase/turso --tag v0.4.4
+      # - name: Install tursodb
+      #   run: cargo install turso_cli --git https://github.com/tursodatabase/turso --tag v0.5.3
+      - name: Install tursodb
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tursodatabase/turso/releases/download/v0.5.3/turso_cli-installer.sh | sh
       - uses: actions/checkout@v6
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
