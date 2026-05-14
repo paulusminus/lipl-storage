@@ -1,13 +1,3 @@
-// use regex::Regex;
-// use std::sync::OnceLock;
-
-// const DOUBLE_LINE: &str = r"\n\s*\n";
-
-// fn double_line_regex() -> &'static Regex {
-//     static DOUBLE_LINE_REGEX: OnceLock<Regex> = OnceLock::new();
-//     DOUBLE_LINE_REGEX.get_or_init(|| DOUBLE_LINE.parse().unwrap())
-// }
-
 pub struct Markdown {
     pub frontmatter: Option<String>,
     pub parts: Vec<Vec<String>>,
@@ -41,40 +31,16 @@ fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
     }
 }
 
-// fn trim_end(s: &str) -> &str {
-//     s.trim_end()
-// }
-
-// fn to_lines(s: &str) -> Vec<String> {
-//     s.split('\n')
-//         .map(trim_end)
-//         .filter(|&s| !s.is_empty())
-//         .map(|s| s.to_string())
-//         .collect()
-// }
-
-// fn to_parts_old(s: String) -> Vec<Vec<String>> {
-//     double_line_regex()
-//         .split(&s)
-//         .map(to_lines)
-//         .filter(|p| !p.is_empty())
-//         .collect()
-// }
-
 pub fn to_parts(input: impl AsRef<str>) -> Vec<Vec<String>> {
     input
         .as_ref()
         .lines()
         .map(|s| s.trim_end().to_string())
         .collect::<Vec<_>>()
-        .split(|c| c.is_empty())
+        .split(String::is_empty)
         .map(Into::into)
-        .filter(not_empty)
+        .filter(|p: &Vec<String>| !p.is_empty())
         .collect()
-}
-
-fn not_empty<T>(c: &Vec<T>) -> bool {
-    !c.is_empty()
 }
 
 pub fn to_text(parts: &[Vec<String>]) -> String {
