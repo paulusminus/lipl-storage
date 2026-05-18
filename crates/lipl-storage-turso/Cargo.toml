@@ -10,6 +10,7 @@ version.workspace = true
 [dependencies]
 futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core" }
+pin-project = "1.1.13"
 tokio = { version = "1.49.0", features = ["rt", "macros"] }
 tokio-stream = "0.1.18"
 tracing = "0.1.44"
@@ -19,3 +20,8 @@ turso = { version = "0.6.0", default-features = false }
 lipl-storage-memory = { path = "../lipl-storage-memory" }
 lipl-storage-fs = { path = "../lipl-storage-fs" }
 tokio = { version = "1.49.0", features = ["rt", "macros", "rt-multi-thread"] }
+criterion = { version = "0.8", features = ["html_reports"] }
+
+[[bench]]
+name = "my_benchmark"
+harness = false
