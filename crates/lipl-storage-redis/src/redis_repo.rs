@@ -114,7 +114,7 @@ impl Default for RedisRepoConfig<String> {
     fn default() -> Self {
         Self {
             clear: true,
-            url: "redis://127.0.0.1".to_owned(),
+            url: "redis://localhost".to_owned(),
         }
     }
 }
