@@ -10,6 +10,7 @@ members = [
     "crates/lipl-storage-redis",
     "crates/hurl-runner", "crates/lipl-storage-turso",
 ]
+default-members = ["crates/lipl-storage-server"]
 
 [workspace.package]
 authors = ["Paul Min"]
