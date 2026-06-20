@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 /*!
 This crate is a dependency library for other crates who wish to work with lyrics and playlists.
 
