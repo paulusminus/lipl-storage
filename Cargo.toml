@@ -8,7 +8,9 @@ members = [
     "crates/lipl-storage-memory",
     "crates/lipl-storage-postgres",
     "crates/lipl-storage-redis",
-    "crates/hurl-runner", "crates/lipl-storage-turso", "crates/lipl-core-component",
+    "crates/hurl-runner",
+    "crates/lipl-storage-turso",
+    # "crates/lipl-core-component",
 ]
 default-members = ["crates/lipl-storage-server"]
 
