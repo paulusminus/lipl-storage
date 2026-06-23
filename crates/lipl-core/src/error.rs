@@ -124,6 +124,9 @@ where
 }
 
 pub trait ErrorExtension<T> {
+    /// # Errors
+    ///
+    /// Converts an error into a `lipl` error.
     fn into_lipl_err(self) -> Result<T, Error>;
 }
 
@@ -132,6 +135,6 @@ where
     E: Into<Error>,
 {
     fn into_lipl_err(self) -> Result<T, Error> {
-        self.map_err(|e| e.into())
+        self.map_err(Into::into)
     }
 }

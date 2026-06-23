@@ -8,6 +8,10 @@ pub trait VecExt<T> {
     fn without(self, t: &T) -> Vec<T>
     where
         T: PartialEq;
+
+    /// # Errors
+    ///
+    /// Returns an error if the mapping function returns an error.
     fn try_map<F, R, E: std::error::Error>(self, f: F) -> Result<Vec<R>, E>
     where
         F: FnMut(T) -> Result<R, E>;

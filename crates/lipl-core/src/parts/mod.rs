@@ -5,12 +5,12 @@ pub struct Markdown {
 
 impl From<String> for Markdown {
     fn from(s: String) -> Self {
-        parse_markdown(s, "---")
+        parse_markdown(&s, "---")
     }
 }
 
-fn parse_markdown(text: String, yaml_separator: &str) -> Markdown {
-    let parts = to_parts(&text);
+fn parse_markdown(text: &str, yaml_separator: &str) -> Markdown {
+    let parts = to_parts(text);
     if !parts.is_empty() && !parts[0].is_empty() && parts[0][0] == *yaml_separator {
         Markdown {
             frontmatter: Some(
@@ -43,6 +43,7 @@ pub fn to_parts(input: impl AsRef<str>) -> Vec<Vec<String>> {
         .collect()
 }
 
+#[must_use]
 pub fn to_text(parts: &[Vec<String>]) -> String {
     parts
         .iter()
@@ -67,7 +68,7 @@ mod test {
 
     #[test]
     fn test_parse_markdown() {
-        let test = "---\nyaml: is_fine\n---\n\nAllemaal\r\n\nWat fijn  \n\r\n".to_owned();
+        let test = "---\nyaml: is_fine\n---\n\nAllemaal\r\n\nWat fijn  \n\r\n";
         let result = super::parse_markdown(test, "---");
         assert_eq!(result.parts, vec![vec!["Allemaal"], vec!["Wat fijn"]]);
         assert_eq!(result.frontmatter, Some("yaml: is_fine".to_owned()))
@@ -75,7 +76,7 @@ mod test {
 
     #[test]
     fn test_parse_markdown_no_content() {
-        let test = "---\nyaml: is_fine\n---".to_owned();
+        let test = "---\nyaml: is_fine\n---";
         let result = super::parse_markdown(test, "---");
         assert!(result.parts.is_empty());
         assert_eq!(result.frontmatter, Some("yaml: is_fine".to_owned()))

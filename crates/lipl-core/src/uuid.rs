@@ -11,6 +11,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 pub struct Uuid(uuid::Uuid);
 
 impl Uuid {
+    #[must_use]
     pub fn inner(&self) -> uuid::Uuid {
         self.0
     }
@@ -29,6 +30,7 @@ impl std::fmt::Debug for Uuid {
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn bytes_to_uuid(bytes: Vec<u8>) -> Result<uuid::Uuid, Error> {
     uuid::Uuid::from_slice(&bytes).map_err(Error::from)
 }

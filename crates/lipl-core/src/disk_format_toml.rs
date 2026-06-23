@@ -12,7 +12,7 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, to
         .by_ref()
         .skip_while(|l| l.trim().is_empty())
         .take_while(|l| !l.trim().is_empty())
-        .map(|s| s.trim())
+        .map(str::trim)
         .map(String::from)
         .collect::<Vec<_>>();
 
@@ -42,7 +42,7 @@ fn lines_to_lyric_post(acc: LyricPost, mut lines: Lines) -> Result<LyricPost, to
 impl FromStr for LyricPost {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let lyric_post = lines_to_lyric_post(Default::default(), s.lines())?;
+        let lyric_post = lines_to_lyric_post(LyricPost::default(), s.lines())?;
         Ok(lyric_post)
     }
 }

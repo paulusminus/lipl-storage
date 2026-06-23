@@ -93,7 +93,7 @@ fn now() -> String {
     chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true)
 }
 
-fn write<W>(w: &mut W, json: String) -> crate::Result<()>
+fn write<W>(w: &mut W, json: impl std::fmt::Display) -> crate::Result<()>
 where
     W: std::io::Write,
 {
@@ -107,6 +107,9 @@ fn line_to_transaction(line: std::io::Result<String>) -> crate::Result<Transacti
         .and_then(|s| s.parse::<Transaction>())
 }
 
+/// # Errors
+///
+/// Returns an error if the log could not be parsed into transactions.
 pub async fn build_from_log<R, DB>(r: R, db: DB) -> crate::Result<()>
 where
     R: std::io::Read,
@@ -140,7 +143,7 @@ pub fn log_to_transaction<W>(mut writer: W) -> impl FnMut(Transaction) -> crate:
 where
     W: std::io::Write,
 {
-    move |transaction| write(&mut writer, transaction.to_string())
+    move |transaction| write(&mut writer, transaction)
 }
 
 pub fn start_log_thread<W>(

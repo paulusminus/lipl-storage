@@ -3,10 +3,10 @@
 /*!
 This crate is a dependency library for other crates who wish to work with lyrics and playlists.
 
-The main trait is LiplRepo. Other crates implement this trait to hide implementation details for creating, reading, updating and deleting
-lyrics ands playlist from a store. All implementation except MemoryRepo implement a persistent store.
+The main trait is `LiplRepo`. Other crates implement this trait to hide implementation details for creating, reading, updating and deleting
+lyrics ands playlist from a store. All implementation except `MemoryRepo` implement a persistent store.
 
-MemoryRepo is usefull for testing perposes.
+`MemoryRepo` is usefull for testing perposes.
 
 */
 
@@ -97,7 +97,7 @@ impl From<(Option<Uuid>, LyricPost)> for Lyric {
 impl From<LyricPost> for Lyric {
     fn from(lyric_post: LyricPost) -> Self {
         Self {
-            id: Default::default(),
+            id: Uuid::default(),
             title: lyric_post.title,
             parts: lyric_post.parts,
         }
@@ -203,6 +203,7 @@ where
     t.summary()
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn to_summaries<T>(list: Vec<T>) -> Vec<Summary>
 where
     T: HasSummary,
@@ -271,6 +272,7 @@ impl From<(Vec<Lyric>, Vec<Playlist>)> for RepoDb {
 }
 
 impl RepoDb {
+    #[must_use]
     pub fn find_lyric_by_title(&self, title: &str) -> Option<Lyric> {
         self.lyrics
             .iter()
@@ -278,6 +280,9 @@ impl RepoDb {
             .cloned()
     }
 
+    /// # Errors
+    ///
+    /// Returns an error if the data could not be serialized to YAML.
     pub fn to_yaml(&self) -> Result<String> {
         let s = toml::ser::to_string(self)?;
         Ok(s)
@@ -290,7 +295,7 @@ impl std::fmt::Display for RepoDb {
             self.lyrics
                 .iter()
                 .map(|lyric| format!(" - {}, {} parts", lyric.title, lyric.parts.len()))
-                .chain(core::iter::once("".to_owned()))
+                .chain(core::iter::once(String::new()))
                 .chain(core::iter::once("Playlists:".to_owned()))
                 .chain(
                     self.playlists
@@ -303,10 +308,17 @@ impl std::fmt::Display for RepoDb {
 }
 
 pub trait Toml {
+    /// # Errors
+    ///
+    /// Returns an error if the data could not be read from the reader.
     fn load<R>(r: R) -> Result<Self>
     where
         R: std::io::Read,
         Self: Sized;
+
+    /// # Errors
+    ///
+    /// Returns an error if the data could not be written to the writer.
     fn save<W>(&self, w: W) -> Result<()>
     where
         W: std::io::Write;
