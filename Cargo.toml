@@ -10,7 +10,7 @@ members = [
     "crates/lipl-storage-redis",
     "crates/hurl-runner",
     "crates/lipl-storage-turso",
-    # "crates/lipl-core-component",
+    "crates/lipl-core-component", "crates/lipl-storage-fs-component",
 ]
 default-members = ["crates/lipl-storage-server"]
 

@@ -9,7 +9,6 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-futures-util = "0.3.31"
 lipl-core = { version = "0.5", path = "../lipl-core" }
 thiserror = "2.0.12"
 lipl-sample-data = { version = "0.5", path = "../lipl-sample-data" }

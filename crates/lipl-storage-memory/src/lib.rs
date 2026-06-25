@@ -1,4 +1,3 @@
-use futures_util::TryFutureExt;
 use lipl_core::Repo;
 use lipl_core::vec_ext::VecExt;
 use lipl_core::{
@@ -143,8 +142,8 @@ impl Toml for MemoryRepo {
 impl Repo for MemoryRepo {
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
         self.get_lyrics()
-            .map_ok(|lyrics| lyrics.map(|lyric| lyric.summary()))
             .await
+            .map(|lyrics| lyrics.map(|lyric| lyric.summary()))
     }
 
     async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
@@ -207,8 +206,8 @@ impl Repo for MemoryRepo {
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
         self.get_playlists()
-            .map_ok(|playlists| playlists.map(|p| p.summary()))
             .await
+            .map(|playlists| playlists.map(|p| p.summary()))
     }
 
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {
