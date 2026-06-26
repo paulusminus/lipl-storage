@@ -53,14 +53,14 @@ impl Display for Lyric {
             title: self.title.clone(),
             hash: self.etag(),
         };
-        let yaml = toml::ser::to_string_pretty(&lyric_meta).unwrap();
+        let toml = toml::ser::to_string_pretty(&lyric_meta).unwrap();
         let parts_string: String = self
             .parts
             .iter()
             .map(|p| p.join("  \n"))
             .collect::<Vec<_>>()
             .join("\n\n");
-        write!(f, "{TOML_PREFIX}\n{yaml}{TOML_PREFIX}\n\n{parts_string}")
+        write!(f, "{TOML_PREFIX}\n{toml}{TOML_PREFIX}\n\n{parts_string}")
     }
 }
 
