@@ -112,13 +112,23 @@ jobs:
       PORT: 3000
       PREFIX: http://localhost:3000/lipl/api/v1
     steps:
+      - name: Add musl packages
+        run: sudo apt install -y musl-tools
+
+      - name: Add musl toolchain
+        run: rustup target add x86_64-unknown-linux-musl
+
       - name: Checkout repository
         uses: actions/checkout@v7
+
       - name: Create docker volume
         run: docker volume create lipl-storage-fs
+
       - name: Check environment
         run: echo prefix=${PREFIX},port=${PORT}
+
       - name: Run the docker image
         run: docker run -d -v lipl-storage-fs:/lipl -p ${{ env.PORT}}:${{ env.PORT }} --env LIPL_USERNAME --env LIPL_PASSWORD ${{ env.REGISTRY }}/paulusminus/lipl-storage
+
       - name: Fill the database with known data
         run: cargo run --release -p hurl-runner
