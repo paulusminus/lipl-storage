@@ -149,7 +149,7 @@ where
             io::post_item(&path, lyric.clone())
                 .and_then(|_| io::get_lyric(&path))
                 .err_into()
-                .map(send(sender, format!("LyricPost {}", &lyric.title)))
+                .map(send(sender, format!("LyricPost {}", lyric.title)))
                 .await
         }
         Request::PlaylistSummaries(sender) => {

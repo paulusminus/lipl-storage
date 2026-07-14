@@ -21,12 +21,12 @@ pwa = ["tower-http/fs"]
 axum = { version = "0.8.4", features = ["http2"] }
 futures-util = "0.3.31"
 hyper = "1.6.0"
-lipl-storage-postgres = { version = "0.5", path = "../lipl-storage-postgres", optional = true }
-lipl-storage-memory = { version = "0.5", path = "../lipl-storage-memory", optional = true }
-lipl-storage-fs = { version = "0.5", path = "../lipl-storage-fs", optional = true }
-lipl-storage-redis = { version = "0.5", path = "../lipl-storage-redis", optional = true }
-lipl-storage-turso = { version = "0.5", path = "../lipl-storage-turso", optional = true }
-lipl-core = { version = "0.5", path = "../lipl-core" }
+lipl-storage-postgres = { version = "0.6", path = "../lipl-storage-postgres", optional = true }
+lipl-storage-memory = { version = "0.6", path = "../lipl-storage-memory", optional = true }
+lipl-storage-fs = { version = "0.6", path = "../lipl-storage-fs", optional = true }
+lipl-storage-redis = { version = "0.6", path = "../lipl-storage-redis", optional = true }
+lipl-storage-turso = { version = "0.6", path = "../lipl-storage-turso", optional = true }
+lipl-core = { version = "0.6", path = "../lipl-core" }
 serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
 tokio = { version = "1.46.1", features = [

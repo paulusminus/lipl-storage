@@ -1478,7 +1478,7 @@ dependencies = [
 
 [[package]]
 name = "hurl-runner"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "hurl",
  "hurl_core",
@@ -1948,7 +1948,7 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 
 [[package]]
 name = "lipl-core"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "bs58",
  "chrono",
@@ -1967,7 +1967,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-sample-data"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "lipl-core",
  "quote",
@@ -1976,7 +1976,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-fs"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "futures-channel",
  "futures-util",
@@ -1989,7 +1989,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-memory"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "lipl-core",
  "lipl-sample-data",
@@ -1999,7 +1999,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-postgres"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "bb8-postgres",
  "futures-util",
@@ -2013,7 +2013,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-redis"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "bb8-redis",
  "futures-util",
@@ -2024,7 +2024,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-server"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "axum",
  "base64",
@@ -2051,7 +2051,7 @@ dependencies = [
 
 [[package]]
 name = "lipl-storage-turso"
-version = "0.5.8"
+version = "0.6.0"
 dependencies = [
  "criterion",
  "futures-util",

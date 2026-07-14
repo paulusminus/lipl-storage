@@ -9,9 +9,9 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
-lipl-core = { version = "0.5", path = "../lipl-core" }
+lipl-core = { version = "0.6", path = "../lipl-core" }
 thiserror = "2.0.12"
-lipl-sample-data = { version = "0.5", path = "../lipl-sample-data" }
+lipl-sample-data = { version = "0.6", path = "../lipl-sample-data" }
 
 [dev-dependencies]
 tokio = { version = "1.46.1", features = ["rt", "macros"] }
