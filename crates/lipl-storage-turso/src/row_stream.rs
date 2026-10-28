@@ -1,6 +1,6 @@
 use std::{pin::pin, task::Poll};
 
-use futures_util::{Stream, TryFutureExt};
+use futures_util::{FutureExt, Stream};
 use pin_project::pin_project;
 use turso::{Row, Rows};
 
@@ -18,6 +18,13 @@ impl From<Rows> for RowStream {
     }
 }
 
+impl RowStream {
+    #[allow(dead_code)]
+    pub fn column_index(&self, name: &str) -> Result<usize> {
+        self.rows.column_index(name)
+    }
+}
+
 impl Stream for RowStream {
     type Item = Result<Row>;
 
@@ -28,7 +35,7 @@ impl Stream for RowStream {
         let mut this = self.project();
         let f = this.rows.next();
         let mut pinned = pin!(f);
-        match pinned.try_poll_unpin(cx) {
+        match pinned.poll_unpin(cx) {
             Poll::Pending => Poll::Pending,
             Poll::Ready(row) => match row {
                 Ok(None) => Poll::Ready(None),
