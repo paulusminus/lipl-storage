@@ -7,7 +7,7 @@ use turso::{Row, Rows};
 type Result<T, E = turso::Error> = std::result::Result<T, E>;
 
 #[pin_project]
-struct RowStream {
+pub struct RowStream {
     #[pin]
     rows: Rows,
 }
@@ -52,7 +52,6 @@ mod tests {
     use crate::convert::to_lyric;
     use futures_util::TryStreamExt;
     use lipl_core::Uuid;
-    use std::pin::pin;
     use turso::{Rows, params};
 
     async fn create_db() -> turso::Connection {
@@ -94,19 +93,5 @@ mod tests {
         let lyric2 = rows.try_next().await.unwrap().unwrap().unwrap();
         assert_eq!(lyric1.title, *"Er is er één jarig");
         assert_eq!(lyric2.title, *"Sinterklaas kapoentje");
-    }
-
-    #[tokio::test]
-    async fn test_rowstream2() {
-        let con = create_db().await;
-        insert_lyric(&con, "Sinterklaas kapoentje", "").await;
-        insert_lyric(&con, "Er is er één jarig", "").await;
-
-        let rows = list_lyrics(&con).await;
-        let row_stream: RowStream = rows.into();
-        let mut pinned = pin!(row_stream);
-        while let Some(row) = pinned.try_next().await.unwrap() {
-            dbg!(row);
-        }
     }
 }

@@ -1,6 +1,5 @@
 use lipl_core::{Lyric, Playlist, Result, Summary, Uuid, parts::to_parts};
-use tokio_stream::wrappers::ReceiverStream;
-use turso::{Row, Rows};
+use turso::Row;
 
 use crate::ErrInto;
 
@@ -31,23 +30,6 @@ impl RowExt for Row {
 
     fn get_parts(&self, index: usize) -> Result<Vec<Vec<String>>> {
         self.get_string(index).map(to_parts)
-    }
-}
-
-pub fn to_list<T: Send + Sync + 'static>(
-    f: fn(Row) -> Result<T>,
-) -> impl Fn(Rows) -> Result<ReceiverStream<Result<T>>>
-where
-{
-    move |mut rows| {
-        let (tx, rx) = tokio::sync::mpsc::channel::<Result<T>>(20);
-        tokio::task::spawn(async move {
-            while let Some(row) = rows.next().await.err_into()? {
-                tx.send(f(row)).await.err_into()?;
-            }
-            Ok::<_, lipl_core::Error>(())
-        });
-        Ok(rx.into())
     }
 }
 

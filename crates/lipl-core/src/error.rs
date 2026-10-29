@@ -123,6 +123,13 @@ where
     Error::Redis(Box::new(error))
 }
 
+pub fn turso_error<E>(error: E) -> Error
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    Error::Turso(Box::new(error))
+}
+
 pub trait ErrorExtension<T> {
     /// # Errors
     ///

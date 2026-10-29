@@ -1,10 +1,12 @@
 use futures_util::TryFutureExt;
-use lipl_core::{RepoConfig, Result};
-use tokio_stream::wrappers::ReceiverStream;
+use lipl_core::{Lyric, Playlist, RepoConfig, Result, Summary};
 use turso::{Builder, IntoParams, Row};
+
+use crate::{object_stream::ObjectStream, row_stream::RowStream};
 
 mod convert;
 mod db;
+mod object_stream;
 mod row_stream;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
@@ -64,7 +66,7 @@ impl TursoDatabase {
         sql: &'static str,
         convert: fn(Row) -> Result<T>,
         params: impl IntoParams,
-    ) -> Result<ReceiverStream<Result<T>>>
+    ) -> Result<ObjectStream<T>>
     where
         T: Send + Sync + 'static,
     {
@@ -73,7 +75,8 @@ impl TursoDatabase {
             .and_then(|mut statement| async move { statement.query(params).await })
             .await
             .err_into()
-            .and_then(convert::to_list(convert))
+            .map(RowStream::from)
+            .map(|s| ObjectStream::new(s, convert))
     }
 
     async fn query_one<T>(
@@ -123,5 +126,31 @@ impl RepoConfig for TursoConfig {
             .and_then(connect)
             .ok_into()
             .err_into()
+    }
+}
+
+#[allow(dead_code)]
+trait TursoDb {
+    async fn lyrics(&self) -> Result<ObjectStream<Lyric>>;
+    async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>>;
+    async fn playlists(&self) -> Result<ObjectStream<Playlist>>;
+    async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>>;
+}
+
+impl TursoDb for TursoDatabase {
+    async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>> {
+        self.lyrics_summaries_stream().await
+    }
+
+    async fn lyrics(&self) -> Result<ObjectStream<Lyric>> {
+        self.lyrics_stream().await
+    }
+
+    async fn playlists(&self) -> Result<ObjectStream<Playlist>> {
+        self.playlists_stream().await
+    }
+
+    async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>> {
+        self.playlists_summaries_stream().await
     }
 }

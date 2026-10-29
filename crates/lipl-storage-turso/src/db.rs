@@ -1,9 +1,8 @@
 use futures_util::{TryFutureExt, TryStreamExt};
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
-use tokio_stream::wrappers::ReceiverStream;
 use turso::Value;
 
-use crate::{ErrInto, TursoDatabase};
+use crate::{ErrInto, TursoDatabase, object_stream::ObjectStream};
 
 use super::convert;
 
@@ -23,17 +22,17 @@ fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
 }
 
 impl TursoDatabase {
-    pub async fn lyrics_stream(&self) -> Result<ReceiverStream<Result<Lyric>>> {
+    pub async fn lyrics_stream(&self) -> Result<ObjectStream<Lyric>> {
         self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
             .await
     }
 
-    pub async fn lyrics_summaries_stream(&self) -> Result<ReceiverStream<Result<Summary>>> {
+    pub async fn lyrics_summaries_stream(&self) -> Result<ObjectStream<Summary>> {
         self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
             .await
     }
 
-    pub async fn playlists_stream(&self) -> Result<ReceiverStream<Result<Playlist>>> {
+    pub async fn playlists_stream(&self) -> Result<ObjectStream<Playlist>> {
         self.query(
             playlist::LIST_FULL,
             convert::to_playlist,
@@ -42,7 +41,7 @@ impl TursoDatabase {
         .await
     }
 
-    pub async fn playlists_summaries_stream(&self) -> Result<ReceiverStream<Result<Summary>>> {
+    pub async fn playlists_summaries_stream(&self) -> Result<ObjectStream<Summary>> {
         self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
             .await
     }
