@@ -3,7 +3,7 @@ use std::env::VarError;
 use crate::Uuid;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
     #[error("File {0:?} has invalid filestem")]
     Filestem(Option<String>),
@@ -100,6 +100,9 @@ pub enum Error {
 
     #[error("Receive error: {0}")]
     Mpsc(#[from] std::sync::mpsc::RecvError),
+
+    #[error("SQL: {0}")]
+    Sql(String),
 }
 
 pub fn postgres_error<E>(error: E) -> Error

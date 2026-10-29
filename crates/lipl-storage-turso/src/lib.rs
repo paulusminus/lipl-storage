@@ -66,17 +66,15 @@ impl TursoDatabase {
         sql: &'static str,
         convert: fn(Row) -> Result<T>,
         params: impl IntoParams,
-    ) -> Result<ObjectStream<T>>
-    where
-        T: Send + Sync + 'static,
-    {
+    ) -> ObjectStream<T> {
         self.inner
             .prepare(sql)
             .and_then(|mut statement| async move { statement.query(params).await })
             .await
-            .err_into()
+            // .err_into()
             .map(RowStream::from)
             .map(|s| ObjectStream::new(s, convert))
+            .unwrap_or_else(ObjectStream::from)
     }
 
     async fn query_one<T>(
@@ -131,26 +129,26 @@ impl RepoConfig for TursoConfig {
 
 #[allow(dead_code)]
 trait TursoDb {
-    async fn lyrics(&self) -> Result<ObjectStream<Lyric>>;
-    async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>>;
-    async fn playlists(&self) -> Result<ObjectStream<Playlist>>;
-    async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>>;
+    async fn lyrics(&self) -> ObjectStream<Lyric>;
+    async fn lyric_summaries(&self) -> ObjectStream<Summary>;
+    async fn playlists(&self) -> ObjectStream<Playlist>;
+    async fn playlist_summaries(&self) -> ObjectStream<Summary>;
 }
 
 impl TursoDb for TursoDatabase {
-    async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>> {
+    async fn lyric_summaries(&self) -> ObjectStream<Summary> {
         self.lyrics_summaries_stream().await
     }
 
-    async fn lyrics(&self) -> Result<ObjectStream<Lyric>> {
+    async fn lyrics(&self) -> ObjectStream<Lyric> {
         self.lyrics_stream().await
     }
 
-    async fn playlists(&self) -> Result<ObjectStream<Playlist>> {
+    async fn playlists(&self) -> ObjectStream<Playlist> {
         self.playlists_stream().await
     }
 
-    async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>> {
+    async fn playlist_summaries(&self) -> ObjectStream<Summary> {
         self.playlists_summaries_stream().await
     }
 }
