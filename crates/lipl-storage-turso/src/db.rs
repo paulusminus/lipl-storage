@@ -1,4 +1,4 @@
-use futures_util::{TryFutureExt, TryStreamExt};
+use futures_util::{TryFutureExt as _, TryStreamExt};
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
 use turso::Value;
 
@@ -22,17 +22,17 @@ fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
 }
 
 impl TursoDatabase {
-    pub async fn lyrics_stream(&self) -> ObjectStream<Lyric> {
+    pub async fn lyrics_stream(&self) -> Result<ObjectStream<Lyric>> {
         self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
             .await
     }
 
-    pub async fn lyrics_summaries_stream(&self) -> ObjectStream<Summary> {
+    pub async fn lyrics_summaries_stream(&self) -> Result<ObjectStream<Summary>> {
         self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
             .await
     }
 
-    pub async fn playlists_stream(&self) -> ObjectStream<Playlist> {
+    pub async fn playlists_stream(&self) -> Result<ObjectStream<Playlist>> {
         self.query(
             playlist::LIST_FULL,
             convert::to_playlist,
@@ -41,7 +41,7 @@ impl TursoDatabase {
         .await
     }
 
-    pub async fn playlists_summaries_stream(&self) -> ObjectStream<Summary> {
+    pub async fn playlists_summaries_stream(&self) -> Result<ObjectStream<Summary>> {
         self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
             .await
     }
@@ -49,11 +49,11 @@ impl TursoDatabase {
 
 impl Repo for TursoDatabase {
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
-        self.lyrics_summaries_stream().await.try_collect().await
+        self.lyrics_summaries_stream().await?.try_collect().await
     }
 
     async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
-        self.lyrics_stream().await.try_collect().await
+        self.lyrics_stream().await?.try_collect().await
     }
 
     async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
@@ -83,11 +83,11 @@ impl Repo for TursoDatabase {
     }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
-        self.playlists_summaries_stream().await.try_collect().await
+        self.playlists_summaries_stream().await?.try_collect().await
     }
 
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {
-        self.playlists_stream().await.try_collect().await
+        self.playlists_stream().await?.try_collect().await
     }
 
     async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
