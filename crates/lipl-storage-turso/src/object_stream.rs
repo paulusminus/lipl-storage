@@ -5,7 +5,7 @@ use std::{
 
 use futures_util::{Stream, StreamExt};
 use lipl_core::Result;
-use turso::Row;
+use turso::{Row, Rows};
 
 use crate::{ErrInto, row_stream::RowStream};
 
@@ -14,10 +14,8 @@ pub struct ObjectStream<O> {
     f: fn(Row) -> lipl_core::Result<O>,
 }
 
-impl<O> ObjectStream<O> {
-    pub fn new(s: RowStream, f: fn(Row) -> Result<O>) -> Self {
-        Self { s, f }
-    }
+pub fn objects<O>(f: fn(Row) -> Result<O>) -> impl Fn(Rows) -> ObjectStream<O> {
+    move |rows| ObjectStream { s: rows.into(), f }
 }
 
 impl<O> Stream for ObjectStream<O> {
@@ -37,7 +35,10 @@ mod test {
     use lipl_core::{Lyric, Uuid};
     use turso::params;
 
-    use crate::{convert::to_lyric, object_stream::ObjectStream, row_stream::RowStream};
+    use crate::{
+        convert::to_lyric,
+        object_stream::{ObjectStream, objects},
+    };
 
     async fn create_db() -> turso::Connection {
         let db = turso::Builder::new_local(":memory:").build().await.unwrap();
@@ -63,13 +64,12 @@ mod test {
             params!(),
         )
         .await
-        .map(RowStream::from)
-        .map(|s| ObjectStream::new(s, to_lyric))
+        .map(objects(to_lyric))
         .unwrap()
     }
 
     #[tokio::test]
-    async fn object_stream() {
+    async fn list_lyric() {
         let con = create_db().await;
         insert_lyric(&con, "Sinterklaas kapoentje", "").await;
         insert_lyric(&con, "Er is er één jarig", "").await;

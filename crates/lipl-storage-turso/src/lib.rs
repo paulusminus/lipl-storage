@@ -2,7 +2,7 @@ use futures_util::TryFutureExt;
 use lipl_core::{Lyric, Playlist, RepoConfig, Result, Summary};
 use turso::{Builder, IntoParams, Row};
 
-use crate::{object_stream::ObjectStream, row_stream::RowStream};
+use crate::object_stream::{ObjectStream, objects};
 
 mod convert;
 mod db;
@@ -72,9 +72,7 @@ impl TursoDatabase {
             .and_then(|mut statement| async move { statement.query(params).await })
             .await
             .err_into()
-            .map(RowStream::from)
-            .map(|s| ObjectStream::new(s, convert))
-        // .unwrap_or_else(ObjectStream::from)
+            .map(objects(convert))
     }
 
     async fn query_one<T>(
