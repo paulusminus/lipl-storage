@@ -2,7 +2,10 @@ use futures_util::TryFutureExt;
 use lipl_core::{Lyric, Playlist, RepoConfig, Result, Summary};
 use turso::{Builder, IntoParams, Row};
 
-use crate::object_stream::{ObjectStream, objects};
+use crate::{
+    db::{lyric, playlist},
+    object_stream::{ObjectStream, objects},
+};
 
 mod convert;
 mod db;
@@ -135,18 +138,26 @@ trait TursoDb {
 
 impl TursoDb for TursoDatabase {
     async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>> {
-        self.lyrics_summaries_stream().await
+        self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
+            .await
     }
 
     async fn lyrics(&self) -> Result<ObjectStream<Lyric>> {
-        self.lyrics_stream().await
+        self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
+            .await
     }
 
     async fn playlists(&self) -> Result<ObjectStream<Playlist>> {
-        self.playlists_stream().await
+        self.query(
+            playlist::LIST_FULL,
+            convert::to_playlist,
+            Vec::<&str>::new(),
+        )
+        .await
     }
 
     async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>> {
-        self.playlists_summaries_stream().await
+        self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
+            .await
     }
 }

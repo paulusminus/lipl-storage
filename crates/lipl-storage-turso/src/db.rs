@@ -2,9 +2,7 @@ use futures_util::{TryFutureExt as _, TryStreamExt};
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
 use turso::Value;
 
-use crate::{ErrInto, TursoDatabase, object_stream::ObjectStream};
-
-use super::convert;
+use super::{ErrInto, TursoDatabase, TursoDb, convert};
 
 fn error_on_count(count: u64, uuid: Uuid) -> Result<()> {
     if count < 1 {
@@ -21,39 +19,13 @@ fn pg_error_to_lipl_core(uuid: Uuid) -> impl Fn(Error) -> lipl_core::Error {
     }
 }
 
-impl TursoDatabase {
-    pub async fn lyrics_stream(&self) -> Result<ObjectStream<Lyric>> {
-        self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
-            .await
-    }
-
-    pub async fn lyrics_summaries_stream(&self) -> Result<ObjectStream<Summary>> {
-        self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
-            .await
-    }
-
-    pub async fn playlists_stream(&self) -> Result<ObjectStream<Playlist>> {
-        self.query(
-            playlist::LIST_FULL,
-            convert::to_playlist,
-            Vec::<&str>::new(),
-        )
-        .await
-    }
-
-    pub async fn playlists_summaries_stream(&self) -> Result<ObjectStream<Summary>> {
-        self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
-            .await
-    }
-}
-
 impl Repo for TursoDatabase {
     async fn get_lyric_summaries(&self) -> Result<Vec<Summary>> {
-        self.lyrics_summaries_stream().await?.try_collect().await
+        self.lyric_summaries().await?.try_collect().await
     }
 
     async fn get_lyrics(&self) -> Result<Vec<Lyric>> {
-        self.lyrics_stream().await?.try_collect().await
+        self.lyrics().await?.try_collect().await
     }
 
     async fn get_lyric(&self, uuid: Uuid) -> Result<Lyric> {
@@ -83,11 +55,11 @@ impl Repo for TursoDatabase {
     }
 
     async fn get_playlist_summaries(&self) -> Result<Vec<Summary>> {
-        self.playlists_summaries_stream().await?.try_collect().await
+        self.playlist_summaries().await?.try_collect().await
     }
 
     async fn get_playlists(&self) -> Result<Vec<Playlist>> {
-        self.playlists_stream().await?.try_collect().await
+        self.playlists().await?.try_collect().await
     }
 
     async fn get_playlist(&self, uuid: Uuid) -> Result<Playlist> {
@@ -112,19 +84,19 @@ impl Repo for TursoDatabase {
     async fn upsert_playlist(&self, playlist: Playlist) -> Result<Playlist> {
         let mut connection = self.inner.clone();
         let transaction = connection.transaction().await.err_into()?;
-        let _ = transaction
+        transaction
             .execute(
                 playlist::UPSERT,
                 &[playlist.id.to_string().as_str(), playlist.title.as_str()],
             )
             .await
             .err_into()?;
-        let _ = transaction
+        transaction
             .execute(member::DELETE, &[playlist.id.to_string().as_str()])
             .await
             .err_into()?;
         for (index, lyric_id) in playlist.members.iter().enumerate() {
-            let _ = transaction
+            transaction
                 .execute(
                     member::INSERT,
                     &[
@@ -145,7 +117,7 @@ impl Repo for TursoDatabase {
     }
 }
 
-mod lyric {
+pub mod lyric {
     pub const LIST: &str = "SELECT id, title FROM lyric ORDER BY title;";
     pub const LIST_FULL: &str = "SELECT id, title, parts FROM lyric ORDER BY title;";
     pub const ITEM: &str = "SELECT * FROM lyric WHERE id = $1;";
@@ -153,7 +125,7 @@ mod lyric {
     pub const UPSERT: &str = "INSERT INTO lyric (id, title, parts) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET title = $2, parts = $3 RETURNING id, title, parts;";
 }
 
-mod playlist {
+pub mod playlist {
     pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
     pub const LIST_FULL: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist LEFT JOIN (SELECT * FROM member ORDER BY ordering) ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
     pub const ITEM: &str = "SELECT playlist.id AS id, title, GROUP_CONCAT(lyric_id) members FROM playlist LEFT JOIN (SELECT * FROM member ORDER BY ordering) ON playlist.id = playlist_id GROUP BY playlist.id HAVING playlist.id = $1;";
