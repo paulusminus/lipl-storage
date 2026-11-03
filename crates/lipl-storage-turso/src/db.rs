@@ -2,7 +2,7 @@ use futures_util::{TryFutureExt as _, TryStreamExt};
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
 use turso::params::IntoValue;
 
-use super::{ErrInto, ObjectsStream, TursoDatabase, convert};
+use super::{ErrInto, ObjectStream, TursoDatabase, convert};
 
 fn error_on_count(count: u64, uuid: Uuid) -> Result<()> {
     if count < 1 {

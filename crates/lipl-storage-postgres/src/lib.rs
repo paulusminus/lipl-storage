@@ -1,7 +1,7 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::TryFutureExt;
 use lipl_core::{
-    Error, Lyric, ObjectsStream, Playlist, Repo, RepoConfig, Result, Summary, postgres_error,
+    Error, Lyric, ObjectStream, Playlist, Repo, RepoConfig, Result, Summary, postgres_error,
 };
 use serde::Serialize;
 use tokio_postgres::{
@@ -11,12 +11,12 @@ use tokio_postgres::{
 
 use crate::{
     db::{lyric, playlist},
-    object_stream::{ObjectStream, objects},
+    pg_stream::{PgStream, objects},
 };
 
 mod convert;
 mod db;
-mod object_stream;
+mod pg_stream;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
 
@@ -55,6 +55,19 @@ impl PostgresConnectionPool {
     async fn batch_execute(&self, sql: &str) -> Result<()> {
         let connection = self.inner.get().await.map_err(postgres_error)?;
         connection.batch_execute(sql).map_err(postgres_error).await
+    }
+
+    async fn query_stream<O>(
+        &self,
+        sql: &'static str,
+        convert: fn(Row) -> Result<O>,
+    ) -> Result<PgStream<O>> {
+        let connection = self.inner.get().await.map_err(postgres_error)?;
+        connection
+            .query_raw(sql, &[] as &[&str])
+            .await
+            .map_err(postgres_error)
+            .map(objects(convert))
     }
 
     async fn query<'a, F, T>(
@@ -156,50 +169,23 @@ pub async fn connection_pool(connection: &str) -> Result<PostgresConnectionPool>
     Ok(postgres_connection_pool)
 }
 
-impl ObjectsStream for PostgresConnectionPool {
-    type Stream<O> = ObjectStream<O>;
+impl ObjectStream for PostgresConnectionPool {
+    type Stream<O> = PgStream<O>;
 
     async fn lyric_summaries(&self) -> Result<Self::Stream<Summary>> {
-        self.inner
-            .get()
-            .map_err(postgres_error)
-            .await?
-            .query_raw(lyric::LIST, &[] as &[&str])
-            .await
-            .map(objects(convert::to_summary))
-            .map_err(postgres_error)
+        self.query_stream(lyric::LIST, convert::to_summary).await
     }
 
     async fn lyrics(&self) -> Result<Self::Stream<Lyric>> {
-        self.inner
-            .get()
-            .map_err(postgres_error)
-            .await?
-            .query_raw(lyric::LIST_FULL, &[] as &[&str])
-            .await
-            .map(objects(convert::to_lyric))
-            .map_err(postgres_error)
+        self.query_stream(lyric::LIST_FULL, convert::to_lyric).await
     }
 
     async fn playlist_summaries(&self) -> Result<Self::Stream<Summary>> {
-        self.inner
-            .get()
-            .map_err(postgres_error)
-            .await?
-            .query_raw(playlist::LIST, &[] as &[&str])
-            .await
-            .map(objects(convert::to_summary))
-            .map_err(postgres_error)
+        self.query_stream(playlist::LIST, convert::to_summary).await
     }
 
     async fn playlists(&self) -> Result<Self::Stream<Playlist>> {
-        self.inner
-            .get()
-            .map_err(postgres_error)
-            .await?
-            .query_raw(playlist::LIST_FULL, &[] as &[&str])
+        self.query_stream(playlist::LIST_FULL, convert::to_playlist)
             .await
-            .map(objects(convert::to_playlist))
-            .map_err(postgres_error)
     }
 }

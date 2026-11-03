@@ -136,6 +136,7 @@ pub(crate) mod lyric {
 
     pub const LIST: &str = "SELECT id, title FROM lyric ORDER BY title;";
     pub const LIST_TYPES: &[Type] = &[];
+    // pub const LIST_PARAMS: &[&str] = &[];
 
     pub const LIST_FULL: &str = "SELECT id, title, parts FROM lyric ORDER BY title;";
     pub const LIST_FULL_TYPES: &[Type] = &[];
@@ -155,6 +156,7 @@ pub(crate) mod playlist {
 
     pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
     pub const LIST_TYPES: &[Type] = &[];
+    // pub const LIST_PARAMS: &[&str] = &[];
 
     pub const LIST_FULL: &str = "SELECT playlist.id AS id, title, ARRAY_AGG(lyric_id ORDER BY ordering) members FROM playlist INNER JOIN member ON playlist.id = playlist_id GROUP BY playlist.id ORDER BY playlist.title;";
     pub const LIST_FULL_TYPES: &[Type] = &[];

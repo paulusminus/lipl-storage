@@ -57,7 +57,7 @@ pub trait HasSummary {
 }
 
 #[allow(async_fn_in_trait)]
-pub trait ObjectsStream {
+pub trait ObjectStream {
     type Stream<O>: Stream<Item = Result<O>>;
     async fn lyrics(&self) -> Result<Self::Stream<Lyric>>;
     async fn lyric_summaries(&self) -> Result<Self::Stream<Summary>>;

@@ -1,16 +1,16 @@
 use futures_util::TryFutureExt;
-use lipl_core::{Lyric, ObjectsStream, Playlist, RepoConfig, Result, Summary};
+use lipl_core::{Lyric, ObjectStream, Playlist, RepoConfig, Result, Summary};
 use turso::{Builder, IntoParams, Row};
 
 use crate::{
     db::{lyric, playlist},
-    object_stream::{ObjectStream, objects},
+    turso_stream::{TursoStream, objects},
 };
 
 mod convert;
 mod db;
-mod object_stream;
 mod row_stream;
+mod turso_stream;
 
 pub const CREATE_DB: &str = include_str!("create_db.sql");
 
@@ -69,7 +69,7 @@ impl TursoDatabase {
         sql: &'static str,
         convert: fn(Row) -> Result<T>,
         params: impl IntoParams,
-    ) -> Result<ObjectStream<T>> {
+    ) -> Result<TursoStream<T>> {
         self.inner
             .prepare(sql)
             .and_then(|mut statement| async move { statement.query(params).await })
@@ -128,8 +128,8 @@ impl RepoConfig for TursoConfig {
     }
 }
 
-impl ObjectsStream for TursoDatabase {
-    type Stream<O> = ObjectStream<O>;
+impl ObjectStream for TursoDatabase {
+    type Stream<O> = TursoStream<O>;
     async fn lyric_summaries(&self) -> Result<Self::Stream<Summary>> {
         self.query(lyric::LIST, convert::to_summary, ()).await
     }
