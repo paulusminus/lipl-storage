@@ -1,14 +1,22 @@
 use bb8_postgres::{PostgresConnectionManager, bb8::Pool};
 use futures_util::TryFutureExt;
-use lipl_core::{Error, Repo, RepoConfig, Result, postgres_error};
+use lipl_core::{
+    Error, Lyric, ObjectsStream, Playlist, Repo, RepoConfig, Result, Summary, postgres_error,
+};
 use serde::Serialize;
 use tokio_postgres::{
     NoTls, Row,
     types::{ToSql, Type},
 };
 
+use crate::{
+    db::{lyric, playlist},
+    object_stream::{ObjectStream, objects},
+};
+
 mod convert;
 mod db;
+mod object_stream;
 
 pub type ConnectionPool = Pool<PostgresConnectionManager<NoTls>>;
 
@@ -146,4 +154,52 @@ pub async fn connection_pool(connection: &str) -> Result<PostgresConnectionPool>
     tracing::info!("Warm up cache finished");
 
     Ok(postgres_connection_pool)
+}
+
+impl ObjectsStream for PostgresConnectionPool {
+    type Stream<O> = ObjectStream<O>;
+
+    async fn lyric_summaries(&self) -> Result<Self::Stream<Summary>> {
+        self.inner
+            .get()
+            .map_err(postgres_error)
+            .await?
+            .query_raw(lyric::LIST, &[] as &[&str])
+            .await
+            .map(objects(convert::to_summary))
+            .map_err(postgres_error)
+    }
+
+    async fn lyrics(&self) -> Result<Self::Stream<Lyric>> {
+        self.inner
+            .get()
+            .map_err(postgres_error)
+            .await?
+            .query_raw(lyric::LIST_FULL, &[] as &[&str])
+            .await
+            .map(objects(convert::to_lyric))
+            .map_err(postgres_error)
+    }
+
+    async fn playlist_summaries(&self) -> Result<Self::Stream<Summary>> {
+        self.inner
+            .get()
+            .map_err(postgres_error)
+            .await?
+            .query_raw(playlist::LIST, &[] as &[&str])
+            .await
+            .map(objects(convert::to_summary))
+            .map_err(postgres_error)
+    }
+
+    async fn playlists(&self) -> Result<Self::Stream<Playlist>> {
+        self.inner
+            .get()
+            .map_err(postgres_error)
+            .await?
+            .query_raw(playlist::LIST_FULL, &[] as &[&str])
+            .await
+            .map(objects(convert::to_playlist))
+            .map_err(postgres_error)
+    }
 }

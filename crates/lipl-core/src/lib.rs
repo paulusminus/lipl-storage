@@ -13,6 +13,7 @@ lyrics ands playlist from a store. All implementation except `MemoryRepo` implem
 pub use crate::uuid::Uuid;
 use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 pub use error::{Error, postgres_error, redis_error};
+use futures_core::Stream;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -53,6 +54,15 @@ pub trait RepoConfig {
 
 pub trait HasSummary {
     fn summary(&self) -> Summary;
+}
+
+#[allow(async_fn_in_trait)]
+pub trait ObjectsStream {
+    type Stream<O>: Stream<Item = Result<O>>;
+    async fn lyrics(&self) -> Result<Self::Stream<Lyric>>;
+    async fn lyric_summaries(&self) -> Result<Self::Stream<Summary>>;
+    async fn playlists(&self) -> Result<Self::Stream<Playlist>>;
+    async fn playlist_summaries(&self) -> Result<Self::Stream<Summary>>;
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

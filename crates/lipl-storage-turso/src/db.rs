@@ -1,8 +1,8 @@
 use futures_util::{TryFutureExt as _, TryStreamExt};
 use lipl_core::{Error, Lyric, Playlist, Repo, Result, Summary, Uuid, parts::to_text};
-use turso::Value;
+use turso::params::IntoValue;
 
-use super::{ErrInto, TursoDatabase, TursoDb, convert};
+use super::{ErrInto, ObjectsStream, TursoDatabase, convert};
 
 fn error_on_count(count: u64, uuid: Uuid) -> Result<()> {
     if count < 1 {
@@ -100,9 +100,9 @@ impl Repo for TursoDatabase {
                 .execute(
                     member::INSERT,
                     &[
-                        Value::from(playlist.id.to_string().as_str()),
-                        Value::from(lyric_id.to_string().as_str()),
-                        Value::from(index as i64),
+                        playlist.id.to_string().into_value().err_into()?,
+                        lyric_id.to_string().into_value().err_into()?,
+                        (index as i64).into_value().err_into()?,
                     ],
                 )
                 .await

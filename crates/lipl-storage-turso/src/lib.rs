@@ -1,5 +1,5 @@
 use futures_util::TryFutureExt;
-use lipl_core::{Lyric, Playlist, RepoConfig, Result, Summary};
+use lipl_core::{Lyric, ObjectsStream, Playlist, RepoConfig, Result, Summary};
 use turso::{Builder, IntoParams, Row};
 
 use crate::{
@@ -128,36 +128,22 @@ impl RepoConfig for TursoConfig {
     }
 }
 
-#[allow(dead_code)]
-trait TursoDb {
-    async fn lyrics(&self) -> Result<ObjectStream<Lyric>>;
-    async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>>;
-    async fn playlists(&self) -> Result<ObjectStream<Playlist>>;
-    async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>>;
-}
+impl ObjectsStream for TursoDatabase {
+    type Stream<O> = ObjectStream<O>;
+    async fn lyric_summaries(&self) -> Result<Self::Stream<Summary>> {
+        self.query(lyric::LIST, convert::to_summary, ()).await
+    }
 
-impl TursoDb for TursoDatabase {
-    async fn lyric_summaries(&self) -> Result<ObjectStream<Summary>> {
-        self.query(lyric::LIST, convert::to_summary, Vec::<&str>::new())
+    async fn lyrics(&self) -> Result<Self::Stream<Lyric>> {
+        self.query(lyric::LIST_FULL, convert::to_lyric, ()).await
+    }
+
+    async fn playlists(&self) -> Result<Self::Stream<Playlist>> {
+        self.query(playlist::LIST_FULL, convert::to_playlist, ())
             .await
     }
 
-    async fn lyrics(&self) -> Result<ObjectStream<Lyric>> {
-        self.query(lyric::LIST_FULL, convert::to_lyric, Vec::<&str>::new())
-            .await
-    }
-
-    async fn playlists(&self) -> Result<ObjectStream<Playlist>> {
-        self.query(
-            playlist::LIST_FULL,
-            convert::to_playlist,
-            Vec::<&str>::new(),
-        )
-        .await
-    }
-
-    async fn playlist_summaries(&self) -> Result<ObjectStream<Summary>> {
-        self.query(playlist::LIST, convert::to_summary, Vec::<&str>::new())
-            .await
+    async fn playlist_summaries(&self) -> Result<Self::Stream<Summary>> {
+        self.query(playlist::LIST, convert::to_summary, ()).await
     }
 }

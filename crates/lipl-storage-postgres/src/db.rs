@@ -131,7 +131,7 @@ impl Repo for PostgresConnectionPool {
     }
 }
 
-mod lyric {
+pub(crate) mod lyric {
     use tokio_postgres::types::Type;
 
     pub const LIST: &str = "SELECT id, title FROM lyric ORDER BY title;";
@@ -150,7 +150,7 @@ mod lyric {
     pub const UPSERT_TYPES: &[Type] = &[Type::UUID, Type::VARCHAR, Type::VARCHAR];
 }
 
-mod playlist {
+pub(crate) mod playlist {
     use tokio_postgres::types::Type;
 
     pub const LIST: &str = "SELECT id, title FROM playlist ORDER BY title;";
