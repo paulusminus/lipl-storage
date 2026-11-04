@@ -10,7 +10,7 @@ where
 }
 
 pub async fn convert_etag() -> Result<(), Box<dyn std::error::Error>> {
-    let repo = FileRepo::new("./data/".to_owned())?;
+    let repo = FileRepo::new("./data/".into())?;
 
     println!("Lyrics");
     let lyrics = repo.get_lyrics().await?;

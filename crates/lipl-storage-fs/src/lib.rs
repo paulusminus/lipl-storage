@@ -2,7 +2,7 @@ use lipl_core::Repo;
 use lipl_core::transaction::{OptionalTransaction, start_log_thread};
 use std::fmt::{Debug, Display};
 use std::fs::OpenOptions;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -24,7 +24,18 @@ mod request;
 
 #[derive(Clone)]
 pub struct FileRepoConfig {
-    pub path: String,
+    pub path: PathBuf,
+}
+
+pub struct FileRepoConfig2 {
+    pub path: PathBuf,
+}
+
+impl FromStr for FileRepoConfig2 {
+    type Err = lipl_core::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.is_dir().map(|_| FileRepoConfig2 { path: s.into() })
+    }
 }
 
 impl FromStr for FileRepoConfig {
@@ -44,13 +55,13 @@ impl RepoConfig for FileRepoConfig {
 #[derive(Clone)]
 pub struct FileRepo {
     tx: mpsc::Sender<Request>,
-    path: String,
+    path: PathBuf,
     _join_handle: Arc<JoinHandle<bool>>,
 }
 
 impl Debug for FileRepo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "FileRepo: {}", self.path)
+        write!(f, "FileRepo: {}", self.path.to_string_lossy())
     }
 }
 
@@ -84,7 +95,7 @@ fn send<T, D: Display>(
 
 async fn handle_request<P, Q>(
     request: Request,
-    source_dir: String,
+    source_dir: &Path,
     lyric_path: P,
     playlist_path: Q,
 ) -> Result<(), lipl_core::Error>
@@ -197,20 +208,20 @@ where
     }
 }
 
-fn path(source_dir: String, extension: &'static str) -> impl Fn(&Uuid) -> PathBuf {
+fn path(source_dir: &Path, extension: &'static str) -> impl Fn(&Uuid) -> PathBuf {
     move |uuid| source_dir.full_path(&uuid.to_string(), extension)
 }
 
 impl FileRepo {
     pub fn new_streaming(source_dir: String) -> lipl_core::Result<Self> {
         Ok(Self {
-            path: source_dir.clone(),
+            path: source_dir.into(),
             tx: mpsc::channel::<Request>(1).0,
             _join_handle: Arc::new(tokio::spawn(async move { true })),
         })
     }
 
-    pub fn new(source_dir: String) -> lipl_core::Result<FileRepo> {
+    pub fn new(source_dir: PathBuf) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
         let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
@@ -234,9 +245,9 @@ impl FileRepo {
                 .try_for_each(|request| {
                     handle_request(
                         request,
-                        source_dir.clone(),
-                        path(source_dir.clone(), LYRIC_EXTENSION),
-                        path(source_dir.clone(), TOML_EXTENSION),
+                        &dir,
+                        path(&dir, LYRIC_EXTENSION),
+                        path(&dir, TOML_EXTENSION),
                     )
                 })
                 .await
@@ -244,7 +255,7 @@ impl FileRepo {
         });
 
         let file_repo = FileRepo {
-            path: dir,
+            path: source_dir.into(),
             tx,
             _join_handle: Arc::new(join_handle),
         };
