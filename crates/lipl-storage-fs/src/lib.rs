@@ -224,7 +224,7 @@ impl FileRepo {
     pub fn new(source_dir: PathBuf) -> lipl_core::Result<FileRepo> {
         let dir = source_dir.clone();
         let (tx, rx) = mpsc::channel::<Request>(10);
-        let transaction_log: PathBuf = PathBuf::from(source_dir.clone()).join(".transaction.log");
+        let transaction_log: PathBuf = PathBuf::from(source_dir.as_path()).join(".transaction.log");
 
         let log = OpenOptions::new()
             .append(true)
@@ -255,7 +255,7 @@ impl FileRepo {
         });
 
         let file_repo = FileRepo {
-            path: source_dir.into(),
+            path: source_dir,
             tx,
             _join_handle: Arc::new(join_handle),
         };
